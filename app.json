@@ -37,6 +37,13 @@
     ],
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "da1fa664-c402-48fa-869c-8f853a9a335a"
+      }
+    },
+    "owner": "proximus18"
   }
 }
