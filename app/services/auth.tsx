@@ -1,9 +1,9 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState } from "react";
 
 // Mock user object for development
 const MOCK_USER = {
-  uid: 'mock-user-id',
-  email: 'test@example.com',
+  uid: "mock-user-id",
+  email: "test@example.com",
 };
 
 interface AuthContextType {
@@ -18,7 +18,9 @@ const AuthContext = createContext<AuthContextType>({
   logout: () => {},
 });
 
-export const AuthProvider: React.FC = ({ children }) => {
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
   const [user, setUser] = useState<typeof MOCK_USER | null>(null);
 
   const login = () => {

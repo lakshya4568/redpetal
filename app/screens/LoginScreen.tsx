@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, ImageBackground, Animated } from 'react-native';
+import { View, StyleSheet, ImageBackground, Animated, Platform } from 'react-native';
 import { Button, TextInput, Text } from 'react-native-paper';
 import { useAuth } from '../services/auth';
+import { theme } from '../theme';
 
-// Please download the Great Vibes font from Google Fonts and place it in assets/fonts
-// You can find free floral background images on sites like Unsplash or Pexels.
 const BACKGROUND_IMAGE = require('../../assets/images/floral-background.png');
 
 export default function LoginScreen({ navigation }) {
@@ -25,13 +24,13 @@ export default function LoginScreen({ navigation }) {
     <ImageBackground source={BACKGROUND_IMAGE} style={styles.background}>
       <View style={styles.overlay}>
         <Text style={styles.title}>RedPetal</Text>
-        <Animated.View style={{ opacity: fadeAnim }}>
+        <Animated.View style={[styles.formContainer, { opacity: fadeAnim }]}>
           <TextInput
             label="Email"
             value={email}
             onChangeText={setEmail}
             style={styles.input}
-            theme={{ colors: { primary: '#ff8fab' } }}
+            theme={{ colors: { primary: theme.colors.primary } }}
           />
           <TextInput
             label="Password"
@@ -39,7 +38,7 @@ export default function LoginScreen({ navigation }) {
             onChangeText={setPassword}
             secureTextEntry
             style={styles.input}
-            theme={{ colors: { primary: '#ff8fab' } }}
+            theme={{ colors: { primary: theme.colors.primary } }}
           />
           <Button mode="contained" onPress={login} style={styles.button}>
             Login
@@ -62,21 +61,25 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: 'rgba(255, 255, 255, 0.8)',
     justifyContent: 'center',
-    padding: 16,
+    padding: theme.spacing.medium,
+  },
+  formContainer: {
+    width: Platform.OS === 'web' ? '50%' : '100%',
+    alignSelf: 'center',
   },
   title: {
     fontSize: 64,
-    fontFamily: 'GreatVibes-Regular',
-    color: '#ff8fab',
+    fontFamily: theme.fonts.cursive,
+    color: theme.colors.primary,
     textAlign: 'center',
-    marginBottom: 32,
+    marginBottom: theme.spacing.large,
   },
   input: {
-    marginBottom: 16,
+    marginBottom: theme.spacing.medium,
     backgroundColor: 'rgba(255, 255, 255, 0.9)',
   },
   button: {
-    marginTop: 8,
-    backgroundColor: '#ff8fab',
+    marginTop: theme.spacing.small,
+    backgroundColor: theme.colors.primary,
   },
 });
