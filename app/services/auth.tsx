@@ -18,7 +18,7 @@ const AuthContext = createContext<AuthContextType>({
   logout: () => {},
 });
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
+const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const [user, setUser] = useState<typeof MOCK_USER | null>(null);
@@ -39,4 +39,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   );
 };
 
+export { AuthProvider };
 export const useAuth = () => useContext(AuthContext);
+export default AuthProvider;

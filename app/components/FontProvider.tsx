@@ -9,7 +9,7 @@ interface FontProviderProps {
   children: React.ReactNode;
 }
 
-export const FontProvider: React.FC<FontProviderProps> = ({ children }) => {
+const FontProvider: React.FC<FontProviderProps> = ({ children }) => {
   const [fontsLoaded] = useFonts({
     "GreatVibes-Regular": require("../../assets/fonts/GreatVibes-Regular.ttf"),
     "SpaceMono-Regular": require("../../assets/fonts/SpaceMono-Regular.ttf"),
@@ -27,3 +27,6 @@ export const FontProvider: React.FC<FontProviderProps> = ({ children }) => {
 
   return <>{children}</>;
 };
+
+export { FontProvider };
+export default FontProvider;

@@ -1,4 +1,4 @@
-import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import {router } from 'expo-router';
 import React, { useEffect, useState } from "react";
 import {
   Animated,
@@ -13,25 +13,16 @@ import { theme } from "../theme";
 
 const BACKGROUND_IMAGE = require("../../assets/images/floral-background.png");
 
-type RootStackParamList = {
-  Login: undefined;
-  Signup: undefined;
-};
-
-type LoginScreenNavigationProp = NativeStackNavigationProp<
-  RootStackParamList,
-  "Login"
->;
-
-interface LoginScreenProps {
-  navigation: LoginScreenNavigationProp;
-}
-
-export default function LoginScreen({ navigation }: LoginScreenProps) {
+export default function LoginScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const { login } = useAuth();
   const [fadeAnim] = useState(new Animated.Value(0));
+
+  const handleLogin = () => {
+    login();
+    router.replace("/(tabs)");
+  };
 
   useEffect(() => {
     Animated.timing(fadeAnim, {
@@ -61,11 +52,11 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
             style={styles.input}
             theme={{ colors: { primary: theme.colors.primary } }}
           />
-          <Button mode="contained" onPress={login} style={styles.button}>
+          <Button mode="contained" onPress={handleLogin} style={styles.button}>
             Login
           </Button>
           <Button
-            onPress={() => navigation.navigate("Signup")}
+            onPress={() => router.push("/auth/signup")}
             style={styles.button}
           >
             Go to Signup

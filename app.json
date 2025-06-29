@@ -7,7 +7,6 @@
     "icon": "./assets/images/icon.png",
     "scheme": "redpetal",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
     "ios": {
       "supportsTablet": true
     },
@@ -16,7 +15,7 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true
+      "package": "com.proximus18.redpetal"
     },
     "web": {
       "bundler": "metro",

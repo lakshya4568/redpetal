@@ -1,6 +1,13 @@
+import { Redirect } from 'expo-router';
 import React from 'react';
-import RootLayout from './_layout';
+import { useAuth } from './services/auth';
 
-export default function App() {
-  return <RootLayout />;
+export default function Index() {
+  const { user } = useAuth();
+
+  if (user) {
+    return <Redirect href="/(tabs)" />;
+  }
+
+  return <Redirect href="/auth/login" />;
 }

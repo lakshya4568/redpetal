@@ -1,4 +1,4 @@
-import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { router } from 'expo-router';
 import React, { useEffect, useState } from "react";
 import {
   Animated,
@@ -13,25 +13,16 @@ import { theme } from "../theme";
 
 const BACKGROUND_IMAGE = require("../../assets/images/floral-background.png");
 
-type RootStackParamList = {
-  Login: undefined;
-  Signup: undefined;
-};
-
-type LoginScreenNavigationProp = NativeStackNavigationProp<
-  RootStackParamList,
-  "Login"
->;
-
-interface LoginScreenProps {
-  navigation: LoginScreenNavigationProp;
-}
-
-export default function LoginScreen({ navigation }: LoginScreenProps) {
+export default function SignupScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const { login } = useAuth();
+  const { login } = useAuth(); // Using mock login for now
   const [fadeAnim] = useState(new Animated.Value(0));
+
+  const handleSignup = () => {
+    login(); // In a real app, this would be a signup function
+    router.replace("/(tabs)");
+  };
 
   useEffect(() => {
     Animated.timing(fadeAnim, {
@@ -61,14 +52,14 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
             style={styles.input}
             theme={{ colors: { primary: theme.colors.primary } }}
           />
-          <Button mode="contained" onPress={login} style={styles.button}>
-            Login
+          <Button mode="contained" onPress={handleSignup} style={styles.button}>
+            Signup
           </Button>
           <Button
-            onPress={() => navigation.navigate("Signup")}
+            onPress={() => router.push("/auth/login")}
             style={styles.button}
           >
-            Go to Signup
+            Go to Login
           </Button>
         </Animated.View>
       </View>
@@ -109,6 +100,5 @@ const styles = StyleSheet.create({
     marginTop: theme.spacing.md,
     backgroundColor: theme.colors.primary,
     borderRadius: theme.borderRadius.md,
-    color: theme.colors.accent, // Added text color for the button
   },
 });
