@@ -1,9 +1,10 @@
 import { useFonts } from "expo-font";
 import * as SplashScreen from "expo-splash-screen";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
+import { Text } from "react-native";
 
 // Keep the splash screen visible while we fetch resources
-SplashScreen.preventAutoHideAsync();
+// SplashScreen.preventAutoHideAsync();
 
 interface FontProviderProps {
   children: React.ReactNode;
@@ -14,14 +15,45 @@ const FontProvider: React.FC<FontProviderProps> = ({ children }) => {
     "GreatVibes-Regular": require("../../assets/fonts/GreatVibes-Regular.ttf"),
     "SpaceMono-Regular": require("../../assets/fonts/SpaceMono-Regular.ttf"),
   });
+  const [appReady, setAppReady] = useState(false);
+  const [fontError, setFontError] = useState<null | string>(null);
+
+  useEffect(() => {
+    // Only call this on native platforms
+    SplashScreen.preventAutoHideAsync().catch(() => {});
+  }, []);
 
   useEffect(() => {
     if (fontsLoaded) {
-      SplashScreen.hideAsync();
+      SplashScreen.hideAsync().catch(() => {});
+      setAppReady(true);
     }
   }, [fontsLoaded]);
 
-  if (!fontsLoaded) {
+  useEffect(() => {
+    // Timeout fallback in case font loading hangs
+    const timeout = setTimeout(() => {
+      if (!fontsLoaded) {
+        setFontError("Font loading timed out. Please restart the app.");
+        SplashScreen.hideAsync().catch(() => {});
+        setAppReady(true);
+      }
+    }, 5000);
+    return () => clearTimeout(timeout);
+  }, [fontsLoaded]);
+
+  if (fontError) {
+    return (
+      <>
+        <Text style={{ color: "red", textAlign: "center", marginTop: 40 }}>
+          {fontError}
+        </Text>
+        {children}
+      </>
+    );
+  }
+
+  if (!appReady) {
     return null;
   }
 
