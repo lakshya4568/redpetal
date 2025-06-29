@@ -1,14 +1,17 @@
-import React from 'react';
-import { PaperProvider } from 'react-native-paper';
-import { AuthProvider } from './services/auth';
-import AppNavigator from './navigation/AppNavigator';
+import React from "react";
+import { PaperProvider } from "react-native-paper";
+import { FontProvider } from "./components/FontProvider";
+import AppNavigator from "./navigation/AppNavigator";
+import { AuthProvider } from "./services/auth";
 
 export default function RootLayout() {
   return (
-    <AuthProvider>
-      <PaperProvider>
-        <AppNavigator />
-      </PaperProvider>
-    </AuthProvider>
+    <FontProvider>
+      <AuthProvider>
+        <PaperProvider>
+          <AppNavigator />
+        </PaperProvider>
+      </AuthProvider>
+    </FontProvider>
   );
 }

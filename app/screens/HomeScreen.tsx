@@ -1,12 +1,13 @@
-import React from 'react';
-import { View, Text, StyleSheet, Platform } from 'react-native';
-import { theme } from '../theme';
+import React from "react";
+import { StyleSheet, Text, TextStyle, View, ViewStyle } from "react-native";
+import { theme } from "../theme";
 
 export default function HomeScreen() {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Welcome to</Text>
       <Text style={styles.appName}>RedPetal</Text>
+      <Text style={styles.subtitle}>Your period tracking companion</Text>
     </View>
   );
 }
@@ -14,22 +15,26 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     backgroundColor: theme.colors.background,
-    padding: theme.spacing.medium,
-  },
+    padding: theme.spacing.lg,
+  } as ViewStyle,
   title: {
-    fontSize: 24,
-    fontFamily: theme.fonts.main,
+    ...theme.typography.headlineMedium,
     color: theme.colors.text,
-    textAlign: 'center',
-  },
+    textAlign: "center",
+    marginBottom: theme.spacing.sm,
+  } as TextStyle,
   appName: {
-    fontSize: 48,
-    fontFamily: theme.fonts.cursive,
+    ...theme.typography.brand,
     color: theme.colors.primary,
-    textAlign: 'center',
-    marginTop: theme.spacing.small,
-  },
+    textAlign: "center",
+    marginBottom: theme.spacing.lg,
+  } as TextStyle,
+  subtitle: {
+    ...theme.typography.bodyLarge,
+    color: theme.colors.textSecondary,
+    textAlign: "center",
+  } as TextStyle,
 });

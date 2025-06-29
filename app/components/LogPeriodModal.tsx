@@ -1,21 +1,33 @@
-import React, { useState } from 'react';
-import { Modal, View, StyleSheet } from 'react-native';
-import { Button, Text, TextInput } from 'react-native-paper';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { theme } from '../theme';
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import React, { useState } from "react";
+import { Modal, StyleSheet, View } from "react-native";
+import { Button, Text, TextInput } from "react-native-paper";
+import { theme } from "../theme";
 
-export default function LogPeriodModal({ visible, onClose, selectedDate }) {
-  const [flow, setFlow] = useState('');
-  const [symptoms, setSymptoms] = useState('');
-  const [mood, setMood] = useState('');
+interface LogPeriodModalProps {
+  visible: boolean;
+  onClose: () => void;
+  selectedDate: string | null;
+}
+
+export default function LogPeriodModal({
+  visible,
+  onClose,
+  selectedDate,
+}: LogPeriodModalProps) {
+  const [flow, setFlow] = useState("");
+  const [symptoms, setSymptoms] = useState("");
+  const [mood, setMood] = useState("");
 
   const handleSave = async () => {
+    if (!selectedDate) return;
+
     try {
       const data = { flow, symptoms, mood };
       await AsyncStorage.setItem(selectedDate, JSON.stringify(data));
       onClose();
     } catch (error) {
-      console.error('Error saving data', error);
+      console.error("Error saving data", error);
     }
   };
 
@@ -58,22 +70,23 @@ export default function LogPeriodModal({ visible, onClose, selectedDate }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    padding: theme.spacing.medium,
+    justifyContent: "center",
+    padding: theme.spacing.lg,
     backgroundColor: theme.colors.background,
   },
   title: {
-    fontSize: 32,
-    fontFamily: theme.fonts.cursive,
+    ...theme.typography.headlineLarge,
     color: theme.colors.primary,
-    textAlign: 'center',
-    marginBottom: theme.spacing.large,
+    textAlign: "center",
+    marginBottom: theme.spacing.xxl,
   },
   input: {
-    marginBottom: theme.spacing.medium,
+    marginBottom: theme.spacing.lg,
+    backgroundColor: theme.colors.surface,
   },
   button: {
-    marginTop: theme.spacing.small,
+    marginTop: theme.spacing.md,
     backgroundColor: theme.colors.primary,
+    borderRadius: theme.borderRadius.md,
   },
 });

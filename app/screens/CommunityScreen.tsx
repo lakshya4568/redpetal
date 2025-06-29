@@ -1,5 +1,6 @@
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import React from "react";
+import { StyleSheet, Text, TextStyle, View, ViewStyle } from "react-native";
+import { theme } from "../theme";
 
 export default function CommunityScreen() {
   return (
@@ -12,10 +13,13 @@ export default function CommunityScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: theme.colors.background,
+    padding: theme.spacing.lg,
+  } as ViewStyle,
   title: {
-    fontSize: 24,
-  },
+    ...theme.typography.headlineLarge,
+    color: theme.colors.text,
+  } as TextStyle,
 });

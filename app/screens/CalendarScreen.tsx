@@ -1,15 +1,17 @@
-import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, Platform, Animated } from 'react-native';
-import { Text } from 'react-native-paper';
-import { Calendar } from 'react-native-calendars';
-import LogPeriodModal from '../components/LogPeriodModal';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { theme } from '../theme';
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import React, { useEffect, useState } from "react";
+import { Animated, Platform, StyleSheet, View } from "react-native";
+import { Calendar } from "react-native-calendars";
+import { Text } from "react-native-paper";
+import LogPeriodModal from "../components/LogPeriodModal";
+import { theme } from "../theme";
 
 export default function CalendarScreen() {
-  const [selectedDates, setSelectedDates] = useState({});
+  const [selectedDates, setSelectedDates] = useState<{ [key: string]: any }>(
+    {}
+  );
   const [isModalVisible, setModalVisible] = useState(false);
-  const [selectedDate, setSelectedDate] = useState(null);
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [fadeAnim] = useState(new Animated.Value(0));
 
   useEffect(() => {
@@ -23,19 +25,23 @@ export default function CalendarScreen() {
       try {
         const keys = await AsyncStorage.getAllKeys();
         const savedData = await AsyncStorage.multiGet(keys);
-        const newSelectedDates = {};
+        const newSelectedDates: { [key: string]: any } = {};
         savedData.forEach(([key, value]) => {
-          newSelectedDates[key] = { selected: true, marked: true, selectedColor: theme.colors.primary };
+          newSelectedDates[key] = {
+            selected: true,
+            marked: true,
+            selectedColor: theme.colors.primary,
+          };
         });
         setSelectedDates(newSelectedDates);
       } catch (error) {
-        console.error('Error loading data', error);
+        console.error("Error loading data", error);
       }
     };
     loadSavedData();
-  }, []);
+  }, [fadeAnim]);
 
-  const onDayPress = (day) => {
+  const onDayPress = (day: { dateString: string }) => {
     setSelectedDate(day.dateString);
     setModalVisible(true);
   };
@@ -47,7 +53,7 @@ export default function CalendarScreen() {
         <Calendar
           markedDates={selectedDates}
           onDayPress={onDayPress}
-          markingType={'multi-dot'}
+          markingType={"multi-dot"}
           theme={{
             calendarBackground: theme.colors.background,
             textSectionTitleColor: theme.colors.primary,
@@ -57,7 +63,7 @@ export default function CalendarScreen() {
             dayTextColor: theme.colors.text,
             arrowColor: theme.colors.primary,
             monthTextColor: theme.colors.primary,
-            textMonthFontFamily: theme.fonts.cursive,
+            textMonthFontFamily: theme.fonts.title.family,
             textMonthFontSize: 32,
           }}
         />
@@ -75,17 +81,16 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: theme.colors.background,
-    padding: theme.spacing.medium,
+    padding: theme.spacing.lg,
   },
   title: {
-    fontSize: 48,
-    fontFamily: theme.fonts.cursive,
+    ...theme.typography.brand,
     color: theme.colors.primary,
-    textAlign: 'center',
-    marginBottom: theme.spacing.medium,
+    textAlign: "center",
+    marginBottom: theme.spacing.lg,
   },
   calendarContainer: {
-    width: Platform.OS === 'web' ? '70%' : '100%',
-    alignSelf: 'center',
+    width: Platform.OS === "web" ? "70%" : "100%",
+    alignSelf: "center",
   },
 });
