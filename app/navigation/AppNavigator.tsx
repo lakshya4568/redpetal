@@ -1,5 +1,5 @@
 import { FontAwesome } from "@expo/vector-icons";
-import { TabBar } from "@mindinventory/react-native-tab-bar-interaction";
+import { TabBar, TabsType } from "@mindinventory/react-native-tab-bar-interaction";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import React from "react";
@@ -14,6 +14,7 @@ import LoginScreen from "../screens/LoginScreen";
 import ProfileScreen from "../screens/ProfileScreen";
 import ResourcesScreen from "../screens/ResourcesScreen";
 import SignupScreen from "../screens/SignupScreen";
+import { black } from "react-native-paper/lib/typescript/styles/themes/v2/colors";
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();

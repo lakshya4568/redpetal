@@ -1,14 +1,35 @@
-import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, ImageBackground, Animated, Platform } from 'react-native';
-import { Button, TextInput, Text } from 'react-native-paper';
-import { useAuth } from '../services/auth';
-import { theme } from '../theme';
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import React, { useEffect, useState } from "react";
+import {
+  Animated,
+  ImageBackground,
+  Platform,
+  StyleSheet,
+  View,
+} from "react-native";
+import { Button, Text, TextInput } from "react-native-paper";
+import { useAuth } from "../services/auth";
+import { theme } from "../theme";
 
-const BACKGROUND_IMAGE = require('../../assets/images/floral-background.png');
+const BACKGROUND_IMAGE = require("../../assets/images/floral-background.png");
 
-export default function LoginScreen({ navigation }) {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+type RootStackParamList = {
+  Login: undefined;
+  Signup: undefined;
+};
+
+type LoginScreenNavigationProp = NativeStackNavigationProp<
+  RootStackParamList,
+  "Login"
+>;
+
+interface LoginScreenProps {
+  navigation: LoginScreenNavigationProp;
+}
+
+export default function LoginScreen({ navigation }: LoginScreenProps) {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const { login } = useAuth();
   const [fadeAnim] = useState(new Animated.Value(0));
 
@@ -18,7 +39,7 @@ export default function LoginScreen({ navigation }) {
       duration: 1000,
       useNativeDriver: true,
     }).start();
-  }, []);
+  }, [fadeAnim]);
 
   return (
     <ImageBackground source={BACKGROUND_IMAGE} style={styles.background}>
@@ -43,7 +64,10 @@ export default function LoginScreen({ navigation }) {
           <Button mode="contained" onPress={login} style={styles.button}>
             Login
           </Button>
-          <Button onPress={() => navigation.navigate('Signup')} style={styles.button}>
+          <Button
+            onPress={() => navigation.navigate("Signup")}
+            style={styles.button}
+          >
             Go to Signup
           </Button>
         </Animated.View>
@@ -55,28 +79,28 @@ export default function LoginScreen({ navigation }) {
 const styles = StyleSheet.create({
   background: {
     flex: 1,
-    resizeMode: 'cover',
+    resizeMode: "cover",
   },
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.8)',
-    justifyContent: 'center',
+    backgroundColor: "rgba(255, 255, 255, 0.8)",
+    justifyContent: "center",
     padding: theme.spacing.medium,
   },
   formContainer: {
-    width: Platform.OS === 'web' ? '50%' : '100%',
-    alignSelf: 'center',
+    width: Platform.OS === "web" ? "50%" : "100%",
+    alignSelf: "center",
   },
   title: {
     fontSize: 64,
     fontFamily: theme.fonts.cursive,
     color: theme.colors.primary,
-    textAlign: 'center',
+    textAlign: "center",
     marginBottom: theme.spacing.large,
   },
   input: {
     marginBottom: theme.spacing.medium,
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    backgroundColor: "rgba(255, 255, 255, 0.9)",
   },
   button: {
     marginTop: theme.spacing.small,
