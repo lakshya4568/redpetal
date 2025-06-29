@@ -1,18 +1,6 @@
-import { useRouter } from "expo-router";
-import { Button, Text, View } from "react-native";
+import React from 'react';
+import RootLayout from './_layout';
 
-export default function Index() {
-  const router = useRouter();
-  return (
-    <View
-      style={{
-        flex: 1,
-        justifyContent: "center",
-        alignItems: "center",
-      }}
-    >
-      <Text>Edit app/index.tsx to edit this screen.</Text>
-      <Button title="Go to Login" onPress={() => router.push("/loginForm")} />
-    </View>
-  );
+export default function App() {
+  return <RootLayout />;
 }
