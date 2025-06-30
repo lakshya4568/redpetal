@@ -1,8 +1,9 @@
-import {router } from 'expo-router';
+import { router } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
   Animated,
   ImageBackground,
+  KeyboardAvoidingView,
   Platform,
   StyleSheet,
   View,
@@ -33,36 +34,50 @@ export default function LoginScreen() {
   }, [fadeAnim]);
 
   return (
-    <ImageBackground source={BACKGROUND_IMAGE} style={styles.background}>
-      <View style={styles.overlay}>
-        <Text style={styles.title}>RedPetal</Text>
-        <Animated.View style={[styles.formContainer, { opacity: fadeAnim }]}>
-          <TextInput
-            label="Email"
-            value={email}
-            onChangeText={setEmail}
-            style={styles.input}
-            theme={{ colors: { primary: theme.colors.primary } }}
-          />
-          <TextInput
-            label="Password"
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry
-            style={styles.input}
-            theme={{ colors: { primary: theme.colors.primary } }}
-          />
-          <Button mode="contained" onPress={handleLogin} style={styles.button}>
-            Login
-          </Button>
-          <Button
-            onPress={() => router.push("/auth/signup")}
-            style={styles.button}
-          >
-            Go to Signup
-          </Button>
-        </Animated.View>
-      </View>
+    <ImageBackground
+      source={BACKGROUND_IMAGE}
+      style={styles.background}
+      imageStyle={{ opacity: 0.7 }} // Reduce opacity of the background image
+    >
+      <KeyboardAvoidingView
+        behavior="padding"
+        keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 0}
+        style={{ flex: 1, justifyContent: "center" }}
+      >
+        <View style={styles.overlay}>
+          <Text style={styles.title}>RedPetal</Text>
+          <Animated.View style={[styles.formContainer, { opacity: fadeAnim }]}>
+            <TextInput
+              label="Email"
+              value={email}
+              onChangeText={setEmail}
+              style={styles.input}
+              theme={{ colors: { primary: theme.colors.primary } }}
+            />
+            <TextInput
+              label="Password"
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry
+              style={styles.input}
+              theme={{ colors: { primary: theme.colors.primary } }}
+            />
+            <Button
+              mode="contained"
+              onPress={handleLogin}
+              style={styles.button}
+            >
+              Login
+            </Button>
+            <Button
+              onPress={() => router.push("/auth/signup")}
+              style={styles.button}
+            >
+              Go to Signup
+            </Button>
+          </Animated.View>
+        </View>
+      </KeyboardAvoidingView>
     </ImageBackground>
   );
 }
@@ -71,6 +86,7 @@ const styles = StyleSheet.create({
   background: {
     flex: 1,
     resizeMode: "cover",
+    // Add opacity to the background image using ImageBackground's imageStyle prop
   },
   overlay: {
     flex: 1,

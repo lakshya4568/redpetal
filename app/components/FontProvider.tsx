@@ -12,8 +12,7 @@ interface FontProviderProps {
 
 const FontProvider: React.FC<FontProviderProps> = ({ children }) => {
   const [fontsLoaded] = useFonts({
-    "GreatVibes-Regular": require("../../assets/fonts/GreatVibes-Regular.ttf"),
-    "SpaceMono-Regular": require("../../assets/fonts/SpaceMono-Regular.ttf"),
+    "Poppins-Regular": require("../../assets/fonts/Poppins-Regular.ttf"),
   });
   const [appReady, setAppReady] = useState(false);
   const [fontError, setFontError] = useState<null | string>(null);

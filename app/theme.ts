@@ -70,19 +70,19 @@ export const colorPalettes = {
 
 // Font Configuration with fallbacks
 export const fonts = {
-  // Title/Logo fonts - Great Vibes (elegant script)
+  // Title/Logo fonts - Poppins (modern sans-serif)
   title: {
     family: Platform.select({
-      ios: "GreatVibes-Regular",
-      android: "GreatVibes-Regular",
-      web: "Great Vibes, cursive",
-      default: "GreatVibes-Regular",
+      ios: "Poppins-Regular",
+      android: "Poppins-Regular",
+      web: "Poppins, sans-serif",
+      default: "Poppins-Regular",
     }),
     fallback: Platform.select({
-      ios: "Georgia",
-      android: "serif",
-      web: "Georgia, serif",
-      default: "serif",
+      ios: "Helvetica Neue",
+      android: "sans-serif",
+      web: "Arial, sans-serif",
+      default: "sans-serif",
     }),
   },
   // Subtitle fonts - Use system fonts for now
@@ -100,13 +100,13 @@ export const fonts = {
       default: "sans-serif",
     }),
   },
-  // Body text fonts - Use system fonts for now
+  // Body text fonts - Poppins (modern sans-serif)
   body: {
     family: Platform.select({
-      ios: "SF Pro Text",
-      android: "Roboto",
-      web: "system-ui, -apple-system, sans-serif",
-      default: "System",
+      ios: "Poppins-Regular",
+      android: "Poppins-Regular",
+      web: "Poppins, sans-serif",
+      default: "Poppins-Regular",
     }),
     fallback: Platform.select({
       ios: "Helvetica Neue",
