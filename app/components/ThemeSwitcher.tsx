@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import {
+  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
@@ -22,129 +23,118 @@ export default function ThemeSwitcher({ onThemeChange }: ThemeSwitcherProps) {
   };
 
   const themeOptions = [
-    {
-      key: "blushPink" as const,
-      name: "Blush Pink",
-      description: "Warm and friendly",
-      color: "#F7CAC9",
-    },
-    {
-      key: "roseRed" as const,
-      name: "Rose Red",
-      description: "Feminine and modern",
-      color: "#E63946",
-    },
-    {
-      key: "terracotta" as const,
-      name: "Terracotta",
-      description: "Natural and earthy",
-      color: "#E06E5A",
-    },
-    {
-      key: "dustyMauve" as const,
-      name: "Dusty Mauve",
-      description: "Soothing and mature",
-      color: "#D8A7B1",
-    },
+    { key: "blushPink", name: "Blush Pink", color: "#F7CAC9" },
+    { key: "roseRed", name: "Rose Red", color: "#E63946" },
+    { key: "terracotta", name: "Terracotta", color: "#E06E5A" },
+    { key: "dustyMauve", name: "Dusty Mauve", color: "#D8A7B1" },
   ];
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Choose Your Theme</Text>
-      <Text style={styles.subtitle}>
-        Pick a color palette that matches your style
-      </Text>
-
+    <SafeAreaView style={styles.safeArea}>
       <ScrollView
-        style={styles.optionsContainer}
-        showsVerticalScrollIndicator={false}
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContentContainer}
       >
-        {themeOptions.map((option) => (
-          <TouchableOpacity
-            key={option.key}
-            style={[styles.themeOption, { borderColor: option.color }]}
-            onPress={() => handleThemeSwitch(option.key)}
-          >
-            <View
-              style={[styles.colorPreview, { backgroundColor: option.color }]}
-            />
-            <View style={styles.themeInfo}>
+        {/* Header */}
+        <View style={styles.headerContainer}>
+          <Text style={styles.title}>Choose Your Theme</Text>
+          <Text style={styles.subtitle}>
+            Pick a color palette that matches your style
+          </Text>
+        </View>
+
+        {/* Theme Options Grid */}
+        <View style={styles.optionsContainer}>
+          {themeOptions.map((option) => (
+            <TouchableOpacity
+              key={option.key}
+              style={[styles.themeOption, { borderColor: option.color }]}
+              onPress={() => handleThemeSwitch(option.key)}
+            >
+              <View
+                style={[styles.colorPreview, { backgroundColor: option.color }]}
+              />
               <Text style={styles.themeName}>{option.name}</Text>
-              <Text style={styles.themeDescription}>{option.description}</Text>
-            </View>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
+            </TouchableOpacity>
+          ))}
+        </View>
 
-      <View style={styles.previewContainer}>
-        <Text style={styles.previewTitle}>Typography Preview</Text>
-        <Text
-          style={[styles.brandText, { color: currentTheme.colors.primary }]}
-        >
-          RedPetal
-        </Text>
-        <Text
-          style={[styles.headlineText, { color: currentTheme.colors.text }]}
-        >
-          A gentle touch for Period wellness
-        </Text>
-        <Text
-          style={[
-            styles.bodyText,
-            { color: currentTheme.colors.textSecondary },
-          ]}
-        >
-          This is how your body text will look with the selected theme. Clean,
-          readable, and perfectly styled.
-        </Text>
+        {/* Typography Preview Card */}
+        <View style={styles.previewContainer}>
+          <Text style={styles.previewTitle}>Typography Preview</Text>
 
-        <View style={styles.buttonPreview}>
-          <View
-            style={[
-              styles.primaryButton,
-              { backgroundColor: currentTheme.colors.primary },
-            ]}
-          >
+          <View style={styles.previewContent}>
+            <Text
+              style={[styles.brandText, { color: currentTheme.colors.primary }]}
+            >
+              RedPetal
+            </Text>
+            <Text
+              style={[styles.headlineText, { color: currentTheme.colors.text }]}
+            >
+              A gentle touch for Period wellness
+            </Text>
             <Text
               style={[
-                styles.buttonText,
-                { color: currentTheme.colors.textOnPrimary },
+                styles.bodyText,
+                { color: currentTheme.colors.textSecondary },
               ]}
             >
-              Apply
+              This is how your body text will look with the selected theme.
             </Text>
           </View>
-          <View
-            style={[
-              styles.secondaryButton,
-              {
-                borderColor: currentTheme.colors.primary,
-                backgroundColor: "transparent",
-              },
-            ]}
-          >
-            <Text
+
+          <View style={styles.buttonPreview}>
+            <TouchableOpacity
               style={[
-                styles.buttonText,
-                { color: currentTheme.colors.primary },
+                styles.primaryButton,
+                { backgroundColor: currentTheme.colors.primary },
               ]}
             >
-              Remove
-            </Text>
+              <Text
+                style={[
+                  styles.buttonText,
+                  { color: currentTheme.colors.textOnPrimary },
+                ]}
+              >
+                Apply
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[
+                styles.secondaryButton,
+                { borderColor: currentTheme.colors.primary },
+              ]}
+            >
+              <Text
+                style={[
+                  styles.buttonText,
+                  { color: currentTheme.colors.primary },
+                ]}
+              >
+                Remove
+              </Text>
+            </TouchableOpacity>
           </View>
         </View>
-      </View>
-    </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  safeArea: {
     flex: 1,
     backgroundColor: theme.colors.background,
-    paddingHorizontal: theme.spacing.md,
-    paddingTop: theme.spacing.md,
-    paddingBottom: theme.spacing.md,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContentContainer: {
+    padding: theme.spacing.md,
+  },
+  headerContainer: {
+    marginBottom: theme.spacing.xl,
   },
   title: {
     ...theme.typography.headlineLarge,
@@ -156,52 +146,48 @@ const styles = StyleSheet.create({
     ...theme.typography.bodyLarge,
     color: theme.colors.textSecondary,
     textAlign: "center",
-    marginBottom: theme.spacing.xl,
   },
   optionsContainer: {
-    marginBottom: theme.spacing.md,
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
+    marginBottom: theme.spacing.xl,
   },
   themeOption: {
-    flexDirection: "row",
-    alignItems: "center",
+    width: "48.5%", // Use percentage for responsive grid
     backgroundColor: theme.colors.surface,
-    borderRadius: theme.borderRadius.xxxl,
+    borderRadius: theme.borderRadius.lg,
+    padding: theme.spacing.md,
+    alignItems: "center",
     borderWidth: 2,
-    paddingVertical: theme.spacing.md,
-    paddingHorizontal: theme.spacing.md,
-    marginBottom: theme.spacing.sm,
+    marginBottom: theme.spacing.md,
     ...theme.shadows.sm,
   },
   colorPreview: {
     width: 40,
     height: 40,
     borderRadius: theme.borderRadius.round,
-    marginRight: theme.spacing.md,
-  },
-  themeInfo: {
-    flex: 1,
+    marginBottom: theme.spacing.md,
   },
   themeName: {
     ...theme.typography.titleMedium,
     color: theme.colors.text,
-    marginBottom: theme.spacing.xs,
-  },
-  themeDescription: {
-    ...theme.typography.bodyMedium,
-    color: theme.colors.textMuted,
   },
   previewContainer: {
     backgroundColor: theme.colors.surface,
-    borderRadius: theme.borderRadius.xxl,
-    paddingVertical: theme.spacing.sm,
-    paddingHorizontal: theme.spacing.sm,
+    borderRadius: theme.borderRadius.xl,
+    padding: theme.spacing.lg,
     ...theme.shadows.md,
   },
   previewTitle: {
     ...theme.typography.titleLarge,
     color: theme.colors.text,
-    marginBottom: theme.spacing.lg,
     textAlign: "center",
+    marginBottom: theme.spacing.lg,
+  },
+  previewContent: {
+    alignItems: "center",
+    marginBottom: theme.spacing.xl,
   },
   brandText: {
     ...theme.typography.brand,
@@ -216,7 +202,6 @@ const styles = StyleSheet.create({
   bodyText: {
     ...theme.typography.bodyMedium,
     textAlign: "center",
-    marginBottom: theme.spacing.lg,
     lineHeight: 22,
   },
   buttonPreview: {
@@ -225,18 +210,16 @@ const styles = StyleSheet.create({
     gap: theme.spacing.md,
   },
   primaryButton: {
-    paddingHorizontal: theme.spacing.sm,
-    paddingVertical: theme.spacing.sm,
-    borderRadius: theme.borderRadius.xxl,
     flex: 1,
+    paddingVertical: theme.spacing.md,
+    borderRadius: theme.borderRadius.xxl,
     alignItems: "center",
   },
   secondaryButton: {
-    paddingHorizontal: theme.spacing.sm,
-    paddingVertical: theme.spacing.sm,
+    flex: 1,
+    paddingVertical: theme.spacing.md,
     borderRadius: theme.borderRadius.xxl,
     borderWidth: 1,
-    flex: 1,
     alignItems: "center",
   },
   buttonText: {
