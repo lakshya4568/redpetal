@@ -68,7 +68,7 @@ export default function ThemeSwitcher({ onThemeChange }: ThemeSwitcherProps) {
             <Text
               style={[styles.headlineText, { color: currentTheme.colors.text }]}
             >
-              A gentle touch for Period wellness
+              A gentle touch for{"\n"}Period wellness
             </Text>
             <Text
               style={[
@@ -127,6 +127,7 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: theme.spacing.md,
     justifyContent: "space-between",
+    alignItems: "center", // Center everything horizontally
   },
   headerContainer: {
     marginBottom: theme.spacing.md,
@@ -148,12 +149,12 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     flexWrap: "wrap",
     justifyContent: "space-between",
-    marginBottom: theme.spacing.md,
+    marginBottom: theme.spacing.sm, // Reduce space between palette and preview
   },
   themeOption: {
     width: "48.5%",
     backgroundColor: theme.colors.surface,
-    borderRadius: theme.borderRadius.lg,
+    borderRadius: theme.borderRadius.xxl,
     padding: theme.spacing.sm,
     alignItems: "center",
     borderWidth: 2,
@@ -173,8 +174,12 @@ const styles = StyleSheet.create({
   },
   previewContainer: {
     backgroundColor: theme.colors.surface,
-    borderRadius: theme.borderRadius.xl,
-    padding: theme.spacing.md,
+    borderRadius: theme.borderRadius.xxxl,
+    padding: theme.spacing.xl, // More padding for larger look
+    minWidth: 320,
+    minHeight: 220,
+    alignSelf: "center",
+    width: "100%",
     ...theme.shadows.md,
   },
   previewTitle: {
@@ -186,25 +191,29 @@ const styles = StyleSheet.create({
   },
   previewContent: {
     alignItems: "center",
-    marginBottom: theme.spacing.md,
+    justifyContent: "center",
+    marginBottom: theme.spacing.lg,
   },
   brandText: {
     ...theme.typography.brand,
     fontSize: 36,
     textAlign: "center",
-    marginBottom: theme.spacing.sm,
+    marginBottom: 8,
+    lineHeight: 49, // 1.35x font size
   },
   headlineText: {
     ...theme.typography.headlineMedium,
     fontSize: 18,
     textAlign: "center",
-    marginBottom: theme.spacing.sm,
+    marginBottom: 8,
+    lineHeight: 24, // 1.35x font size
   },
   bodyText: {
     ...theme.typography.bodyMedium,
     fontSize: 14,
     textAlign: "center",
-    lineHeight: 20,
+    lineHeight: 19, // 1.35x font size
+    marginBottom: 0,
   },
   buttonPreview: {
     flexDirection: "row",
