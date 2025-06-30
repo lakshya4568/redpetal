@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import {
   SafeAreaView,
-  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -22,7 +21,7 @@ export default function ThemeSwitcher({ onThemeChange }: ThemeSwitcherProps) {
     onThemeChange?.(newTheme);
   };
 
-  const themeOptions = [
+  const themeOptions: { key: keyof typeof colorPalettes; name: string; color: string }[] = [
     { key: "blushPink", name: "Blush Pink", color: "#F7CAC9" },
     { key: "roseRed", name: "Rose Red", color: "#E63946" },
     { key: "terracotta", name: "Terracotta", color: "#E06E5A" },
@@ -31,10 +30,7 @@ export default function ThemeSwitcher({ onThemeChange }: ThemeSwitcherProps) {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={styles.scrollContentContainer}
-      >
+      <View style={styles.container}>
         {/* Header */}
         <View style={styles.headerContainer}>
           <Text style={styles.title}>Choose Your Theme</Text>
@@ -117,7 +113,7 @@ export default function ThemeSwitcher({ onThemeChange }: ThemeSwitcherProps) {
             </TouchableOpacity>
           </View>
         </View>
-      </ScrollView>
+      </View>
     </SafeAreaView>
   );
 }
@@ -127,23 +123,24 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: theme.colors.background,
   },
-  scrollView: {
+  container: {
     flex: 1,
-  },
-  scrollContentContainer: {
     padding: theme.spacing.md,
+    justifyContent: "space-between",
   },
   headerContainer: {
-    marginBottom: theme.spacing.xl,
+    marginBottom: theme.spacing.md,
   },
   title: {
     ...theme.typography.headlineLarge,
+    fontSize: 28,
     color: theme.colors.text,
     textAlign: "center",
-    marginBottom: theme.spacing.sm,
+    marginBottom: theme.spacing.xs,
   },
   subtitle: {
     ...theme.typography.bodyLarge,
+    fontSize: 16,
     color: theme.colors.textSecondary,
     textAlign: "center",
   },
@@ -151,78 +148,84 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     flexWrap: "wrap",
     justifyContent: "space-between",
-    marginBottom: theme.spacing.xl,
+    marginBottom: theme.spacing.md,
   },
   themeOption: {
-    width: "48.5%", // Use percentage for responsive grid
+    width: "48.5%",
     backgroundColor: theme.colors.surface,
     borderRadius: theme.borderRadius.lg,
-    padding: theme.spacing.md,
+    padding: theme.spacing.sm,
     alignItems: "center",
     borderWidth: 2,
-    marginBottom: theme.spacing.md,
+    marginBottom: theme.spacing.sm,
     ...theme.shadows.sm,
   },
   colorPreview: {
-    width: 40,
-    height: 40,
+    width: 30,
+    height: 30,
     borderRadius: theme.borderRadius.round,
-    marginBottom: theme.spacing.md,
+    marginBottom: theme.spacing.sm,
   },
   themeName: {
     ...theme.typography.titleMedium,
+    fontSize: 14,
     color: theme.colors.text,
   },
   previewContainer: {
     backgroundColor: theme.colors.surface,
     borderRadius: theme.borderRadius.xl,
-    padding: theme.spacing.lg,
+    padding: theme.spacing.md,
     ...theme.shadows.md,
   },
   previewTitle: {
     ...theme.typography.titleLarge,
+    fontSize: 20,
     color: theme.colors.text,
     textAlign: "center",
-    marginBottom: theme.spacing.lg,
+    marginBottom: theme.spacing.md,
   },
   previewContent: {
     alignItems: "center",
-    marginBottom: theme.spacing.xl,
+    marginBottom: theme.spacing.md,
   },
   brandText: {
     ...theme.typography.brand,
+    fontSize: 36,
     textAlign: "center",
-    marginBottom: theme.spacing.md,
+    marginBottom: theme.spacing.sm,
   },
   headlineText: {
     ...theme.typography.headlineMedium,
+    fontSize: 18,
     textAlign: "center",
-    marginBottom: theme.spacing.md,
+    marginBottom: theme.spacing.sm,
   },
   bodyText: {
     ...theme.typography.bodyMedium,
+    fontSize: 14,
     textAlign: "center",
-    lineHeight: 22,
+    lineHeight: 20,
   },
   buttonPreview: {
     flexDirection: "row",
     justifyContent: "space-around",
-    gap: theme.spacing.md,
+    gap: theme.spacing.sm,
   },
   primaryButton: {
     flex: 1,
-    paddingVertical: theme.spacing.md,
+    paddingVertical: theme.spacing.sm,
     borderRadius: theme.borderRadius.xxl,
     alignItems: "center",
   },
   secondaryButton: {
     flex: 1,
-    paddingVertical: theme.spacing.md,
+    paddingVertical: theme.spacing.sm,
     borderRadius: theme.borderRadius.xxl,
     borderWidth: 1,
     alignItems: "center",
   },
   buttonText: {
     ...theme.typography.button,
+    fontSize: 14,
   },
 });
