@@ -86,7 +86,7 @@ export default function ThemeSwitcher({ onThemeChange }: ThemeSwitcherProps) {
         <Text
           style={[styles.headlineText, { color: currentTheme.colors.text }]}
         >
-          Beautiful Headlines
+          A gentle touch for Period wellness
         </Text>
         <Text
           style={[
@@ -111,7 +111,7 @@ export default function ThemeSwitcher({ onThemeChange }: ThemeSwitcherProps) {
                 { color: currentTheme.colors.textOnPrimary },
               ]}
             >
-              Primary Button
+              Apply
             </Text>
           </View>
           <View
@@ -129,7 +129,7 @@ export default function ThemeSwitcher({ onThemeChange }: ThemeSwitcherProps) {
                 { color: currentTheme.colors.primary },
               ]}
             >
-              Secondary
+              Remove
             </Text>
           </View>
         </View>
@@ -142,7 +142,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: theme.colors.background,
-    padding: theme.spacing.lg,
+    paddingHorizontal: theme.spacing.md,
+    paddingTop: theme.spacing.md,
+    paddingBottom: theme.spacing.md,
   },
   title: {
     ...theme.typography.headlineLarge,
@@ -157,17 +159,17 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.xl,
   },
   optionsContainer: {
-    flex: 1,
-    marginBottom: theme.spacing.lg,
+    marginBottom: theme.spacing.md,
   },
   themeOption: {
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: theme.colors.surface,
-    borderRadius: theme.borderRadius.lg,
+    borderRadius: theme.borderRadius.xxxl,
     borderWidth: 2,
-    padding: theme.spacing.lg,
-    marginBottom: theme.spacing.md,
+    paddingVertical: theme.spacing.md,
+    paddingHorizontal: theme.spacing.md,
+    marginBottom: theme.spacing.sm,
     ...theme.shadows.sm,
   },
   colorPreview: {
@@ -190,8 +192,9 @@ const styles = StyleSheet.create({
   },
   previewContainer: {
     backgroundColor: theme.colors.surface,
-    borderRadius: theme.borderRadius.xl,
-    padding: theme.spacing.xl,
+    borderRadius: theme.borderRadius.xxl,
+    paddingVertical: theme.spacing.sm,
+    paddingHorizontal: theme.spacing.sm,
     ...theme.shadows.md,
   },
   previewTitle: {
@@ -222,16 +225,16 @@ const styles = StyleSheet.create({
     gap: theme.spacing.md,
   },
   primaryButton: {
-    paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.md,
-    borderRadius: theme.borderRadius.md,
+    paddingHorizontal: theme.spacing.sm,
+    paddingVertical: theme.spacing.sm,
+    borderRadius: theme.borderRadius.xxl,
     flex: 1,
     alignItems: "center",
   },
   secondaryButton: {
-    paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.md,
-    borderRadius: theme.borderRadius.md,
+    paddingHorizontal: theme.spacing.sm,
+    paddingVertical: theme.spacing.sm,
+    borderRadius: theme.borderRadius.xxl,
     borderWidth: 1,
     flex: 1,
     alignItems: "center",

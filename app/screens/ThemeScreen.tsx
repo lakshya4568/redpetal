@@ -15,7 +15,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: theme.colors.background,
-    paddingTop: Platform.OS === "ios" ? 50 : 30,
-    paddingHorizontal: theme.spacing.lg,
+    paddingTop: Platform.OS === "ios" ? 36 : 20,
+    paddingHorizontal: theme.spacing.md,
   },
 });
