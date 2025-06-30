@@ -1,3 +1,4 @@
+import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
   SafeAreaView,
@@ -16,6 +17,7 @@ interface ThemeSwitcherProps {
 export default function ThemeSwitcher({ onThemeChange }: ThemeSwitcherProps) {
   const { palette, setPalette, resetPalette, theme } = useThemeContext();
   const [selectedPalette, setSelectedPalette] = useState(palette);
+  const router = useRouter();
 
   const handleThemeSwitch = (paletteName: keyof typeof colorPalettes) => {
     setSelectedPalette(paletteName);
@@ -24,6 +26,7 @@ export default function ThemeSwitcher({ onThemeChange }: ThemeSwitcherProps) {
   const handleApply = () => {
     setPalette(selectedPalette);
     onThemeChange?.(theme);
+    router.push("/(tabs)");
   };
 
   const handleRemove = () => {

@@ -8,8 +8,8 @@ import {
   View,
 } from "react-native";
 import { Button, Text, TextInput } from "react-native-paper";
+import { useThemeContext } from "../components/ThemeContext";
 import { useAuth } from "../services/auth";
-import { theme } from "../theme";
 
 const BACKGROUND_IMAGE = require("../../assets/images/floral-background.png");
 
@@ -32,6 +32,7 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
   const [password, setPassword] = useState("");
   const { login } = useAuth();
   const [fadeAnim] = useState(new Animated.Value(0));
+  const { theme } = useThemeContext();
 
   useEffect(() => {
     Animated.timing(fadeAnim, {
@@ -40,6 +41,8 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
       useNativeDriver: true,
     }).start();
   }, [fadeAnim]);
+
+  const styles = createStyles(theme);
 
   return (
     <ImageBackground source={BACKGROUND_IMAGE} style={styles.background}>
@@ -76,39 +79,40 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
   );
 }
 
-const styles = StyleSheet.create({
-  background: {
-    flex: 1,
-    resizeMode: "cover",
-  },
-  overlay: {
-    flex: 1,
-    backgroundColor: theme.colors.overlay,
-    justifyContent: "center",
-    padding: theme.spacing.lg,
-  },
-  formContainer: {
-    width: Platform.OS === "web" ? "50%" : "100%",
-    alignSelf: "center",
-    backgroundColor: theme.colors.surface,
-    borderRadius: theme.borderRadius.xl,
-    padding: theme.spacing.xl,
-    ...theme.shadows.lg,
-  },
-  title: {
-    ...theme.typography.brand,
-    color: theme.colors.primary,
-    textAlign: "center",
-    marginBottom: theme.spacing.xxl,
-  },
-  input: {
-    marginBottom: theme.spacing.lg,
-    backgroundColor: theme.colors.surface,
-  },
-  button: {
-    marginTop: theme.spacing.md,
-    backgroundColor: theme.colors.primary,
-    borderRadius: theme.borderRadius.md,
-    color: theme.colors.accent, // Added text color for the button
-  },
-});
+const createStyles = (theme: any) =>
+  StyleSheet.create({
+    background: {
+      flex: 1,
+      resizeMode: "cover",
+    },
+    overlay: {
+      flex: 1,
+      backgroundColor: theme.colors.overlay,
+      justifyContent: "center",
+      padding: theme.spacing.lg,
+    },
+    formContainer: {
+      width: Platform.OS === "web" ? "50%" : "100%",
+      alignSelf: "center",
+      backgroundColor: theme.colors.surface,
+      borderRadius: theme.borderRadius.xl,
+      padding: theme.spacing.xl,
+      ...theme.shadows.lg,
+    },
+    title: {
+      ...theme.typography.brand,
+      color: theme.colors.primary,
+      textAlign: "center",
+      marginBottom: theme.spacing.xxl,
+    },
+    input: {
+      marginBottom: theme.spacing.lg,
+      backgroundColor: theme.colors.surface,
+    },
+    button: {
+      marginTop: theme.spacing.md,
+      backgroundColor: theme.colors.primary,
+      borderRadius: theme.borderRadius.md,
+      color: theme.colors.accent, // Added text color for the button
+    },
+  });

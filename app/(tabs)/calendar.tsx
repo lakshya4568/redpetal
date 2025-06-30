@@ -1,12 +1,14 @@
+
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import React, { useEffect, useState } from "react";
 import { Animated, Platform, StyleSheet, View } from "react-native";
 import { Calendar } from "react-native-calendars";
 import { Text } from "react-native-paper";
 import LogPeriodModal from "../components/LogPeriodModal";
-import { theme } from "../theme";
+import { useThemeContext } from "../components/ThemeContext";
 
 export default function CalendarScreen() {
+  const { theme } = useThemeContext();
   const [selectedDates, setSelectedDates] = useState<{ [key: string]: any }>(
     {}
   );
@@ -39,12 +41,30 @@ export default function CalendarScreen() {
       }
     };
     loadSavedData();
-  }, [fadeAnim]);
+  }, [fadeAnim, theme.colors.primary]);
 
   const onDayPress = (day: { dateString: string }) => {
     setSelectedDate(day.dateString);
     setModalVisible(true);
   };
+
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.colors.background,
+      padding: theme.spacing.lg,
+    },
+    title: {
+      ...theme.typography.brand,
+      color: theme.colors.primary,
+      textAlign: "center",
+      marginBottom: theme.spacing.lg,
+    },
+    calendarContainer: {
+      width: Platform.OS === "web" ? "70%" : "100%",
+      alignSelf: "center",
+    },
+  });
 
   return (
     <View style={styles.container}>
@@ -77,20 +97,3 @@ export default function CalendarScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.background,
-    padding: theme.spacing.lg,
-  },
-  title: {
-    ...theme.typography.brand,
-    color: theme.colors.primary,
-    textAlign: "center",
-    marginBottom: theme.spacing.lg,
-  },
-  calendarContainer: {
-    width: Platform.OS === "web" ? "70%" : "100%",
-    alignSelf: "center",
-  },
-});

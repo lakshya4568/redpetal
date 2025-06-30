@@ -1,6 +1,12 @@
-import React, { createContext, useContext, useState, useEffect, useMemo } from "react";
-import { Appearance } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
+import { Appearance } from "react-native";
 import { colorPalettes, switchTheme } from "../theme";
 
 // Define the shape of the context
@@ -15,8 +21,10 @@ interface ThemeContextType {
 const ThemeContext = createContext<ThemeContextType>({
   theme: switchTheme("blushPink"),
   palette: "blushPink",
-  setPalette: () => console.warn("setPalette called outside of a ThemeProvider"),
-  resetPalette: () => console.warn("resetPalette called outside of a ThemeProvider"),
+  setPalette: () =>
+    console.warn("setPalette called outside of a ThemeProvider"),
+  resetPalette: () =>
+    console.warn("resetPalette called outside of a ThemeProvider"),
 });
 
 // Custom hook to use the theme context
@@ -24,7 +32,8 @@ export const useThemeContext = () => useContext(ThemeContext);
 
 // Provider component
 export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
-  const [palette, setPalette] = useState<keyof typeof colorPalettes>("blushPink");
+  const [palette, setPalette] =
+    useState<keyof typeof colorPalettes>("blushPink");
 
   // Load the saved theme from AsyncStorage
   useEffect(() => {
@@ -74,3 +83,5 @@ export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
     </ThemeContext.Provider>
   );
 };
+
+export default ThemeProvider;
