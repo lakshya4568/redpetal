@@ -1,3 +1,4 @@
+
 import { FontAwesome } from "@expo/vector-icons";
 import {
   TabBar,
@@ -6,62 +7,63 @@ import {
 import { Tabs } from 'expo-router';
 import React from "react";
 import { Dimensions } from "react-native";
-import { theme } from "../theme";
-
-const TABS = [
-  {
-    name: "index",
-    activeIcon: (
-      <FontAwesome name="home" color={theme.colors.textOnPrimary} size={25} />
-    ),
-    inactiveIcon: (
-      <FontAwesome name="home" color={theme.colors.textMuted} size={25} />
-    ),
-  },
-  {
-    name: "calendar",
-    activeIcon: (
-      <FontAwesome
-        name="calendar"
-        color={theme.colors.textOnPrimary}
-        size={25}
-      />
-    ),
-    inactiveIcon: (
-      <FontAwesome name="calendar" color={theme.colors.textMuted} size={25} />
-    ),
-  },
-  {
-    name: "community",
-    activeIcon: (
-      <FontAwesome name="users" color={theme.colors.textOnPrimary} size={25} />
-    ),
-    inactiveIcon: (
-      <FontAwesome name="users" color={theme.colors.textMuted} size={25} />
-    ),
-  },
-  {
-    name: "resources",
-    activeIcon: (
-      <FontAwesome name="book" color={theme.colors.textOnPrimary} size={25} />
-    ),
-    inactiveIcon: (
-      <FontAwesome name="book" color={theme.colors.textMuted} size={25} />
-    ),
-  },
-  {
-    name: "profile",
-    activeIcon: (
-      <FontAwesome name="user" color={theme.colors.textOnPrimary} size={25} />
-    ),
-    inactiveIcon: (
-      <FontAwesome name="user" color={theme.colors.textMuted} size={25} />
-    ),
-  },
-];
+import { useThemeContext } from "../components/ThemeContext";
 
 export default function TabLayout() {
+  const { theme } = useThemeContext();
   const windowWidth = Dimensions.get("window").width;
+
+  const TABS = [
+    {
+      name: "index",
+      activeIcon: (
+        <FontAwesome name="home" color={theme.colors.textOnPrimary} size={25} />
+      ),
+      inactiveIcon: (
+        <FontAwesome name="home" color={theme.colors.textMuted} size={25} />
+      ),
+    },
+    {
+      name: "calendar",
+      activeIcon: (
+        <FontAwesome
+          name="calendar"
+          color={theme.colors.textOnPrimary}
+          size={25}
+        />
+      ),
+      inactiveIcon: (
+        <FontAwesome name="calendar" color={theme.colors.textMuted} size={25} />
+      ),
+    },
+    {
+      name: "community",
+      activeIcon: (
+        <FontAwesome name="users" color={theme.colors.textOnPrimary} size={25} />
+      ),
+      inactiveIcon: (
+        <FontAwesome name="users" color={theme.colors.textMuted} size={25} />
+      ),
+    },
+    {
+      name: "resources",
+      activeIcon: (
+        <FontAwesome name="book" color={theme.colors.textOnPrimary} size={25} />
+      ),
+      inactiveIcon: (
+        <FontAwesome name="book" color={theme.colors.textMuted} size={25} />
+      ),
+    },
+    {
+      name: "profile",
+      activeIcon: (
+        <FontAwesome name="user" color={theme.colors.textOnPrimary} size={25} />
+      ),
+      inactiveIcon: (
+        <FontAwesome name="user" color={theme.colors.textMuted} size={25} />
+      ),
+    },
+  ];
 
   return (
     <Tabs
@@ -95,3 +97,4 @@ export default function TabLayout() {
     </Tabs>
   );
 }
+

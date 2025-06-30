@@ -6,19 +6,30 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { colorPalettes, switchTheme, theme } from "../theme";
+import { colorPalettes } from "../theme";
+import { useThemeContext } from "./ThemeContext";
 
 interface ThemeSwitcherProps {
   onThemeChange?: (newTheme: any) => void;
 }
 
 export default function ThemeSwitcher({ onThemeChange }: ThemeSwitcherProps) {
-  const [currentTheme, setCurrentTheme] = useState(theme);
+  const { palette, setPalette, resetPalette, theme } = useThemeContext();
+  const [selectedPalette, setSelectedPalette] = useState(palette);
 
   const handleThemeSwitch = (paletteName: keyof typeof colorPalettes) => {
-    const newTheme = switchTheme(paletteName);
-    setCurrentTheme(newTheme);
-    onThemeChange?.(newTheme);
+    setSelectedPalette(paletteName);
+  };
+
+  const handleApply = () => {
+    setPalette(selectedPalette);
+    onThemeChange?.(theme);
+  };
+
+  const handleRemove = () => {
+    resetPalette();
+    setSelectedPalette("blushPink");
+    onThemeChange?.(theme);
   };
 
   const themeOptions: { key: keyof typeof colorPalettes; name: string; color: string }[] = [
@@ -28,9 +39,11 @@ export default function ThemeSwitcher({ onThemeChange }: ThemeSwitcherProps) {
     { key: "dustyMauve", name: "Dusty Mauve", color: "#D8A7B1" },
   ];
 
+  const styles = getStyles(theme);
+
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <View style={styles.container}>
+    <SafeAreaView style={[styles.safeArea]}>
+      <View style={[styles.container]}>
         {/* Header */}
         <View style={styles.headerContainer}>
           <Text style={styles.title}>Choose Your Theme</Text>
@@ -44,7 +57,11 @@ export default function ThemeSwitcher({ onThemeChange }: ThemeSwitcherProps) {
           {themeOptions.map((option) => (
             <TouchableOpacity
               key={option.key}
-              style={[styles.themeOption, { borderColor: option.color }]}
+              style={[
+                styles.themeOption,
+                { borderColor: option.color },
+                selectedPalette === option.key && { borderWidth: 3 },
+              ]}
               onPress={() => handleThemeSwitch(option.key)}
             >
               <View
@@ -61,19 +78,19 @@ export default function ThemeSwitcher({ onThemeChange }: ThemeSwitcherProps) {
 
           <View style={styles.previewContent}>
             <Text
-              style={[styles.brandText, { color: currentTheme.colors.primary }]}
+              style={[styles.brandText, { color: theme.colors.primary }]}
             >
               RedPetal
             </Text>
             <Text
-              style={[styles.headlineText, { color: currentTheme.colors.text }]}
+              style={[styles.headlineText, { color: theme.colors.text }]}
             >
               A gentle touch for{"\n"}Period wellness
             </Text>
             <Text
               style={[
                 styles.bodyText,
-                { color: currentTheme.colors.textSecondary },
+                { color: theme.colors.textSecondary },
               ]}
             >
               This is how your body text will look with the selected theme.
@@ -84,13 +101,14 @@ export default function ThemeSwitcher({ onThemeChange }: ThemeSwitcherProps) {
             <TouchableOpacity
               style={[
                 styles.primaryButton,
-                { backgroundColor: currentTheme.colors.primary },
+                { backgroundColor: theme.colors.primary },
               ]}
+              onPress={handleApply}
             >
               <Text
                 style={[
                   styles.buttonText,
-                  { color: currentTheme.colors.textOnPrimary },
+                  { color: theme.colors.textOnPrimary },
                 ]}
               >
                 Apply
@@ -99,13 +117,14 @@ export default function ThemeSwitcher({ onThemeChange }: ThemeSwitcherProps) {
             <TouchableOpacity
               style={[
                 styles.secondaryButton,
-                { borderColor: currentTheme.colors.primary },
+                { borderColor: theme.colors.primary },
               ]}
+              onPress={handleRemove}
             >
               <Text
                 style={[
                   styles.buttonText,
-                  { color: currentTheme.colors.primary },
+                  { color: theme.colors.primary },
                 ]}
               >
                 Remove
@@ -118,123 +137,126 @@ export default function ThemeSwitcher({ onThemeChange }: ThemeSwitcherProps) {
   );
 }
 
-const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: theme.colors.background,
-  },
-  container: {
-    flex: 1,
-    padding: theme.spacing.md,
-    justifyContent: "space-between",
-    alignItems: "center", // Center everything horizontally
-  },
-  headerContainer: {
-    marginBottom: theme.spacing.md,
-  },
-  title: {
-    ...theme.typography.headlineLarge,
-    fontSize: 28,
-    color: theme.colors.text,
-    textAlign: "center",
-    marginBottom: theme.spacing.xs,
-  },
-  subtitle: {
-    ...theme.typography.bodyLarge,
-    fontSize: 16,
-    color: theme.colors.textSecondary,
-    textAlign: "center",
-  },
-  optionsContainer: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "space-between",
-    marginBottom: theme.spacing.sm, // Reduce space between palette and preview
-  },
-  themeOption: {
-    width: "48.5%",
-    backgroundColor: theme.colors.surface,
-    borderRadius: theme.borderRadius.xxl,
-    padding: theme.spacing.sm,
-    alignItems: "center",
-    borderWidth: 2,
-    marginBottom: theme.spacing.sm,
-    ...theme.shadows.sm,
-  },
-  colorPreview: {
-    width: 30,
-    height: 30,
-    borderRadius: theme.borderRadius.round,
-    marginBottom: theme.spacing.sm,
-  },
-  themeName: {
-    ...theme.typography.titleMedium,
-    fontSize: 14,
-    color: theme.colors.text,
-  },
-  previewContainer: {
-    backgroundColor: theme.colors.surface,
-    borderRadius: theme.borderRadius.xxxl,
-    padding: theme.spacing.xl, // More padding for larger look
-    minWidth: 320,
-    minHeight: 220,
-    alignSelf: "center",
-    width: "100%",
-    ...theme.shadows.md,
-  },
-  previewTitle: {
-    ...theme.typography.titleLarge,
-    fontSize: 20,
-    color: theme.colors.text,
-    textAlign: "center",
-    marginBottom: theme.spacing.md,
-  },
-  previewContent: {
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: theme.spacing.lg,
-  },
-  brandText: {
-    ...theme.typography.brand,
-    fontSize: 36,
-    textAlign: "center",
-    marginBottom: 8,
-    lineHeight: 49, // 1.35x font size
-  },
-  headlineText: {
-    ...theme.typography.headlineMedium,
-    fontSize: 18,
-    textAlign: "center",
-    marginBottom: 8,
-    lineHeight: 24, // 1.35x font size
-  },
-  bodyText: {
-    ...theme.typography.bodyMedium,
-    fontSize: 14,
-    textAlign: "center",
-    lineHeight: 19, // 1.35x font size
-    marginBottom: 0,
-  },
-  buttonPreview: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-    gap: theme.spacing.sm,
-  },
-  primaryButton: {
-    flex: 1,
-    paddingVertical: theme.spacing.sm,
-    borderRadius: theme.borderRadius.xxl,
-    alignItems: "center",
-  },
-  secondaryButton: {
-    flex: 1,
-    paddingVertical: theme.spacing.sm,
-    borderRadius: theme.borderRadius.xxl,
-    borderWidth: 1,
-    alignItems: "center",
-  },
-  buttonText: {
-    ...theme.typography.button,
-    fontSize: 14,
-  },
-});
+function getStyles(theme: any) {
+  return StyleSheet.create({
+    safeArea: {
+      flex: 1,
+      backgroundColor: theme.colors.background,
+    },
+    container: {
+      flex: 1,
+      padding: 16,
+      justifyContent: "space-between",
+      alignItems: "center",
+      backgroundColor: theme.colors.background,
+    },
+    headerContainer: {
+      marginBottom: theme.spacing.md,
+    },
+    title: {
+      ...theme.typography.headlineLarge,
+      fontSize: 28,
+      color: theme.colors.text,
+      textAlign: "center",
+      marginBottom: theme.spacing.xs,
+    },
+    subtitle: {
+      ...theme.typography.bodyLarge,
+      fontSize: 16,
+      color: theme.colors.textSecondary,
+      textAlign: "center",
+    },
+    optionsContainer: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      justifyContent: "space-between",
+      marginBottom: theme.spacing.sm,
+    },
+    themeOption: {
+      width: "48.5%",
+      backgroundColor: theme.colors.surface,
+      borderRadius: theme.borderRadius.xxl,
+      padding: theme.spacing.sm,
+      alignItems: "center",
+      borderWidth: 2,
+      marginBottom: theme.spacing.sm,
+      ...theme.shadows.sm,
+    },
+    colorPreview: {
+      width: 30,
+      height: 30,
+      borderRadius: theme.borderRadius.round,
+      marginBottom: theme.spacing.sm,
+    },
+    themeName: {
+      ...theme.typography.titleMedium,
+      fontSize: 14,
+      color: theme.colors.text,
+    },
+    previewContainer: {
+      backgroundColor: theme.colors.surface,
+      borderRadius: theme.borderRadius.xxxl,
+      padding: theme.spacing.xl,
+      minWidth: 320,
+      minHeight: 220,
+      alignSelf: "center",
+      width: "100%",
+      ...theme.shadows.md,
+    },
+    previewTitle: {
+      ...theme.typography.titleLarge,
+      fontSize: 20,
+      color: theme.colors.text,
+      textAlign: "center",
+      marginBottom: theme.spacing.md,
+    },
+    previewContent: {
+      alignItems: "center",
+      justifyContent: "center",
+      marginBottom: theme.spacing.lg,
+    },
+    brandText: {
+      ...theme.typography.brand,
+      fontSize: 36,
+      textAlign: "center",
+      marginBottom: 8,
+      lineHeight: 49,
+    },
+    headlineText: {
+      ...theme.typography.headlineMedium,
+      fontSize: 18,
+      textAlign: "center",
+      marginBottom: 8,
+      lineHeight: 24,
+    },
+    bodyText: {
+      ...theme.typography.bodyMedium,
+      fontSize: 14,
+      textAlign: "center",
+      lineHeight: 19,
+      marginBottom: 0,
+    },
+    buttonPreview: {
+      flexDirection: "row",
+      justifyContent: "space-around",
+      gap: theme.spacing.sm,
+    },
+    primaryButton: {
+      flex: 1,
+      paddingVertical: theme.spacing.sm,
+      borderRadius: theme.borderRadius.xxl,
+      alignItems: "center",
+    },
+    secondaryButton: {
+      flex: 1,
+      paddingVertical: theme.spacing.sm,
+      borderRadius: theme.borderRadius.xxl,
+      borderWidth: 1,
+      alignItems: "center",
+    },
+    buttonText: {
+      ...theme.typography.button,
+      fontSize: 14,
+    },
+  });
+}
