@@ -1,8 +1,8 @@
 import { Stack } from 'expo-router';
 import React from "react";
 import { PaperProvider } from "react-native-paper";
-import FontProvider from "./components/FontProvider";
-import AuthProvider from "./services/auth";
+import { FontProvider } from "./components/FontProvider";
+import { AuthProvider } from "./services/auth";
 import { ThemeProvider } from "./components/ThemeContext";
 
 export default function RootLayout() {

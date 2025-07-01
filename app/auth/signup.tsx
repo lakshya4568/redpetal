@@ -1,4 +1,4 @@
-import { router } from 'expo-router';
+import { router } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
   Animated,
@@ -8,8 +8,8 @@ import {
   View,
 } from "react-native";
 import { Button, Text, TextInput } from "react-native-paper";
+import { useThemeContext } from "../components/ThemeContext";
 import { useAuth } from "../services/auth";
-import { theme } from "../theme";
 
 const BACKGROUND_IMAGE = require("../../assets/images/floral-background.png");
 
@@ -17,6 +17,7 @@ export default function SignupScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const { login } = useAuth(); // Using mock login for now
+  const { theme } = useThemeContext();
   const [fadeAnim] = useState(new Animated.Value(0));
 
   const handleSignup = () => {
@@ -33,15 +34,17 @@ export default function SignupScreen() {
   }, [fadeAnim]);
 
   return (
-    <ImageBackground source={BACKGROUND_IMAGE} style={styles.background}>
-      <View style={styles.overlay}>
-        <Text style={styles.title}>RedPetal</Text>
-        <Animated.View style={[styles.formContainer, { opacity: fadeAnim }]}>
+    <ImageBackground source={BACKGROUND_IMAGE} style={styles(theme).background}>
+      <View style={styles(theme).overlay}>
+        <Text style={styles(theme).title}>RedPetal</Text>
+        <Animated.View
+          style={[styles(theme).formContainer, { opacity: fadeAnim }]}
+        >
           <TextInput
             label="Email"
             value={email}
             onChangeText={setEmail}
-            style={styles.input}
+            style={styles(theme).input}
             theme={{ colors: { primary: theme.colors.primary } }}
           />
           <TextInput
@@ -49,15 +52,19 @@ export default function SignupScreen() {
             value={password}
             onChangeText={setPassword}
             secureTextEntry
-            style={styles.input}
+            style={styles(theme).input}
             theme={{ colors: { primary: theme.colors.primary } }}
           />
-          <Button mode="contained" onPress={handleSignup} style={styles.button}>
+          <Button
+            mode="contained"
+            onPress={handleSignup}
+            style={styles(theme).button}
+          >
             Signup
           </Button>
           <Button
             onPress={() => router.push("/auth/login")}
-            style={styles.button}
+            style={styles(theme).button}
           >
             Go to Login
           </Button>
@@ -67,38 +74,39 @@ export default function SignupScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  background: {
-    flex: 1,
-    resizeMode: "cover",
-  },
-  overlay: {
-    flex: 1,
-    backgroundColor: theme.colors.overlay,
-    justifyContent: "center",
-    padding: theme.spacing.lg,
-  },
-  formContainer: {
-    width: Platform.OS === "web" ? "50%" : "100%",
-    alignSelf: "center",
-    backgroundColor: theme.colors.surface,
-    borderRadius: theme.borderRadius.xl,
-    padding: theme.spacing.xl,
-    ...theme.shadows.lg,
-  },
-  title: {
-    ...theme.typography.brand,
-    color: theme.colors.primary,
-    textAlign: "center",
-    marginBottom: theme.spacing.xxl,
-  },
-  input: {
-    marginBottom: theme.spacing.lg,
-    backgroundColor: theme.colors.surface,
-  },
-  button: {
-    marginTop: theme.spacing.md,
-    backgroundColor: theme.colors.primary,
-    borderRadius: theme.borderRadius.md,
-  },
-});
+const styles = (theme: any) =>
+  StyleSheet.create({
+    background: {
+      flex: 1,
+      resizeMode: "cover",
+    },
+    overlay: {
+      flex: 1,
+      backgroundColor: theme.colors.overlay,
+      justifyContent: "center",
+      padding: theme.spacing.lg,
+    },
+    formContainer: {
+      width: Platform.OS === "web" ? "50%" : "100%",
+      alignSelf: "center",
+      backgroundColor: theme.colors.surface,
+      borderRadius: theme.borderRadius.xl,
+      padding: theme.spacing.xl,
+      ...theme.shadows.lg,
+    },
+    title: {
+      ...theme.typography.brand,
+      color: theme.colors.primary,
+      textAlign: "center",
+      marginBottom: theme.spacing.xxl,
+    },
+    input: {
+      marginBottom: theme.spacing.lg,
+      backgroundColor: theme.colors.surface,
+    },
+    button: {
+      marginTop: theme.spacing.md,
+      backgroundColor: theme.colors.primary,
+      borderRadius: theme.borderRadius.md,
+    },
+  });

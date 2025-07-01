@@ -68,50 +68,50 @@ export const colorPalettes = {
   },
 };
 
-// Font Configuration with fallbacks
+// Font Configuration with robust fallbacks
 export const fonts = {
-  // Title/Logo fonts - Great Vibes (elegant script)
+  // Title/Logo fonts - Pacifico (casual script) with system fallbacks
   title: {
     family: Platform.select({
-      ios: "GreatVibes-Regular",
-      android: "GreatVibes-Regular",
-      web: "Great Vibes, cursive",
-      default: "GreatVibes-Regular",
+      ios: "Pacifico-Title",
+      android: "Pacifico-Title",
+      web: "Pacifico, cursive",
+      default: "Pacifico-Title",
     }),
     fallback: Platform.select({
-      ios: "Georgia",
+      ios: "Georgia, serif",
       android: "serif",
-      web: "Georgia, serif",
+      web: "Georgia, Times, serif",
       default: "serif",
     }),
   },
-  // Subtitle fonts - Use system fonts for now
+  // Subtitle fonts - Cookie (decorative script) with system fallbacks
   subtitle: {
     family: Platform.select({
-      ios: "Helvetica Neue",
-      android: "Roboto",
-      web: "system-ui, -apple-system, sans-serif",
-      default: "System",
+      ios: "Cookie-subtitle",
+      android: "Cookie-subtitle",
+      web: "Cookie, cursive",
+      default: "Cookie-subtitle",
     }),
     fallback: Platform.select({
-      ios: "Helvetica",
-      android: "sans-serif",
-      web: "Arial, sans-serif",
+      ios: "SF Pro Display, -apple-system, sans-serif",
+      android: "Roboto, sans-serif",
+      web: "system-ui, -apple-system, sans-serif",
       default: "sans-serif",
     }),
   },
-  // Body text fonts - Use system fonts for now
+  // Body text fonts - OpenSans with system fallbacks
   body: {
     family: Platform.select({
-      ios: "SF Pro Text",
-      android: "Roboto",
-      web: "system-ui, -apple-system, sans-serif",
-      default: "System",
+      ios: "OpenSans-Body",
+      android: "OpenSans-Body",
+      web: "Open Sans, sans-serif",
+      default: "OpenSans-Body",
     }),
     fallback: Platform.select({
-      ios: "Helvetica Neue",
-      android: "sans-serif",
-      web: "Arial, sans-serif",
+      ios: "SF Pro Text, -apple-system, sans-serif",
+      android: "Roboto, sans-serif",
+      web: "system-ui, -apple-system, sans-serif",
       default: "sans-serif",
     }),
   },

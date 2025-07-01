@@ -4,49 +4,181 @@
 
 ### ✅ Working Fonts
 
-- **Great Vibes**: Already available in `assets/fonts/GreatVibes-Regular.ttf`
-- **SpaceMono**: Already available in `assets/fonts/SpaceMono-Regular.ttf`
+- **Pacifico**: Available in `assets/fonts/Pacifico-Title.ttf` - Used for branding/titles
+- **Cookie**: Available in `assets/fonts/Cookie-subtitle.ttf` - Used for decorative subtitles
+- **Open Sans**: Available in `assets/fonts/OpenSans-Body.ttf` - Used for body text
 - **System Fonts**: iOS (SF Pro), Android (Roboto), Web (system-ui)
 
-### 🎯 Target Fonts (To Add Later)
+### 🎯 Font Usage in App
 
-- **Josefin Sans**: Modern geometric sans-serif for headings
-- **Poppins**: Clean and readable sans-serif for body text
+- **Brand/Logo**: Pacifico (casual script font) ✅
+- **Decorative Text**: Cookie (elegant script) ✅
+- **Body Text**: Open Sans (clean and readable) ✅
+- **Fallbacks**: System fonts for reliability ✅
 
 ## Current Theme Implementation
 
 The theme is now set up to use:
 
-1. **Brand/Logo**: Great Vibes (elegant script) ✅
-2. **Headings**: System fonts (Helvetica Neue on iOS, Roboto on Android) ✅
-3. **Body Text**: System fonts (SF Pro Text on iOS, Roboto on Android) ✅
+1. **Brand/Logo**: Pacifico-Title (casual script) ✅
+2. **Subtitles**: Cookie-subtitle (decorative script) ✅
+3. **Body Text**: OpenSans-Body (clean sans-serif) ✅
+4. **Fallbacks**: System fonts (SF Pro on iOS, Roboto on Android) ✅
 
-## How to Add Custom Fonts Later
+## Font Loading Implementation
 
-### Step 1: Download Font Files
+### FontProvider Component
 
-Download TTF/OTF files for:
+The FontProvider component loads your actual fonts with improved error handling:
 
-- Josefin Sans (Regular, Medium, SemiBold, Bold)
-- Poppins (Regular, Medium, SemiBold, Bold)
+```tsx
+// In FontProvider.tsx
+const fontConfig = useMemo((): Record<string, any> => {
+  // For web, don't load custom fonts
+  if (Platform.OS === "web") {
+    return {};
+  }
 
-### Step 2: Add to Assets
-
-Place font files in `/assets/fonts/`:
-
+  // For native platforms, load fonts with error handling
+  try {
+    const config: Record<string, any> = {
+      "Pacifico-Title": require("../../assets/fonts/Pacifico-Title.ttf"),
+      "Cookie-subtitle": require("../../assets/fonts/Cookie-subtitle.ttf"),
+      "OpenSans-Body": require("../../assets/fonts/OpenSans-Body.ttf"),
+    };
+    return config;
+  } catch (error) {
+    console.warn("Font files not found, using system fonts:", error);
+    return {};
+  }
+}, []);
 ```
+
+### Theme Configuration
+
+The theme.ts file has been optimized for better font loading:
+
+```typescript
+export const fonts = {
+  title: {
+    family: Platform.select({
+      ios: "Pacifico-Title",
+      android: "Pacifico-Title",
+      web: "Pacifico, cursive",
+      default: "Pacifico-Title",
+    }),
+  },
+  subtitle: {
+    family: Platform.select({
+      ios: "Cookie-subtitle",
+      android: "Cookie-subtitle",
+      web: "Cookie, cursive",
+      default: "Cookie-subtitle",
+    }),
+  },
+  body: {
+    family: Platform.select({
+      ios: "OpenSans-Body",
+      android: "OpenSans-Body",
+      web: "Open Sans, sans-serif",
+      default: "OpenSans-Body",
+    }),
+  },
+};
+```
+
+## Current Assets Structure
+
+```text
 assets/fonts/
-├── GreatVibes-Regular.ttf          ✅ (already added)
-├── SpaceMono-Regular.ttf           ✅ (already added)
-├── JosefinSans-Regular.ttf         (to add)
-├── JosefinSans-Medium.ttf          (to add)
-├── JosefinSans-SemiBold.ttf        (to add)
-├── JosefinSans-Bold.ttf            (to add)
-├── Poppins-Regular.ttf             (to add)
-├── Poppins-Medium.ttf              (to add)
-├── Poppins-SemiBold.ttf            (to add)
-└── Poppins-Bold.ttf                (to add)
+├── Pacifico-Title.ttf              ✅ (for branding/titles)
+├── Cookie-subtitle.ttf             ✅ (for decorative text)
+├── OpenSans-Body.ttf               ✅ (for body text)
+└── .DS_Store                       (system file)
 ```
+
+## Error Resolution
+
+### Common Font Loading Issues
+
+The error you encountered (`ExpoFontLoader.loadAsync has been rejected`) can be caused by:
+
+1. **Font file corruption**: The font files may be corrupted or incomplete
+2. **Incorrect file format**: Ensure all font files are valid TTF/OTF formats
+3. **Cache issues**: Font cache may need to be cleared
+4. **Platform-specific issues**: Android font loading can be more sensitive
+
+### 🔧 Solutions Applied
+
+1. **Improved Error Handling**: FontProvider now has better error catching
+2. **Reduced Timeout**: Changed from 5 seconds to 3 seconds to fail faster
+3. **Clean Font Names**: Removed font stacks from family names for cleaner loading
+4. **Better Fallbacks**: Improved fallback font configuration
+5. **TypeScript Fixes**: Fixed type issues that could cause loading problems
+
+### If Fonts Still Don't Load
+
+If you continue to experience issues:
+
+```bash
+# Clear Expo cache
+npx expo start --clear
+
+# Or restart with tunnel
+npx expo start --tunnel --clear
+
+# Reset Metro bundler cache
+npx react-native start --reset-cache
+```
+
+### Manual Font Verification
+
+You can verify your font files are valid:
+
+1. Open each font file on your computer to ensure they display correctly
+2. Check file sizes - corrupted fonts are often 0 bytes or very small
+3. Try opening the fonts in a font viewer application
+
+If any fonts are corrupted, re-download them from:
+
+- **Pacifico**: [Google Fonts](https://fonts.google.com/specimen/Pacifico)
+- **Cookie**: [Google Fonts](https://fonts.google.com/specimen/Cookie)
+- **Open Sans**: [Google Fonts](https://fonts.google.com/specimen/Open+Sans)
+
+## How to Add More Fonts Later
+
+### Step 1: Add Font Files
+
+Place new TTF/OTF files in `/assets/fonts/`:
+
+### Step 2: Update FontProvider
+
+Add new fonts to the fontConfig in FontProvider.tsx:
+
+```tsx
+config["NewFont-Regular"] = require("../../assets/fonts/NewFont-Regular.ttf");
+```
+
+### Step 3: Update Theme
+
+Add new font families to the fonts object in theme.ts:
+
+```typescript
+newFont: {
+  family: Platform.select({
+    ios: "NewFont-Regular, fallback",
+    android: "NewFont-Regular, fallback",
+    web: "New Font, fallback",
+    default: "NewFont-Regular, fallback",
+  }),
+},
+```
+
+├── Poppins-Medium.ttf (to add)
+├── Poppins-SemiBold.ttf (to add)
+└── Poppins-Bold.ttf (to add)
+
+````
 
 ### Step 3: Update FontProvider
 
@@ -67,7 +199,7 @@ const [fontsLoaded] = useFonts({
   "Poppins-SemiBold": require("../../assets/fonts/Poppins-SemiBold.ttf"),
   "Poppins-Bold": require("../../assets/fonts/Poppins-Bold.ttf"),
 });
-```
+````
 
 ### Step 4: Update Theme Fonts
 
