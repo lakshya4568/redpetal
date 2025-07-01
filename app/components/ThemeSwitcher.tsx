@@ -7,7 +7,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { colorPalettes } from "../theme";
+import { colorPalettes, switchTheme } from "../theme";
 import { useThemeContext } from "./ThemeContext";
 
 interface ThemeSwitcherProps {
@@ -17,25 +17,32 @@ interface ThemeSwitcherProps {
 export default function ThemeSwitcher({ onThemeChange }: ThemeSwitcherProps) {
   const { palette, setPalette, resetPalette, theme } = useThemeContext();
   const [selectedPalette, setSelectedPalette] = useState(palette);
+  const [previewTheme, setPreviewTheme] = useState(theme);
   const router = useRouter();
 
   const handleThemeSwitch = (paletteName: keyof typeof colorPalettes) => {
     setSelectedPalette(paletteName);
+    setPreviewTheme(switchTheme(paletteName));
   };
 
   const handleApply = () => {
     setPalette(selectedPalette);
-    onThemeChange?.(theme);
+    onThemeChange?.(previewTheme);
     router.push("/(tabs)");
   };
 
   const handleRemove = () => {
     resetPalette();
     setSelectedPalette("blushPink");
-    onThemeChange?.(theme);
+    setPreviewTheme(switchTheme("blushPink"));
+    onThemeChange?.(switchTheme("blushPink"));
   };
 
-  const themeOptions: { key: keyof typeof colorPalettes; name: string; color: string }[] = [
+  const themeOptions: {
+    key: keyof typeof colorPalettes;
+    name: string;
+    color: string;
+  }[] = [
     { key: "blushPink", name: "Blush Pink", color: "#F7CAC9" },
     { key: "roseRed", name: "Rose Red", color: "#E63946" },
     { key: "terracotta", name: "Terracotta", color: "#E06E5A" },
@@ -43,6 +50,7 @@ export default function ThemeSwitcher({ onThemeChange }: ThemeSwitcherProps) {
   ];
 
   const styles = getStyles(theme);
+  const previewStyles = getStyles(previewTheme);
 
   return (
     <SafeAreaView style={[styles.safeArea]}>
@@ -76,42 +84,52 @@ export default function ThemeSwitcher({ onThemeChange }: ThemeSwitcherProps) {
         </View>
 
         {/* Typography Preview Card */}
-        <View style={styles.previewContainer}>
-          <Text style={styles.previewTitle}>Typography Preview</Text>
+        <TouchableOpacity
+          activeOpacity={0.8}
+          style={previewStyles.previewContainer}
+          onPress={() => setPreviewTheme(switchTheme(selectedPalette))}
+        >
+          <Text style={previewStyles.previewTitle}>Typography Preview</Text>
 
-          <View style={styles.previewContent}>
+          <View style={previewStyles.previewContent}>
             <Text
-              style={[styles.brandText, { color: theme.colors.primary }]}
+              style={[
+                previewStyles.brandText,
+                { color: previewTheme.colors.primary },
+              ]}
             >
               RedPetal
             </Text>
             <Text
-              style={[styles.headlineText, { color: theme.colors.text }]}
+              style={[
+                previewStyles.headlineText,
+                { color: previewTheme.colors.text },
+              ]}
             >
               A gentle touch for{"\n"}Period wellness
             </Text>
             <Text
               style={[
-                styles.bodyText,
-                { color: theme.colors.textSecondary },
+                previewStyles.bodyText,
+                { color: previewTheme.colors.textSecondary },
               ]}
             >
               This is how your body text will look with the selected theme.
             </Text>
           </View>
 
-          <View style={styles.buttonPreview}>
+          <View style={previewStyles.buttonPreview}>
             <TouchableOpacity
               style={[
-                styles.primaryButton,
-                { backgroundColor: theme.colors.primary },
+                previewStyles.primaryButton,
+                { backgroundColor: previewTheme.colors.primary },
               ]}
               onPress={handleApply}
             >
               <Text
                 style={[
-                  styles.buttonText,
-                  { color: theme.colors.textOnPrimary },
+                  previewStyles.buttonText,
+                  { color: previewTheme.colors.textOnPrimary },
                 ]}
               >
                 Apply
@@ -119,22 +137,22 @@ export default function ThemeSwitcher({ onThemeChange }: ThemeSwitcherProps) {
             </TouchableOpacity>
             <TouchableOpacity
               style={[
-                styles.secondaryButton,
-                { borderColor: theme.colors.primary },
+                previewStyles.secondaryButton,
+                { borderColor: previewTheme.colors.primary },
               ]}
               onPress={handleRemove}
             >
               <Text
                 style={[
-                  styles.buttonText,
-                  { color: theme.colors.primary },
+                  previewStyles.buttonText,
+                  { color: previewTheme.colors.primary },
                 ]}
               >
                 Remove
               </Text>
             </TouchableOpacity>
           </View>
-        </View>
+        </TouchableOpacity>
       </View>
     </SafeAreaView>
   );
