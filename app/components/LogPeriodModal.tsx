@@ -2,7 +2,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import React, { useState } from "react";
 import { Modal, StyleSheet, View } from "react-native";
 import { Button, Text, TextInput } from "react-native-paper";
-import { theme } from "../theme";
+import { useThemeContext } from "./ThemeContext";
 
 interface LogPeriodModalProps {
   visible: boolean;
@@ -18,6 +18,7 @@ export default function LogPeriodModal({
   const [flow, setFlow] = useState("");
   const [symptoms, setSymptoms] = useState("");
   const [mood, setMood] = useState("");
+  const { theme } = useThemeContext();
 
   const handleSave = async () => {
     if (!selectedDate) return;
@@ -30,6 +31,30 @@ export default function LogPeriodModal({
       console.error("Error saving data", error);
     }
   };
+
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+      justifyContent: "center",
+      padding: theme.spacing.lg,
+      backgroundColor: theme.colors.background,
+    },
+    title: {
+      ...theme.typography.headlineLarge,
+      color: theme.colors.primary,
+      textAlign: "center",
+      marginBottom: theme.spacing.xxl,
+    },
+    input: {
+      marginBottom: theme.spacing.lg,
+      backgroundColor: theme.colors.surface,
+    },
+    button: {
+      marginTop: theme.spacing.md,
+      backgroundColor: theme.colors.primary,
+      borderRadius: theme.borderRadius.md,
+    },
+  });
 
   return (
     <Modal visible={visible} onRequestClose={onClose} animationType="slide">
@@ -66,27 +91,3 @@ export default function LogPeriodModal({
     </Modal>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: "center",
-    padding: theme.spacing.lg,
-    backgroundColor: theme.colors.background,
-  },
-  title: {
-    ...theme.typography.headlineLarge,
-    color: theme.colors.primary,
-    textAlign: "center",
-    marginBottom: theme.spacing.xxl,
-  },
-  input: {
-    marginBottom: theme.spacing.lg,
-    backgroundColor: theme.colors.surface,
-  },
-  button: {
-    marginTop: theme.spacing.md,
-    backgroundColor: theme.colors.primary,
-    borderRadius: theme.borderRadius.md,
-  },
-});

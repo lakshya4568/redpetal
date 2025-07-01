@@ -1,10 +1,9 @@
-
 import { FontAwesome } from "@expo/vector-icons";
 import {
   TabBar,
   TabsType,
 } from "@mindinventory/react-native-tab-bar-interaction";
-import { Tabs } from 'expo-router';
+import { Tabs } from "expo-router";
 import React from "react";
 import { Dimensions } from "react-native";
 import { useThemeContext } from "../components/ThemeContext";
@@ -39,7 +38,11 @@ export default function TabLayout() {
     {
       name: "community",
       activeIcon: (
-        <FontAwesome name="users" color={theme.colors.textOnPrimary} size={25} />
+        <FontAwesome
+          name="users"
+          color={theme.colors.textOnPrimary}
+          size={25}
+        />
       ),
       inactiveIcon: (
         <FontAwesome name="users" color={theme.colors.textMuted} size={25} />
@@ -81,9 +84,12 @@ export default function TabLayout() {
           transitionSpeed={theme.animation.normal}
           defaultActiveTabIndex={0}
           onTabChange={(tab: TabsType, index: number) => {
-            setTimeout(() => {
+            // Use immediate navigation instead of setTimeout to prevent race conditions
+            try {
               props.navigation.navigate(tab.name);
-            }, theme.animation.fast);
+            } catch (error) {
+              console.warn("Navigation error:", error);
+            }
           }}
         />
       )}
@@ -97,4 +103,3 @@ export default function TabLayout() {
     </Tabs>
   );
 }
-

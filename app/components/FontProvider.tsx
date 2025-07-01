@@ -14,6 +14,7 @@ interface FontProviderProps {
 
 const FontProvider: React.FC<FontProviderProps> = ({ children }) => {
   const [appReady, setAppReady] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
 
   // Define font configuration - more robust approach
   const fontConfig = useMemo((): Record<string, any> => {
@@ -40,6 +41,8 @@ const FontProvider: React.FC<FontProviderProps> = ({ children }) => {
 
   // Handle font loading completion
   const onLayoutRootView = useCallback(async () => {
+    if (!isMounted) return;
+
     try {
       if (
         Platform.OS === "web" ||
@@ -57,17 +60,26 @@ const FontProvider: React.FC<FontProviderProps> = ({ children }) => {
       }
     } catch (error) {
       console.warn("Error hiding splash screen:", error);
-      setAppReady(true); // Continue anyway
+      if (isMounted) {
+        setAppReady(true); // Continue anyway
+      }
     }
-  }, [fontsLoaded, fontConfig]);
+  }, [fontsLoaded, fontConfig, isMounted]);
 
   useEffect(() => {
-    onLayoutRootView();
-  }, [onLayoutRootView]);
+    setIsMounted(true);
+    return () => setIsMounted(false);
+  }, []);
+
+  useEffect(() => {
+    if (isMounted) {
+      onLayoutRootView();
+    }
+  }, [onLayoutRootView, isMounted]);
 
   // Handle font loading errors
   useEffect(() => {
-    if (fontLoadError) {
+    if (fontLoadError && isMounted) {
       console.error("Font loading error:", fontLoadError);
       console.log("Platform:", Platform.OS);
       console.log("Font config keys:", Object.keys(fontConfig));
@@ -75,16 +87,19 @@ const FontProvider: React.FC<FontProviderProps> = ({ children }) => {
       setAppReady(true); // Continue with system fonts
       SplashScreen.hideAsync().catch(() => {});
     }
-  }, [fontLoadError, fontConfig, fontsLoaded]);
+  }, [fontLoadError, fontConfig, fontsLoaded, isMounted]);
 
   // Timeout fallback for native platforms
   useEffect(() => {
+    if (!isMounted) return;
+
     const timeout = setTimeout(() => {
       if (
         Platform.OS !== "web" &&
         !fontsLoaded &&
         !fontLoadError &&
-        Object.keys(fontConfig).length > 0
+        Object.keys(fontConfig).length > 0 &&
+        isMounted
       ) {
         console.warn("Font loading timed out, continuing with system fonts");
         setAppReady(true);
@@ -93,16 +108,16 @@ const FontProvider: React.FC<FontProviderProps> = ({ children }) => {
     }, 3000); // Reduced timeout to 3 seconds
 
     return () => clearTimeout(timeout);
-  }, [fontsLoaded, fontLoadError, fontConfig]);
+  }, [fontsLoaded, fontLoadError, fontConfig, isMounted]);
 
   // For web, don't wait for fonts
   useEffect(() => {
-    if (Platform.OS === "web") {
+    if (Platform.OS === "web" && isMounted) {
       setAppReady(true);
     }
-  }, []);
+  }, [isMounted]);
 
-  if (!appReady) {
+  if (!appReady || !isMounted) {
     return null;
   }
 
