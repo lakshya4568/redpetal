@@ -1,50 +1,91 @@
-# Welcome to your Expo app 👋
+# RedPetal
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+RedPetal is a community-driven platform and hub designed for girls and women of all ages, including mothers and daughters, to share, discuss, and track their periods and other related topics. It is a safe and supportive space where users can connect, learn, and support each other.
 
-## Get started
+## Features
 
-1. Install dependencies
+### 1. **Period Tracking**
+
+- Track your menstrual cycle with ease.
+
+- Get reminders and insights about your cycle.
+
+### 2. **Community Discussions**
+
+- Join discussions on various topics related to periods, health, and wellness.
+
+- Share experiences and advice with others in the community.
+
+### 3. **Home Remedies for Period Relief**
+
+- Access a curated list of home remedies to alleviate period pain and discomfort.
+
+- Share your own recipes and tips with the community.
+
+### 4. **Resource Sharing**
+
+- Discover articles, videos, and other resources about menstrual health and wellness.
+
+- Share helpful resources with the community.
+
+### 5. **Personalized Themes**
+
+- Customize the app's appearance with themes that suit your style.
+
+## How to Use
+
+1. **Sign Up**: Create an account to join the community.
+
+2. **Explore**: Navigate through the app to explore features like period tracking, discussions, and resources.
+
+3. **Engage**: Participate in discussions, share your experiences, and connect with others.
+
+4. **Contribute**: Add your own home remedies, tips, and resources to help others.
+
+## Technology Stack
+
+- **Frontend**: React Native
+
+- **Backend**: Node.js (server-side logic)
+
+- **Database**: TBD
+
+- **Other Tools**: Expo, TypeScript, Babel, ESLint
+
+## Installation
+
+1. Clone the repository:
+
+   ```bash
+   git clone <repository-url>
+   ```
+
+2. Navigate to the project directory:
+
+   ```bash
+   cd redpetal
+   ```
+
+3. Install dependencies:
 
    ```bash
    npm install
    ```
 
-2. Start the app
+4. Start the development server:
 
    ```bash
-   npx expo start
+   npm start
    ```
 
-In the output, you'll find options to open the app in a
+## Contributing
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+We welcome contributions from the community! If you have ideas, suggestions, or code to contribute, please feel free to open a pull request or issue.
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+## License
 
-## Get a fresh project
+This project is licensed under the MIT License. See the LICENSE file for details.
 
-When you're ready, run:
+## Contact
 
-```bash
-npm run reset-project
-```
-
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
-
-## Learn more
-
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+For any questions or feedback, please contact us at [support@redpetal.com](mailto:support@redpetal.com).
