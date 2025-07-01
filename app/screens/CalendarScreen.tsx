@@ -6,9 +6,11 @@ import { Calendar } from "react-native-calendars";
 import { Text } from "react-native-paper";
 import LogPeriodModal from "../components/LogPeriodModal";
 import { useThemeContext } from "../components/ThemeContext";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function CalendarScreen() {
   const { theme } = useThemeContext();
+  const insets = useSafeAreaInsets();
   const [selectedDates, setSelectedDates] = useState<{ [key: string]: any }>(
     {}
   );
@@ -53,6 +55,10 @@ export default function CalendarScreen() {
       flex: 1,
       backgroundColor: theme.colors.background,
       padding: theme.spacing.lg,
+      paddingTop: insets.top,
+      paddingBottom: insets.bottom,
+      paddingLeft: insets.left,
+      paddingRight: insets.right,
     },
     title: {
       ...theme.typography.brand,
@@ -96,4 +102,3 @@ export default function CalendarScreen() {
     </View>
   );
 }
-

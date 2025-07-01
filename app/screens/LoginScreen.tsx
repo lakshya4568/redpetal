@@ -10,6 +10,7 @@ import {
 import { Button, Text, TextInput } from "react-native-paper";
 import { useThemeContext } from "../components/ThemeContext";
 import { useAuth } from "../services/auth";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const BACKGROUND_IMAGE = require("../../assets/images/floral-background.png");
 
@@ -44,36 +45,40 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
 
   const styles = createStyles(theme);
 
+  const insets = useSafeAreaInsets();
+
   return (
     <ImageBackground source={BACKGROUND_IMAGE} style={styles.background}>
-      <View style={styles.overlay}>
-        <Text style={styles.title}>RedPetal</Text>
-        <Animated.View style={[styles.formContainer, { opacity: fadeAnim }]}>
-          <TextInput
-            label="Email"
-            value={email}
-            onChangeText={setEmail}
-            style={styles.input}
-            theme={{ colors: { primary: theme.colors.primary } }}
-          />
-          <TextInput
-            label="Password"
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry
-            style={styles.input}
-            theme={{ colors: { primary: theme.colors.primary } }}
-          />
-          <Button mode="contained" onPress={login} style={styles.button}>
-            Login
-          </Button>
-          <Button
-            onPress={() => navigation.navigate("Signup")}
-            style={styles.button}
-          >
-            Go to Signup
-          </Button>
-        </Animated.View>
+      <View style={[{ flex: 1, paddingTop: insets.top, paddingBottom: insets.bottom, paddingLeft: insets.left, paddingRight: insets.right }]}>
+        <View style={styles.overlay}>
+          <Text style={styles.title}>RedPetal</Text>
+          <Animated.View style={[styles.formContainer, { opacity: fadeAnim }]}>
+            <TextInput
+              label="Email"
+              value={email}
+              onChangeText={setEmail}
+              style={styles.input}
+              theme={{ colors: { primary: theme.colors.primary } }}
+            />
+            <TextInput
+              label="Password"
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry
+              style={styles.input}
+              theme={{ colors: { primary: theme.colors.primary } }}
+            />
+            <Button mode="contained" onPress={login} style={styles.button}>
+              Login
+            </Button>
+            <Button
+              onPress={() => navigation.navigate("Signup")}
+              style={styles.button}
+            >
+              Go to Signup
+            </Button>
+          </Animated.View>
+        </View>
       </View>
     </ImageBackground>
   );
