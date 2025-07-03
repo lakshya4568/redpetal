@@ -77,11 +77,11 @@ export default function TabLayout() {
           tabBarContainerBackground={theme.colors.primary}
           circleFillColor={theme.colors.accent}
           containerBottomSpace={theme.spacing.lg}
-          containerTopLeftRadius={theme.borderRadius.xxl}
-          containerTopRightRadius={theme.borderRadius.xxl}
-          containerBottomLeftRadius={theme.borderRadius.xxl}
-          containerBottomRightRadius={theme.borderRadius.xxl}
-          transitionSpeed={theme.animation.normal}
+          containerTopLeftRadius={theme.borderRadius.none}
+          containerTopRightRadius={theme.borderRadius.none}
+          containerBottomLeftRadius={theme.borderRadius.xl}
+          containerBottomRightRadius={theme.borderRadius.xl}
+          transitionSpeed={theme.animation.slow}
           defaultActiveTabIndex={0}
           onTabChange={(tab: TabsType, index: number) => {
             // Use immediate navigation instead of setTimeout to prevent race conditions

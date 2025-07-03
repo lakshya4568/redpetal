@@ -279,7 +279,7 @@ export const spacing = {
 // Border Radius Scale
 export const borderRadius = {
   none: 0,
-  xs: 2,
+  xs: 1,
   sm: 4,
   md: 8,
   lg: 12,

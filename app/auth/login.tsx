@@ -14,16 +14,43 @@ import { useAuth } from "../services/auth";
 
 const BACKGROUND_IMAGE = require("../../assets/images/floral-background.png");
 
+// Define a type for the errors state
+interface FormErrors {
+  email?: string;
+  password?: string;
+}
+
 export default function LoginScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  // Use the defined type for the errors state
+  const [errors, setErrors] = useState<FormErrors>({});
   const { login } = useAuth();
   const { theme } = useThemeContext();
   const [fadeAnim] = useState(new Animated.Value(0));
 
+  //validate email and password
+  const validateForm = () => {
+    // Initialize errors with the correct type
+    let errors: FormErrors = {};
+
+    if (!email) errors.email = "Email is required";
+    if (!password) errors.password = "Password is required";
+
+    setErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
   const handleLogin = () => {
-    login();
-    router.replace("/(tabs)");
+    if (validateForm()) {
+      console.log("Submitted", email, password);
+      setEmail("");
+      setPassword("");
+      setErrors({}); // Clear errors on successful validation
+      
+      login();
+     router.replace("/(tabs)");
+    }
   };
 
   useEffect(() => {
@@ -57,6 +84,10 @@ export default function LoginScreen() {
               style={styles(theme).input}
               theme={{ colors: { primary: theme.colors.primary } }}
             />
+            {/* Add error message display if needed */}
+            {errors.email && (
+              <Text style={{ color: "red" }}>{errors.email}</Text>
+            )}
             <TextInput
               label="Password"
               value={password}
@@ -65,6 +96,10 @@ export default function LoginScreen() {
               style={styles(theme).input}
               theme={{ colors: { primary: theme.colors.primary } }}
             />
+            {/* Add error message display if needed */}
+            {errors.password && (
+              <Text style={{ color: "red" }}>{errors.password}</Text>
+            )}
             <Button
               mode="contained"
               onPress={handleLogin}
