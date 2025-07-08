@@ -9,6 +9,7 @@ import {
   View,
 } from "react-native";
 import { Button, Text, TextInput } from "react-native-paper";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useThemeContext } from "../components/ThemeContext";
 import { useAuth } from "../services/auth";
 
@@ -47,9 +48,9 @@ export default function LoginScreen() {
       setEmail("");
       setPassword("");
       setErrors({}); // Clear errors on successful validation
-      
+
       login();
-     router.replace("/(tabs)");
+      router.replace("/(tabs)");
     }
   };
 
@@ -67,65 +68,87 @@ export default function LoginScreen() {
       style={styles(theme).background}
       imageStyle={{ opacity: 0.7 }} // Reduce opacity of the background image
     >
-      <KeyboardAvoidingView
-        behavior="padding"
-        keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 0}
-        style={{ flex: 1, justifyContent: "center" }}
-      >
-        <View style={styles(theme).overlay}>
-          <Text style={styles(theme).title}>RedPetal</Text>
-          <Animated.View
-            style={[styles(theme).formContainer, { opacity: fadeAnim }]}
-          >
-            <TextInput
-              label="Email"
-              value={email}
-              onChangeText={setEmail}
-              style={styles(theme).input}
-              theme={{ colors: { primary: theme.colors.primary } }}
-            />
-            {/* Add error message display if needed */}
-            {errors.email && (
-              <Text style={{ color: "red" }}>{errors.email}</Text>
-            )}
-            <TextInput
-              label="Password"
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry
-              style={styles(theme).input}
-              theme={{ colors: { primary: theme.colors.primary } }}
-            />
-            {/* Add error message display if needed */}
-            {errors.password && (
-              <Text style={{ color: "red" }}>{errors.password}</Text>
-            )}
-            <Button
-              mode="contained"
-              onPress={handleLogin}
-              style={styles(theme).button}
+      <SafeAreaView style={styles(theme).safeArea}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
+          style={styles(theme).keyboardAvoidingView}
+        >
+          <View style={styles(theme).overlay}>
+            <Text style={styles(theme).title}>RedPetal</Text>
+            <Animated.View
+              style={[styles(theme).formContainer, { opacity: fadeAnim }]}
             >
-              Login
-            </Button>
-            <Button
-              onPress={() => router.push("/auth/signup")}
-              style={styles(theme).button}
-            >
-              Go to Signup
-            </Button>
-          </Animated.View>
-        </View>
-      </KeyboardAvoidingView>
+              <TextInput
+                label="Email"
+                value={email}
+                onChangeText={setEmail}
+                style={styles(theme).input}
+                error={!!errors.email}
+                theme={{ colors: { primary: theme.colors.primary } }}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoComplete="email"
+              />
+              {/* Add error message display if needed */}
+              {errors.email && (
+                <Text style={styles(theme).errorText}>{errors.email}</Text>
+              )}
+              <TextInput
+                label="Password"
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry
+                style={styles(theme).input}
+                error={!!errors.password}
+                theme={{ colors: { primary: theme.colors.primary } }}
+                autoComplete="current-password"
+              />
+              {/* Add error message display if needed */}
+              {errors.password && (
+                <Text style={styles(theme).errorText}>{errors.password}</Text>
+              )}
+              <Button
+                mode="contained"
+                onPress={handleLogin}
+                style={styles(theme).button}
+                contentStyle={styles(theme).buttonContent}
+              >
+                Login
+              </Button>
+              <View style={styles(theme).signupContainer}>
+                <Text style={styles(theme).signupText}>
+                  Don&apos;t have an account?{" "}
+                </Text>
+                <Button
+                  onPress={() => router.push("/auth/signup")}
+                  mode="text"
+                  style={styles(theme).signupButton}
+                >
+                  Sign Up
+                </Button>
+              </View>
+            </Animated.View>
+          </View>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
     </ImageBackground>
   );
 }
 
 const styles = (theme: any) =>
   StyleSheet.create({
+    safeArea: {
+      flex: 1,
+      backgroundColor: "transparent", // Make SafeAreaView transparent
+    },
     background: {
       flex: 1,
       resizeMode: "cover",
-      // Add opacity to the background image using ImageBackground's imageStyle prop
+    },
+    keyboardAvoidingView: {
+      flex: 1,
+      justifyContent: "center",
     },
     overlay: {
       flex: 1,
@@ -135,6 +158,7 @@ const styles = (theme: any) =>
     },
     formContainer: {
       width: Platform.OS === "web" ? "50%" : "100%",
+      maxWidth: 400,
       alignSelf: "center",
       backgroundColor: theme.colors.surface,
       borderRadius: theme.borderRadius.xl,
@@ -148,13 +172,35 @@ const styles = (theme: any) =>
       marginBottom: theme.spacing.xxl,
     },
     input: {
-      marginBottom: theme.spacing.lg,
+      marginBottom: theme.spacing.sm,
       backgroundColor: theme.colors.surface,
     },
+    errorText: {
+      color: theme.colors.error,
+      fontSize: 12,
+      marginTop: -theme.spacing.sm,
+      marginBottom: theme.spacing.md,
+      marginLeft: theme.spacing.md,
+    },
     button: {
-      marginTop: theme.spacing.md,
+      marginTop: theme.spacing.lg,
       backgroundColor: theme.colors.primary,
       borderRadius: theme.borderRadius.md,
-      color: theme.colors.accent, // Added text color for the button
+    },
+    buttonContent: {
+      height: 48,
+    },
+    signupContainer: {
+      flexDirection: "row",
+      justifyContent: "center",
+      alignItems: "center",
+      marginTop: theme.spacing.lg,
+    },
+    signupText: {
+      ...theme.typography.bodyMedium,
+      color: theme.colors.textSecondary,
+    },
+    signupButton: {
+      marginLeft: -theme.spacing.sm,
     },
   });
