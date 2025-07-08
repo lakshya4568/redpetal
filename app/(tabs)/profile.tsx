@@ -22,7 +22,7 @@ export default function ProfileScreen() {
   };
 
   const handleThemePress = () => {
-    router.push("/screens/ThemeScreen");
+    router.push("/components/ThemeScreen");
   };
 
   return (
