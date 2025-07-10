@@ -1,25 +1,80 @@
 import React from "react";
 import {
+  FlatList,
   ScrollView,
   StyleSheet,
   Text,
-  TextStyle,
   View,
   ViewStyle,
 } from "react-native";
+import ArticleCard from "../components/ArticleCard";
+import CalendarHeader from "../components/CalendarHeader";
+import InsightCard from "../components/InsightCard";
+import NotesCard from "../components/NotesCard";
+import PeriodTrackerCard from "../components/PeriodTrackerCard";
+import SectionHeader from "../components/SectionHeader";
 import { useThemeContext } from "../components/ThemeContext";
+
+const insights = [
+  { title: "Time for a pregnancy test?", icon: "🧪" },
+  { title: "Early pregnancy or PMS symptoms?", icon: "🤔" },
+  { title: "Coping with pregnancy paranoia", icon: "🧘" },
+];
+
+const cycleArticles = [
+  { title: "What counts as a late period?", readTime: "7 min read" },
+  { title: "Cramps but no period? This could be why", readTime: "6 min read" },
+  { title: "5 late period 'remedies' to avoid", readTime: "11 min read" },
+];
 
 export default function HomeScreen() {
   const { theme } = useThemeContext();
   return (
     <ScrollView style={styles(theme).container}>
-      <View style={styles(theme).content}>
-        <Text style={styles(theme).title}>Welcome to</Text>
-        <Text style={styles(theme).appName}>RedPetal</Text>
-        <Text style={styles(theme).subtitle}>
-          Your period tracking companion
-        </Text>
-      </View>
+      <CalendarHeader />
+      <PeriodTrackerCard />
+      <SectionHeader title="My daily insights" />
+      <FlatList
+        horizontal
+        data={insights}
+        renderItem={({ item }) => (
+          <InsightCard
+            title={item.title}
+            icon={<Text style={{ fontSize: 40 }}>{item.icon}</Text>}
+          />
+        )}
+        keyExtractor={(item, index) => index.toString()}
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={{ paddingHorizontal: theme.spacing.lg }}
+      />
+      <ArticleCard
+        title="Am I pregnant?"
+        items={[
+          "8 early signs of pregnancy",
+          "Taking a pregnancy test",
+          "Other reasons you're late",
+        ]}
+        image={require("../../assets/images/floral-background.png")}
+      />
+      <SectionHeader title="Based on your current cycle" />
+      <FlatList
+        horizontal
+        data={cycleArticles}
+        renderItem={({ item }) => (
+          <View style={{ marginRight: theme.spacing.md }}>
+            <ArticleCard
+              title={item.title}
+              image={require("../../assets/images/floral-background.png")}
+            />
+            <Text style={styles(theme).readTime}>{item.readTime}</Text>
+          </View>
+        )}
+        keyExtractor={(item, index) => index.toString()}
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={{ paddingHorizontal: theme.spacing.lg }}
+      />
+      <NotesCard />
+      <View style={{ height: theme.spacing.xl }} />
     </ScrollView>
   );
 }
@@ -30,29 +85,10 @@ const styles = (theme: any) =>
       flex: 1,
       backgroundColor: theme.colors.background,
     } as ViewStyle,
-    content: {
-      flex: 1,
-      justifyContent: "center",
-      alignItems: "center",
-      padding: theme.spacing.lg,
-      minHeight: 400,
-    } as ViewStyle,
-    title: {
-      ...theme.typography.headlineMedium,
-      color: theme.colors.text,
-      textAlign: "center",
-      marginBottom: theme.spacing.sm,
-    } as TextStyle,
-    appName: {
-      ...theme.typography.brand,
-      color: theme.colors.primary,
-      textAlign: "center",
-      marginBottom: theme.spacing.lg,
-    } as TextStyle,
-    subtitle: {
-      ...theme.typography.bodyLarge,
+    readTime: {
+      ...theme.typography.bodySmall,
       color: theme.colors.textSecondary,
-      textAlign: "center",
-      marginBottom: theme.spacing.xl,
-    } as TextStyle,
+      marginTop: theme.spacing.sm,
+      marginLeft: theme.spacing.lg,
+    },
   });
