@@ -15,6 +15,7 @@ interface ArticleCardProps {
   items?: string[];
   image: any;
   onPress?: () => void;
+  height?: number;
 }
 
 export default function ArticleCard({
@@ -22,10 +23,14 @@ export default function ArticleCard({
   items,
   image,
   onPress,
+  height = 200,
 }: ArticleCardProps) {
   const { theme } = useThemeContext();
   return (
-    <TouchableOpacity onPress={onPress} style={styles(theme).container}>
+    <TouchableOpacity
+      onPress={onPress}
+      style={[styles(theme).container, { height }]}
+    >
       <ImageBackground
         source={image}
         style={styles(theme).image}
@@ -54,7 +59,6 @@ const styles = (theme: any) =>
       marginHorizontal: theme.spacing.lg,
       marginVertical: theme.spacing.md,
       borderRadius: theme.borderRadius.lg,
-      height: 200,
     } as ViewStyle,
     image: {
       width: "100%",

@@ -1,38 +1,59 @@
 import React from "react";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import {
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { useThemeContext } from "./ThemeContext";
 
 export default function CalendarHeader() {
   const { theme } = useThemeContext();
   const days = ["S", "M", "T", "W", "T", "F", "S"];
-  const dates = [6, 7, 8, 9, 10, 11, 12];
-  const today = 10;
+  // Create a wider range of dates for scrolling
+  const dates = Array.from({ length: 30 }, (_, i) => i + 1);
+  const today = new Date().getDate();
+  const currentMonth = new Date().toLocaleString("default", { month: "long" });
+  const currentYear = new Date().getFullYear();
 
   return (
     <View style={styles(theme).container}>
-      <Text style={styles(theme).month}>10 July</Text>
-      <View style={styles(theme).weekContainer}>
-        {days.map((day, index) => (
+      <Text style={styles(theme).month}>
+        {today} {currentMonth}
+      </Text>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles(theme).weekContainer}
+      >
+        {dates.map((date, index) => (
           <View key={index} style={styles(theme).dayWrapper}>
-            <Text style={styles(theme).dayText}>{day}</Text>
+            <Text style={styles(theme).dayText}>
+              {
+                days[
+                  new Date(currentYear, new Date().getMonth(), date).getDay()
+                ]
+              }
+            </Text>
             <TouchableOpacity
               style={[
                 styles(theme).dateContainer,
-                dates[index] === today && styles(theme).todayContainer,
+                date === today && styles(theme).todayContainer,
               ]}
             >
               <Text
                 style={[
                   styles(theme).dateText,
-                  dates[index] === today && styles(theme).todayText,
+                  date === today && styles(theme).todayText,
                 ]}
               >
-                {dates[index]}
+                {date}
               </Text>
             </TouchableOpacity>
           </View>
         ))}
-      </View>
+      </ScrollView>
     </View>
   );
 }
@@ -53,10 +74,12 @@ const styles = (theme: any) =>
     },
     weekContainer: {
       flexDirection: "row",
-      justifyContent: "space-around",
+      justifyContent: "flex-start",
+      paddingHorizontal: theme.spacing.sm,
     },
     dayWrapper: {
       alignItems: "center",
+      marginHorizontal: theme.spacing.sm,
     },
     dayText: {
       ...theme.typography.bodySmall,

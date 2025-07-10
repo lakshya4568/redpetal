@@ -9,10 +9,12 @@ import {
 } from "react-native";
 import ArticleCard from "../components/ArticleCard";
 import CalendarHeader from "../components/CalendarHeader";
+import CycleSummaryCard from "../components/CycleSummaryCard";
 import InsightCard from "../components/InsightCard";
 import NotesCard from "../components/NotesCard";
 import PeriodTrackerCard from "../components/PeriodTrackerCard";
 import SectionHeader from "../components/SectionHeader";
+import SymptomPatternsCard from "../components/SymptomPatternsCard";
 import { useThemeContext } from "../components/ThemeContext";
 
 const insights = [
@@ -40,7 +42,7 @@ export default function HomeScreen() {
         renderItem={({ item }) => (
           <InsightCard
             title={item.title}
-            icon={<Text style={{ fontSize: 40 }}>{item.icon}</Text>}
+            icon={<Text style={{ fontSize: 28 }}>{item.icon}</Text>}
           />
         )}
         keyExtractor={(item, index) => index.toString()}
@@ -61,10 +63,11 @@ export default function HomeScreen() {
         horizontal
         data={cycleArticles}
         renderItem={({ item }) => (
-          <View style={{ marginRight: theme.spacing.md }}>
+          <View style={{ marginRight: theme.spacing.md, width: 250 }}>
             <ArticleCard
               title={item.title}
               image={require("../../assets/images/floral-background.png")}
+              height={150}
             />
             <Text style={styles(theme).readTime}>{item.readTime}</Text>
           </View>
@@ -73,6 +76,8 @@ export default function HomeScreen() {
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={{ paddingHorizontal: theme.spacing.lg }}
       />
+      <CycleSummaryCard />
+      <SymptomPatternsCard />
       <NotesCard />
       <View style={{ height: theme.spacing.xl }} />
     </ScrollView>
@@ -90,5 +95,5 @@ const styles = (theme: any) =>
       color: theme.colors.textSecondary,
       marginTop: theme.spacing.sm,
       marginLeft: theme.spacing.lg,
-    },
+    }
   });
