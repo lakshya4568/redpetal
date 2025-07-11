@@ -7,10 +7,42 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import AnimatedPostCard from "../components/AnimatedPostCard";
 import CommentsModal from "../components/CommentsModal";
-import CreatePostModal from "../components/CreatePostModal";
-import PostCard, { Comment, Post } from "../components/PostCard";
+import CreatePostModalWithImages from "../components/CreatePostModalWithImages";
 import { useThemeContext } from "../components/ThemeContext";
+
+interface Comment {
+  id: string;
+  author: string;
+  content: string;
+  timestamp: string;
+}
+
+interface PostImage {
+  id: string;
+  uri: string;
+}
+
+interface Reaction {
+  id: string;
+  type: "like" | "love" | "laugh" | "wow" | "sad" | "angry";
+  emoji: string;
+  count: number;
+}
+
+interface Post {
+  id: string;
+  author: string;
+  avatar: string;
+  content: string;
+  images?: PostImage[];
+  likes: number;
+  comments: Comment[];
+  timestamp: string;
+  isLiked: boolean;
+  reactions?: Reaction[];
+}
 
 export default function CommunityScreen() {
   const { theme } = useThemeContext();
@@ -90,16 +122,18 @@ export default function CommunityScreen() {
     },
   ]);
 
-  const handleCreatePost = (content: string) => {
+  const handleCreatePost = (content: string, images: PostImage[] = []) => {
     const newPost: Post = {
       id: Date.now().toString(),
       author: "You",
       avatar: "https://randomuser.me/api/portraits/women/10.jpg",
       content,
+      images,
       likes: 0,
       comments: [],
       timestamp: "now",
       isLiked: false,
+      reactions: [],
     };
     setPosts([newPost, ...posts]);
     Alert.alert("Success", "Your post has been shared with the community!");
@@ -126,6 +160,47 @@ export default function CommunityScreen() {
 
   const handleShare = (postId: string) => {
     Alert.alert("Shared!", "Post link copied to clipboard");
+  };
+
+  const handleReaction = (postId: string, reactionType: string) => {
+    setPosts(
+      posts.map((post) => {
+        if (post.id === postId) {
+          const existingReaction = post.reactions?.find(
+            (r) => r.type === reactionType
+          );
+          let updatedReactions = post.reactions || [];
+
+          if (existingReaction) {
+            // Increment existing reaction
+            updatedReactions = updatedReactions.map((r) =>
+              r.type === reactionType ? { ...r, count: r.count + 1 } : r
+            );
+          } else {
+            // Add new reaction
+            const reactionEmojis: { [key: string]: string } = {
+              like: "👍",
+              love: "❤️",
+              laugh: "😂",
+              wow: "😮",
+              sad: "😢",
+              angry: "😠",
+            };
+
+            const newReaction: Reaction = {
+              id: Date.now().toString(),
+              type: reactionType as any,
+              emoji: reactionEmojis[reactionType] || "👍",
+              count: 1,
+            };
+            updatedReactions = [...updatedReactions, newReaction];
+          }
+
+          return { ...post, reactions: updatedReactions };
+        }
+        return post;
+      })
+    );
   };
 
   const handleAddComment = (comment: string) => {
@@ -197,11 +272,21 @@ export default function CommunityScreen() {
       <FlatList
         data={posts}
         renderItem={({ item }) => (
-          <PostCard
-            post={item}
+          <AnimatedPostCard
+            id={item.id}
+            username={item.author}
+            profileImage={item.avatar}
+            content={item.content}
+            images={item.images || []}
+            timestamp={item.timestamp}
+            likeCount={item.likes}
+            commentCount={item.comments.length}
+            isLiked={item.isLiked}
+            reactions={item.reactions || []}
             onLike={handleLike}
             onComment={handleComment}
             onShare={handleShare}
+            onReaction={handleReaction}
           />
         )}
         keyExtractor={(item) => item.id}
@@ -209,7 +294,7 @@ export default function CommunityScreen() {
         showsVerticalScrollIndicator={false}
       />
 
-      <CreatePostModal
+      <CreatePostModalWithImages
         visible={createPostVisible}
         onClose={() => setCreatePostVisible(false)}
         onSubmit={handleCreatePost}
