@@ -6,6 +6,7 @@ import {
   Dimensions,
   Image,
   Modal,
+  Platform,
   ScrollView,
   StyleSheet,
   Text,
@@ -66,9 +67,14 @@ export default function CreatePostModalWithImages({
 
   React.useEffect(() => {
     if (visible) {
-      modalScale.value = withSpring(1, { duration: 300 });
+      modalScale.value = withSpring(1, {
+        duration: Platform.OS === "android" ? 200 : 300,
+        dampingRatio: 0.8,
+      });
     } else {
-      modalScale.value = withTiming(0, { duration: 200 });
+      modalScale.value = withTiming(0, {
+        duration: Platform.OS === "android" ? 150 : 200,
+      });
       // Reset form when modal closes
       setContent("");
       setImages([]);
@@ -77,60 +83,80 @@ export default function CreatePostModalWithImages({
   }, [visible, modalScale]);
 
   const requestPermissions = async () => {
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== "granted") {
-      Alert.alert(
-        "Permission Required",
-        "Sorry, we need camera roll permissions to add images to your post."
-      );
+    try {
+      const { status } =
+        await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== "granted") {
+        Alert.alert(
+          "Permission Required",
+          "Sorry, we need camera roll permissions to add images to your post.",
+          [{ text: "OK", style: "default" }]
+        );
+        return false;
+      }
+      return true;
+    } catch (error) {
+      console.error("Error requesting permissions:", error);
+      Alert.alert("Error", "Failed to request permissions. Please try again.");
       return false;
     }
-    return true;
   };
 
   const pickImage = async () => {
     const hasPermission = await requestPermissions();
     if (!hasPermission) return;
 
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [4, 3],
-      quality: 0.8,
-      allowsMultipleSelection: false,
-    });
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ["images"],
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 0.8,
+        allowsMultipleSelection: false,
+      });
 
-    if (!result.canceled && result.assets[0]) {
-      const newImage: PostImage = {
-        id: Date.now().toString(),
-        uri: result.assets[0].uri,
-      };
-      setImages((prev) => [...prev, newImage]);
+      if (!result.canceled && result.assets[0]) {
+        const newImage: PostImage = {
+          id: Date.now().toString(),
+          uri: result.assets[0].uri,
+        };
+        setImages((prev) => [...prev, newImage]);
+      }
+    } catch (error) {
+      console.error("Error picking image:", error);
+      Alert.alert("Error", "Failed to pick image. Please try again.");
     }
   };
 
   const takePhoto = async () => {
-    const { status } = await ImagePicker.requestCameraPermissionsAsync();
-    if (status !== "granted") {
-      Alert.alert(
-        "Permission Required",
-        "Sorry, we need camera permissions to take photos."
-      );
-      return;
-    }
+    try {
+      const { status } = await ImagePicker.requestCameraPermissionsAsync();
+      if (status !== "granted") {
+        Alert.alert(
+          "Permission Required",
+          "Sorry, we need camera permissions to take photos.",
+          [{ text: "OK", style: "default" }]
+        );
+        return;
+      }
 
-    const result = await ImagePicker.launchCameraAsync({
-      allowsEditing: true,
-      aspect: [4, 3],
-      quality: 0.8,
-    });
+      const result = await ImagePicker.launchCameraAsync({
+        mediaTypes: ["images"],
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 0.8,
+      });
 
-    if (!result.canceled && result.assets[0]) {
-      const newImage: PostImage = {
-        id: Date.now().toString(),
-        uri: result.assets[0].uri,
-      };
-      setImages((prev) => [...prev, newImage]);
+      if (!result.canceled && result.assets && result.assets[0]) {
+        const newImage: PostImage = {
+          id: Date.now().toString(),
+          uri: result.assets[0].uri,
+        };
+        setImages((prev) => [...prev, newImage]);
+      }
+    } catch (error) {
+      console.error("Error taking photo:", error);
+      Alert.alert("Error", "Failed to take photo. Please try again.");
     }
   };
 
@@ -154,11 +180,15 @@ export default function CreatePostModalWithImages({
 
     setIsSubmitting(true);
 
-    // Animate submit button
-    submitButtonScale.value = withSequence(
-      withSpring(0.95, { duration: 100 }),
-      withSpring(1, { duration: 100 })
-    );
+    // Animate submit button with error handling
+    try {
+      submitButtonScale.value = withSequence(
+        withSpring(0.95, { duration: 100 }),
+        withSpring(1, { duration: 100 })
+      );
+    } catch (animationError) {
+      console.error("Animation error:", animationError);
+    }
 
     try {
       await onSubmit(content.trim(), images);

@@ -10,8 +10,14 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { Comment } from "./PostCard";
 import { useThemeContext } from "./ThemeContext";
+
+interface Comment {
+  id: string;
+  author: string;
+  content: string;
+  timestamp: string;
+}
 
 interface CommentsModalProps {
   visible: boolean;

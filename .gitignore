@@ -18,8 +18,14 @@ expo-env.d.ts
 *.key
 *.mobileprovision
 
+# User-folderr
 example/
 .github/
+.idea/
+.vscode/
+*.sublime-workspace
+*.sublime-project
+
 # Metro
 .metro-health-check*
 

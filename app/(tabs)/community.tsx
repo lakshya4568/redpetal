@@ -1,7 +1,8 @@
-import React, { useState } from "react";
+import React, { useCallback, useState } from "react";
 import {
   Alert,
   FlatList,
+  Platform,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -10,6 +11,8 @@ import {
 import AnimatedPostCard from "../components/AnimatedPostCard";
 import CommentsModal from "../components/CommentsModal";
 import CreatePostModalWithImages from "../components/CreatePostModalWithImages";
+import ShareDialog from "../components/ShareDialog";
+import SuccessToast from "../components/SuccessToast";
 import { useThemeContext } from "../components/ThemeContext";
 
 interface Comment {
@@ -49,6 +52,9 @@ export default function CommunityScreen() {
   const [createPostVisible, setCreatePostVisible] = useState(false);
   const [commentsVisible, setCommentsVisible] = useState(false);
   const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
+  const [shareDialogVisible, setShareDialogVisible] = useState(false);
+  const [successToastVisible, setSuccessToastVisible] = useState(false);
+  const [toastMessage, setToastMessage] = useState("");
 
   // Mock data with enhanced structure
   const [posts, setPosts] = useState<Post[]>([
@@ -139,9 +145,9 @@ export default function CommunityScreen() {
     Alert.alert("Success", "Your post has been shared with the community!");
   };
 
-  const handleLike = (postId: string) => {
-    setPosts(
-      posts.map((post) =>
+  const handleLike = useCallback((postId: string) => {
+    setPosts((prevPosts) =>
+      prevPosts.map((post) =>
         post.id === postId
           ? {
               ...post,
@@ -151,57 +157,104 @@ export default function CommunityScreen() {
           : post
       )
     );
-  };
+  }, []);
 
-  const handleComment = (postId: string) => {
-    setSelectedPostId(postId);
-    setCommentsVisible(true);
-  };
+  const handleComment = useCallback((postId: string) => {
+    try {
+      if (!postId) {
+        console.warn("Comment called without postId");
+        return;
+      }
 
-  const handleShare = (postId: string) => {
-    Alert.alert("Shared!", "Post link copied to clipboard");
-  };
+      setSelectedPostId(postId);
+      setCommentsVisible(true);
+    } catch (error) {
+      console.error("Comment error:", error);
+      Alert.alert("Error", "Unable to open comments at this time");
+    }
+  }, []);
 
-  const handleReaction = (postId: string, reactionType: string) => {
-    setPosts(
-      posts.map((post) => {
-        if (post.id === postId) {
-          const existingReaction = post.reactions?.find(
-            (r) => r.type === reactionType
-          );
-          let updatedReactions = post.reactions || [];
+  const handleShare = useCallback(async (postId: string) => {
+    try {
+      if (!postId) {
+        console.warn("Share called without postId");
+        return;
+      }
 
-          if (existingReaction) {
-            // Increment existing reaction
-            updatedReactions = updatedReactions.map((r) =>
-              r.type === reactionType ? { ...r, count: r.count + 1 } : r
+      if (Platform.OS === "android") {
+        // Android-specific share handling with custom dialog
+        setShareDialogVisible(true);
+      } else {
+        Alert.alert("Shared!", "Post link copied to clipboard");
+      }
+    } catch (error) {
+      console.error("Share error:", error);
+      Alert.alert("Error", "Unable to share post at this time");
+    }
+  }, []);
+
+  const handleCopyLink = useCallback(() => {
+    try {
+      setShareDialogVisible(false);
+      setToastMessage("Post link copied to clipboard!");
+      setSuccessToastVisible(true);
+    } catch (error) {
+      console.error("Copy link error:", error);
+      Alert.alert("Error", "Unable to copy link at this time");
+    }
+  }, []);
+
+  const handleCloseShareDialog = useCallback(() => {
+    setShareDialogVisible(false);
+  }, []);
+
+  const handleHideToast = useCallback(() => {
+    setSuccessToastVisible(false);
+  }, []);
+
+  const handleReaction = useCallback(
+    (postId: string, reactionType: string) => {
+      setPosts(
+        posts.map((post) => {
+          if (post.id === postId) {
+            const existingReaction = post.reactions?.find(
+              (r) => r.type === reactionType
             );
-          } else {
-            // Add new reaction
-            const reactionEmojis: { [key: string]: string } = {
-              like: "👍",
-              love: "❤️",
-              laugh: "😂",
-              wow: "😮",
-              sad: "😢",
-              angry: "😠",
-            };
+            let updatedReactions = post.reactions || [];
 
-            const newReaction: Reaction = {
-              id: Date.now().toString(),
-              type: reactionType as any,
-              emoji: reactionEmojis[reactionType] || "👍",
-              count: 1,
-            };
-            updatedReactions = [...updatedReactions, newReaction];
+            if (existingReaction) {
+              // Increment existing reaction
+              updatedReactions = updatedReactions.map((r) =>
+                r.type === reactionType ? { ...r, count: r.count + 1 } : r
+              );
+            } else {
+              // Add new reaction
+              const reactionEmojis: { [key: string]: string } = {
+                like: "👍",
+                love: "❤️",
+                laugh: "😂",
+                wow: "😮",
+                sad: "😢",
+                angry: "😠",
+              };
+
+              const newReaction: Reaction = {
+                id: Date.now().toString(),
+                type: reactionType as any,
+                emoji: reactionEmojis[reactionType] || "👍",
+                count: 1,
+              };
+              updatedReactions = [...updatedReactions, newReaction];
+            }
+
+            return { ...post, reactions: updatedReactions };
           }
-
-          return { ...post, reactions: updatedReactions };
-        }
-        return post;
-      })
-    );
-  };
+          return post;
+        })
+      );
+    },
+    [posts]
+  );
 
   const handleAddComment = (comment: string) => {
     if (selectedPostId) {
@@ -223,6 +276,46 @@ export default function CommunityScreen() {
   };
 
   const selectedPost = posts.find((post) => post.id === selectedPostId);
+
+  // Memoized render function for better performance
+  const renderPost = useCallback(
+    ({ item }: { item: Post }) => {
+      if (!item) {
+        console.warn("Render called with undefined item");
+        return null;
+      }
+
+      return (
+        <AnimatedPostCard
+          id={item.id}
+          username={item.author}
+          profileImage={item.avatar}
+          content={item.content}
+          images={item.images || []}
+          timestamp={item.timestamp}
+          likeCount={item.likes}
+          commentCount={item.comments?.length || 0}
+          isLiked={item.isLiked}
+          reactions={item.reactions || []}
+          onLike={handleLike}
+          onComment={handleComment}
+          onShare={handleShare}
+          onReaction={handleReaction}
+        />
+      );
+    },
+    [handleLike, handleComment, handleShare, handleReaction]
+  );
+
+  // Fixed item layout for better scrolling performance (approximate height)
+  const getItemLayout = useCallback(
+    (data: any, index: number) => ({
+      length: 300, // Approximate item height
+      offset: 300 * index,
+      index,
+    }),
+    []
+  );
 
   const styles = StyleSheet.create({
     container: {
@@ -253,12 +346,19 @@ export default function CommunityScreen() {
       fontWeight: "bold",
     },
     postList: {
-      padding: theme.spacing.lg,
+      paddingHorizontal: Platform.OS === "android" ? 0 : theme.spacing.lg,
+      paddingVertical: theme.spacing.md,
     },
   });
 
   return (
     <View style={styles.container}>
+      <SuccessToast
+        visible={successToastVisible}
+        message={toastMessage}
+        onHide={handleHideToast}
+      />
+
       <View style={styles.header}>
         <Text style={styles.title}>Community</Text>
         <TouchableOpacity
@@ -271,27 +371,16 @@ export default function CommunityScreen() {
 
       <FlatList
         data={posts}
-        renderItem={({ item }) => (
-          <AnimatedPostCard
-            id={item.id}
-            username={item.author}
-            profileImage={item.avatar}
-            content={item.content}
-            images={item.images || []}
-            timestamp={item.timestamp}
-            likeCount={item.likes}
-            commentCount={item.comments.length}
-            isLiked={item.isLiked}
-            reactions={item.reactions || []}
-            onLike={handleLike}
-            onComment={handleComment}
-            onShare={handleShare}
-            onReaction={handleReaction}
-          />
-        )}
+        renderItem={renderPost}
         keyExtractor={(item) => item.id}
+        getItemLayout={getItemLayout}
         contentContainerStyle={styles.postList}
         showsVerticalScrollIndicator={false}
+        removeClippedSubviews={Platform.OS === "android"}
+        initialNumToRender={4}
+        maxToRenderPerBatch={5}
+        windowSize={10}
+        updateCellsBatchingPeriod={50}
       />
 
       <CreatePostModalWithImages
@@ -308,6 +397,12 @@ export default function CommunityScreen() {
         }}
         comments={selectedPost?.comments || []}
         onAddComment={handleAddComment}
+      />
+
+      <ShareDialog
+        visible={shareDialogVisible}
+        onClose={handleCloseShareDialog}
+        onCopyLink={handleCopyLink}
       />
     </View>
   );

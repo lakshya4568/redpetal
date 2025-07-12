@@ -4,6 +4,7 @@ import {
   Dimensions,
   FlatList,
   Image,
+  Platform,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -79,7 +80,13 @@ export default function AnimatedPostCard({
   const [showReactions, setShowReactions] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
-  // Animation values
+  // Calculate proper image width based on card margins and padding
+  const cardMargin =
+    Platform.OS === "android" ? theme.spacing.md : theme.spacing.lg;
+  const cardPadding = theme.spacing.lg;
+  const imageWidth = screenWidth - cardMargin * 2 - cardPadding * 2;
+
+  // Animation values with reduced complexity for better Android performance
   const likeScale = useSharedValue(1);
   const likeRotation = useSharedValue(0);
   const heartOpacity = useSharedValue(0);
@@ -111,84 +118,110 @@ export default function AnimatedPostCard({
   }));
 
   const handleLike = () => {
-    // Trigger like animation
-    likeScale.value = withSequence(
-      withSpring(0.8, { duration: 100 }),
-      withSpring(1.2, { duration: 200 }),
-      withSpring(1, { duration: 200 })
-    );
-
-    if (!isLiked) {
-      // Show heart animation for new likes
-      heartOpacity.value = withTiming(1, { duration: 200 });
-      heartScale.value = withSequence(
-        withSpring(1.5, { duration: 300 }),
-        withTiming(0, { duration: 200 }, () => {
-          runOnJS(() => {
-            heartOpacity.value = 0;
-            heartScale.value = 0;
-          })();
-        })
+    try {
+      // Trigger like animation with error handling
+      likeScale.value = withSequence(
+        withSpring(0.9, { damping: 10, stiffness: 300 }),
+        withSpring(1.1, { damping: 10, stiffness: 300 }),
+        withSpring(1, { damping: 10, stiffness: 300 })
       );
 
-      // Add rotation for new likes
-      likeRotation.value = withSequence(
-        withTiming(10, { duration: 100 }),
-        withTiming(-10, { duration: 100 }),
-        withTiming(0, { duration: 100 })
-      );
+      if (!isLiked) {
+        // Show heart animation for new likes
+        heartOpacity.value = withTiming(1, { duration: 200 });
+        heartScale.value = withSequence(
+          withSpring(1.3, { damping: 10, stiffness: 300 }),
+          withTiming(0, { duration: 150 }, () => {
+            runOnJS(() => {
+              heartOpacity.value = 0;
+              heartScale.value = 0;
+            })();
+          })
+        );
+
+        // Add subtle rotation for new likes
+        likeRotation.value = withSequence(
+          withTiming(8, { duration: 80 }),
+          withTiming(-8, { duration: 80 }),
+          withTiming(0, { duration: 80 })
+        );
+      }
+
+      runOnJS(onLike)(id);
+    } catch (error) {
+      console.error("Like animation error:", error);
+      // Fallback to just calling the onLike function
+      runOnJS(onLike)(id);
     }
-
-    runOnJS(onLike)(id);
   };
 
   const handleLongPressLike = () => {
-    setShowReactions(!showReactions);
+    try {
+      setShowReactions(!showReactions);
 
-    if (!showReactions) {
-      reactionPanelScale.value = withSpring(1, { duration: 300 });
-      reactionPanelOpacity.value = withTiming(1, { duration: 200 });
-    } else {
-      reactionPanelScale.value = withTiming(0, { duration: 200 });
-      reactionPanelOpacity.value = withTiming(0, { duration: 200 });
+      if (!showReactions) {
+        reactionPanelScale.value = withSpring(1, { duration: 250 });
+        reactionPanelOpacity.value = withTiming(1, { duration: 150 });
+      } else {
+        reactionPanelScale.value = withTiming(0, { duration: 150 });
+        reactionPanelOpacity.value = withTiming(0, { duration: 150 });
+      }
+    } catch (error) {
+      console.error("Reaction panel error:", error);
+      setShowReactions(!showReactions);
     }
   };
 
   const handleReaction = (reactionType: string) => {
-    // Animate reaction selection
-    likeScale.value = withSequence(
-      withSpring(0.9, { duration: 150 }),
-      withSpring(1, { duration: 150 })
-    );
+    try {
+      // Animate reaction selection
+      likeScale.value = withSequence(
+        withSpring(0.95, { damping: 10, stiffness: 300 }),
+        withSpring(1, { damping: 10, stiffness: 300 })
+      );
 
-    // Hide reaction panel
-    reactionPanelScale.value = withTiming(0, { duration: 200 });
-    reactionPanelOpacity.value = withTiming(0, { duration: 200 });
+      // Hide reaction panel
+      reactionPanelScale.value = withTiming(0, { duration: 150 });
+      reactionPanelOpacity.value = withTiming(0, { duration: 150 });
 
-    runOnJS(() => {
+      runOnJS(() => {
+        setShowReactions(false);
+        onReaction(id, reactionType);
+      })();
+    } catch (error) {
+      console.error("Reaction handler error:", error);
       setShowReactions(false);
       onReaction(id, reactionType);
-    })();
+    }
   };
 
   const handleCardPress = () => {
-    cardScale.value = withSequence(
-      withTiming(0.98, { duration: 100 }),
-      withTiming(1, { duration: 100 })
-    );
+    try {
+      cardScale.value = withSequence(
+        withTiming(0.98, { duration: 80 }),
+        withTiming(1, { duration: 80 })
+      );
+    } catch (error) {
+      console.error("Card press animation error:", error);
+    }
   };
 
   const renderImage = ({ item, index }: { item: PostImage; index: number }) => (
     <Image
       source={{ uri: item.uri }}
-      style={[styles(theme).postImage, { width: screenWidth - 40 }]}
+      style={[styles(theme).postImage, { width: imageWidth }]}
       resizeMode="cover"
     />
   );
 
   return (
     <Animated.View style={[styles(theme).card, cardStyle]}>
-      <TouchableOpacity onPress={handleCardPress} activeOpacity={0.95}>
+      <TouchableOpacity
+        onPress={handleCardPress}
+        activeOpacity={0.95}
+        delayPressIn={0}
+        delayPressOut={0}
+      >
         {/* Header */}
         <View style={styles(theme).header}>
           <View style={styles(theme).userInfo}>
@@ -229,9 +262,18 @@ export default function AnimatedPostCard({
               horizontal
               pagingEnabled
               showsHorizontalScrollIndicator={false}
+              removeClippedSubviews={Platform.OS === "android"}
+              initialNumToRender={1}
+              maxToRenderPerBatch={2}
+              windowSize={3}
+              getItemLayout={(data, index) => ({
+                length: imageWidth,
+                offset: imageWidth * index,
+                index,
+              })}
               onMomentumScrollEnd={(event) => {
                 const index = Math.round(
-                  event.nativeEvent.contentOffset.x / (screenWidth - 40)
+                  event.nativeEvent.contentOffset.x / imageWidth
                 );
                 setCurrentImageIndex(index);
               }}
@@ -341,15 +383,13 @@ const styles = (theme: any) =>
   StyleSheet.create({
     card: {
       backgroundColor: theme.colors.surface,
-      borderRadius: theme.borderRadius.lg,
-      marginHorizontal: theme.spacing.lg,
-      marginVertical: theme.spacing.md,
+      borderRadius: theme.borderRadius.xl,
+      marginVertical: theme.spacing.sm,
+      marginHorizontal:
+        Platform.OS === "android" ? theme.spacing.md : theme.spacing.lg,
       padding: theme.spacing.lg,
-      elevation: 2,
-      shadowColor: "#000",
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.1,
-      shadowRadius: 4,
+      ...theme.shadows.md,
+      elevation: 4, // Added elevation for Android shadow
     },
     header: {
       flexDirection: "row",
@@ -364,58 +404,54 @@ const styles = (theme: any) =>
     profileImage: {
       width: 40,
       height: 40,
-      borderRadius: 20,
+      borderRadius: theme.borderRadius.round,
       marginRight: theme.spacing.md,
     },
     defaultProfileImage: {
       width: 40,
       height: 40,
-      borderRadius: 20,
-      backgroundColor: theme.colors.primary + "20",
-      alignItems: "center",
+      borderRadius: theme.borderRadius.round,
+      backgroundColor: theme.colors.border,
       justifyContent: "center",
+      alignItems: "center",
       marginRight: theme.spacing.md,
     },
     username: {
-      fontSize: 16,
-      fontWeight: "bold",
+      ...theme.typography.titleMedium,
       color: theme.colors.text,
-      fontFamily: theme.fonts.body.fontFamily,
+      fontWeight: "600",
     },
     timestamp: {
+      color: theme.colors.textSecondary,
       fontSize: 12,
-      color: theme.colors.text + "80",
-      fontFamily: theme.fonts.body.fontFamily,
     },
     content: {
-      fontSize: 14,
       color: theme.colors.text,
-      lineHeight: 20,
       marginBottom: theme.spacing.md,
-      fontFamily: theme.fonts.body.fontFamily,
+      lineHeight: 22,
     },
     imageContainer: {
-      marginBottom: theme.spacing.md,
-      borderRadius: theme.borderRadius.md,
+      borderRadius: theme.borderRadius.lg,
       overflow: "hidden",
+      marginBottom: theme.spacing.md,
+      height: 250, // Fixed height for image container
     },
     postImage: {
-      height: 200,
-      borderRadius: theme.borderRadius.md,
+      height: "100%",
+      borderRadius: theme.borderRadius.lg,
     },
     imageIndicators: {
+      position: "absolute",
+      bottom: 10,
       flexDirection: "row",
       justifyContent: "center",
-      alignItems: "center",
-      marginTop: theme.spacing.sm,
-      paddingVertical: theme.spacing.xs,
     },
     indicator: {
-      width: 6,
-      height: 6,
-      borderRadius: 3,
-      backgroundColor: theme.colors.text + "40",
-      marginHorizontal: 2,
+      width: 8,
+      height: 8,
+      borderRadius: 4,
+      backgroundColor: "rgba(255, 255, 255, 0.5)",
+      marginHorizontal: 4,
     },
     activeIndicator: {
       backgroundColor: theme.colors.primary,
@@ -427,62 +463,72 @@ const styles = (theme: any) =>
     },
     reactionEmoji: {
       fontSize: 16,
-      marginRight: 4,
+      marginRight: 2,
     },
     reactionCount: {
-      fontSize: 12,
-      color: theme.colors.text + "80",
+      ...theme.typography.bodySmall,
+      color: theme.colors.textSecondary,
       marginLeft: theme.spacing.xs,
-      fontFamily: theme.fonts.body.fontFamily,
     },
     actions: {
       flexDirection: "row",
-      justifyContent: "space-around",
+      justifyContent: "space-between",
       alignItems: "center",
       paddingTop: theme.spacing.md,
       borderTopWidth: 1,
-      borderTopColor: theme.colors.text + "20",
+      borderTopColor: theme.colors.border,
     },
     actionButton: {
       flexDirection: "row",
       alignItems: "center",
       padding: theme.spacing.sm,
-      position: "relative",
     },
     actionText: {
-      marginLeft: theme.spacing.xs,
-      fontSize: 14,
+      ...theme.typography.button,
+      marginLeft: theme.spacing.sm,
       color: theme.colors.text,
-      fontFamily: theme.fonts.body.fontFamily,
+    },
+    likeText: {
+      ...theme.typography.button,
+      marginLeft: theme.spacing.sm,
+      color: theme.colors.primary,
+      fontWeight: "bold",
+    },
+    heartContainer: {
+      position: "absolute",
+      top: "40%",
+      left: "45%",
+      zIndex: 10,
     },
     floatingHeart: {
       position: "absolute",
-      top: -30,
-      left: 15,
-      zIndex: 1000,
+      top: "40%",
+      left: "45%",
+      zIndex: 10,
     },
     floatingHeartText: {
-      fontSize: 30,
+      fontSize: 50,
+      textShadowColor: "rgba(0, 0, 0, 0.5)",
+      textShadowOffset: { width: 0, height: 2 },
+      textShadowRadius: 4,
     },
     reactionPanel: {
       position: "absolute",
-      bottom: 80,
-      left: 20,
-      right: 20,
+      bottom: 50,
+      left: 10,
       backgroundColor: theme.colors.surface,
-      borderRadius: theme.borderRadius.xl,
+      borderRadius: theme.borderRadius.xxl,
+      paddingVertical: theme.spacing.sm,
+      paddingHorizontal: theme.spacing.md,
       flexDirection: "row",
-      justifyContent: "space-around",
       alignItems: "center",
-      paddingVertical: theme.spacing.md,
-      paddingHorizontal: theme.spacing.lg,
-      elevation: 8,
-      shadowColor: "#000",
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.3,
-      shadowRadius: 8,
-      borderWidth: 1,
-      borderColor: theme.colors.text + "10",
+      ...theme.shadows.lg,
+      zIndex: 20,
+      elevation: 10, // Added elevation for Android shadow
+    },
+    reaction: {
+      padding: theme.spacing.sm,
+      borderRadius: theme.borderRadius.lg,
     },
     reactionButton: {
       padding: theme.spacing.sm,
