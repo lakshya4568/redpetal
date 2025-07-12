@@ -144,7 +144,12 @@ export default function CreatePostModalWithImages({
       return;
     }
 
-    console.log("Creating post with content:", content, "and images:", images.length);
+    console.log(
+      "Creating post with content:",
+      content,
+      "and images:",
+      images.length
+    );
     setIsSubmitting(true);
 
     // Simple submit button animation
@@ -306,7 +311,9 @@ export default function CreatePostModalWithImages({
               <Ionicons name="close" size={24} color={theme.colors.text} />
             </TouchableOpacity>
             <Text style={styles.title}>Create Post</Text>
-            <Animated.View style={{ transform: [{ scale: submitButtonScale }] }}>
+            <Animated.View
+              style={{ transform: [{ scale: submitButtonScale }] }}
+            >
               <TouchableOpacity
                 onPress={handleSubmit}
                 disabled={isSubmitting}
@@ -354,11 +361,7 @@ export default function CreatePostModalWithImages({
                       onPress={() => removeImage(image.id)}
                       style={styles.removeImageButton}
                     >
-                      <Ionicons
-                        name="close-circle"
-                        size={24}
-                        color="#ff4444"
-                      />
+                      <Ionicons name="close-circle" size={24} color="#ff4444" />
                     </TouchableOpacity>
                   </View>
                 ))}
@@ -371,11 +374,7 @@ export default function CreatePostModalWithImages({
                 onPress={showImageOptions}
                 style={styles.actionButton}
               >
-                <Ionicons
-                  name="image"
-                  size={24}
-                  color={theme.colors.primary}
-                />
+                <Ionicons name="image" size={24} color={theme.colors.primary} />
                 <Text style={styles.actionText}>Add Photo</Text>
               </TouchableOpacity>
             </View>

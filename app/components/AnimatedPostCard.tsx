@@ -89,7 +89,7 @@ export default function AnimatedPostCard({
 
   const handleLike = () => {
     console.log("Like button pressed for post:", id);
-    
+
     // Simple, stable animation for like button
     Animated.sequence([
       Animated.timing(likeScale, {
@@ -139,7 +139,7 @@ export default function AnimatedPostCard({
 
   const handleComment = () => {
     console.log("Comment button pressed for post:", id);
-    
+
     // Simple card press animation
     Animated.sequence([
       Animated.timing(cardScale, {
@@ -160,7 +160,7 @@ export default function AnimatedPostCard({
 
   const handleShare = () => {
     console.log("Share button pressed for post:", id);
-    
+
     // Simple card press animation
     Animated.sequence([
       Animated.timing(cardScale, {
@@ -181,7 +181,7 @@ export default function AnimatedPostCard({
 
   const handleLongPressLike = () => {
     console.log("Long press like for reactions:", id);
-    
+
     if (!showReactions) {
       setShowReactions(true);
       Animated.parallel([
@@ -215,7 +215,7 @@ export default function AnimatedPostCard({
 
   const handleReaction = (reactionType: string) => {
     console.log("Reaction selected:", reactionType, "for post:", id);
-    
+
     // Animate reaction selection
     Animated.timing(likeScale, {
       toValue: 0.95,
@@ -273,12 +273,12 @@ export default function AnimatedPostCard({
   );
 
   return (
-    <Animated.View 
+    <Animated.View
       style={[
-        styles(theme).card, 
+        styles(theme).card,
         {
           transform: [{ scale: cardScale }],
-        }
+        },
       ]}
     >
       <TouchableOpacity
@@ -391,13 +391,13 @@ export default function AnimatedPostCard({
             <Text style={styles(theme).actionText}>{likeCount}</Text>
 
             {/* Floating heart animation */}
-            <Animated.View 
+            <Animated.View
               style={[
-                styles(theme).floatingHeart, 
+                styles(theme).floatingHeart,
                 {
                   opacity: heartOpacity,
                   transform: [{ scale: heartScale }],
-                }
+                },
               ]}
             >
               <Text style={styles(theme).floatingHeartText}>❤️</Text>
@@ -437,7 +437,7 @@ export default function AnimatedPostCard({
               {
                 opacity: reactionPanelOpacity,
                 transform: [{ scale: reactionPanelScale }],
-              }
+              },
             ]}
           >
             {reactionTypes.map((reaction) => (
@@ -586,19 +586,21 @@ const styles = (theme: any) =>
       left: 10,
       backgroundColor: theme.colors.surface,
       borderRadius: theme.borderRadius.xxl,
-      paddingVertical: theme.spacing.sm,
-      paddingHorizontal: theme.spacing.md,
+      paddingVertical: theme.spacing.xs,
+      paddingHorizontal: theme.spacing.sm,
       flexDirection: "row",
       alignItems: "center",
       ...theme.shadows.lg,
       zIndex: 20,
       elevation: 10,
+      maxWidth: "90%", // Ensure it doesn't exceed screen width
     },
     reactionButton: {
-      padding: theme.spacing.sm,
-      borderRadius: theme.borderRadius.lg,
+      padding: theme.spacing.xs,
+      borderRadius: theme.borderRadius.md,
+      marginHorizontal: 2, // Reduce spacing between reactions
     },
     reactionButtonText: {
-      fontSize: 28,
+      fontSize: 24, // Reduced from 28 to fit better
     },
   });
