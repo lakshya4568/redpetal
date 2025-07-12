@@ -129,6 +129,8 @@ export default function CommunityScreen() {
   ]);
 
   const handleCreatePost = (content: string, images: PostImage[] = []) => {
+    console.log("Creating new post:", { content, imageCount: images.length });
+    
     const newPost: Post = {
       id: Date.now().toString(),
       author: "You",
@@ -141,25 +143,39 @@ export default function CommunityScreen() {
       isLiked: false,
       reactions: [],
     };
+    
     setPosts([newPost, ...posts]);
-    Alert.alert("Success", "Your post has been shared with the community!");
+    
+    // Show success toast instead of Alert
+    setToastMessage("Your post has been shared with the community!");
+    setSuccessToastVisible(true);
   };
 
   const handleLike = useCallback((postId: string) => {
-    setPosts((prevPosts) =>
-      prevPosts.map((post) =>
-        post.id === postId
-          ? {
-              ...post,
-              isLiked: !post.isLiked,
-              likes: post.isLiked ? post.likes - 1 : post.likes + 1,
-            }
-          : post
-      )
-    );
+    console.log("Like action for post:", postId);
+    
+    try {
+      setPosts((prevPosts) =>
+        prevPosts.map((post) =>
+          post.id === postId
+            ? {
+                ...post,
+                isLiked: !post.isLiked,
+                likes: post.isLiked ? post.likes - 1 : post.likes + 1,
+              }
+            : post
+        )
+      );
+      
+      console.log("Like action completed successfully");
+    } catch (error) {
+      console.error("Error in handleLike:", error);
+    }
   }, []);
 
   const handleComment = useCallback((postId: string) => {
+    console.log("Comment action for post:", postId);
+    
     try {
       if (!postId) {
         console.warn("Comment called without postId");
@@ -168,6 +184,7 @@ export default function CommunityScreen() {
 
       setSelectedPostId(postId);
       setCommentsVisible(true);
+      console.log("Comments modal opened successfully");
     } catch (error) {
       console.error("Comment error:", error);
       Alert.alert("Error", "Unable to open comments at this time");
@@ -175,6 +192,8 @@ export default function CommunityScreen() {
   }, []);
 
   const handleShare = useCallback(async (postId: string) => {
+    console.log("Share action for post:", postId);
+    
     try {
       if (!postId) {
         console.warn("Share called without postId");
@@ -183,10 +202,13 @@ export default function CommunityScreen() {
 
       if (Platform.OS === "android") {
         // Android-specific share handling with custom dialog
+        console.log("Opening Android share dialog");
         setShareDialogVisible(true);
       } else {
         Alert.alert("Shared!", "Post link copied to clipboard");
       }
+      
+      console.log("Share action completed successfully");
     } catch (error) {
       console.error("Share error:", error);
       Alert.alert("Error", "Unable to share post at this time");
@@ -214,64 +236,82 @@ export default function CommunityScreen() {
 
   const handleReaction = useCallback(
     (postId: string, reactionType: string) => {
-      setPosts(
-        posts.map((post) => {
-          if (post.id === postId) {
-            const existingReaction = post.reactions?.find(
-              (r) => r.type === reactionType
-            );
-            let updatedReactions = post.reactions || [];
-
-            if (existingReaction) {
-              // Increment existing reaction
-              updatedReactions = updatedReactions.map((r) =>
-                r.type === reactionType ? { ...r, count: r.count + 1 } : r
+      console.log("Reaction action:", { postId, reactionType });
+      
+      try {
+        setPosts(
+          posts.map((post) => {
+            if (post.id === postId) {
+              const existingReaction = post.reactions?.find(
+                (r) => r.type === reactionType
               );
-            } else {
-              // Add new reaction
-              const reactionEmojis: { [key: string]: string } = {
-                like: "👍",
-                love: "❤️",
-                laugh: "😂",
-                wow: "😮",
-                sad: "😢",
-                angry: "😠",
-              };
+              let updatedReactions = post.reactions || [];
 
-              const newReaction: Reaction = {
-                id: Date.now().toString(),
-                type: reactionType as any,
-                emoji: reactionEmojis[reactionType] || "👍",
-                count: 1,
-              };
-              updatedReactions = [...updatedReactions, newReaction];
+              if (existingReaction) {
+                // Increment existing reaction
+                updatedReactions = updatedReactions.map((r) =>
+                  r.type === reactionType ? { ...r, count: r.count + 1 } : r
+                );
+              } else {
+                // Add new reaction
+                const reactionEmojis: { [key: string]: string } = {
+                  like: "👍",
+                  love: "❤️",
+                  laugh: "😂",
+                  wow: "😮",
+                  sad: "😢",
+                  angry: "😠",
+                };
+
+                const newReaction: Reaction = {
+                  id: Date.now().toString(),
+                  type: reactionType as any,
+                  emoji: reactionEmojis[reactionType] || "👍",
+                  count: 1,
+                };
+                updatedReactions = [...updatedReactions, newReaction];
+              }
+
+              return { ...post, reactions: updatedReactions };
             }
-
-            return { ...post, reactions: updatedReactions };
-          }
-          return post;
-        })
-      );
+            return post;
+          })
+        );
+        
+        console.log("Reaction action completed successfully");
+      } catch (error) {
+        console.error("Error in handleReaction:", error);
+      }
     },
     [posts]
   );
 
   const handleAddComment = (comment: string) => {
-    if (selectedPostId) {
-      const newComment: Comment = {
-        id: Date.now().toString(),
-        author: "You",
-        content: comment,
-        timestamp: "now",
-      };
+    console.log("Adding comment:", { selectedPostId, comment });
+    
+    try {
+      if (selectedPostId) {
+        const newComment: Comment = {
+          id: Date.now().toString(),
+          author: "You",
+          content: comment,
+          timestamp: "now",
+        };
 
-      setPosts(
-        posts.map((post) =>
-          post.id === selectedPostId
-            ? { ...post, comments: [...post.comments, newComment] }
-            : post
-        )
-      );
+        setPosts(
+          posts.map((post) =>
+            post.id === selectedPostId
+              ? { ...post, comments: [...post.comments, newComment] }
+              : post
+          )
+        );
+        
+        console.log("Comment added successfully");
+      } else {
+        console.warn("No selectedPostId when adding comment");
+      }
+    } catch (error) {
+      console.error("Error adding comment:", error);
     }
   };
 

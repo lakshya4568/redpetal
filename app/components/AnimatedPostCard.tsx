@@ -1,6 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import {
+  Animated,
   Dimensions,
   FlatList,
   Image,
@@ -10,14 +11,6 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import Animated, {
-  runOnJS,
-  useAnimatedStyle,
-  useSharedValue,
-  withSequence,
-  withSpring,
-  withTiming,
-} from "react-native-reanimated";
 import { useThemeContext } from "./ThemeContext";
 
 const { width: screenWidth } = Dimensions.get("window");
@@ -86,124 +79,189 @@ export default function AnimatedPostCard({
   const cardPadding = theme.spacing.lg;
   const imageWidth = screenWidth - cardMargin * 2 - cardPadding * 2;
 
-  // Animation values with reduced complexity for better Android performance
-  const likeScale = useSharedValue(1);
-  const likeRotation = useSharedValue(0);
-  const heartOpacity = useSharedValue(0);
-  const heartScale = useSharedValue(0);
-  const reactionPanelScale = useSharedValue(0);
-  const reactionPanelOpacity = useSharedValue(0);
-  const cardScale = useSharedValue(1);
-
-  // Animated styles
-  const likeButtonStyle = useAnimatedStyle(() => ({
-    transform: [
-      { scale: likeScale.value },
-      { rotate: `${likeRotation.value}deg` },
-    ],
-  }));
-
-  const heartStyle = useAnimatedStyle(() => ({
-    opacity: heartOpacity.value,
-    transform: [{ scale: heartScale.value }],
-  }));
-
-  const reactionPanelStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: reactionPanelScale.value }],
-    opacity: reactionPanelOpacity.value,
-  }));
-
-  const cardStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: cardScale.value }],
-  }));
+  // React Native Animated API (stable for Android Expo Go)
+  const likeScale = useRef(new Animated.Value(1)).current;
+  const heartOpacity = useRef(new Animated.Value(0)).current;
+  const heartScale = useRef(new Animated.Value(0)).current;
+  const reactionPanelScale = useRef(new Animated.Value(0)).current;
+  const reactionPanelOpacity = useRef(new Animated.Value(0)).current;
+  const cardScale = useRef(new Animated.Value(1)).current;
 
   const handleLike = () => {
-    try {
-      // Trigger like animation with error handling
-      likeScale.value = withSequence(
-        withSpring(0.9, { damping: 10, stiffness: 300 }),
-        withSpring(1.1, { damping: 10, stiffness: 300 }),
-        withSpring(1, { damping: 10, stiffness: 300 })
-      );
+    console.log("Like button pressed for post:", id);
+    
+    // Simple, stable animation for like button
+    Animated.sequence([
+      Animated.timing(likeScale, {
+        toValue: 0.9,
+        duration: 100,
+        useNativeDriver: true,
+      }),
+      Animated.timing(likeScale, {
+        toValue: 1.1,
+        duration: 100,
+        useNativeDriver: true,
+      }),
+      Animated.timing(likeScale, {
+        toValue: 1,
+        duration: 100,
+        useNativeDriver: true,
+      }),
+    ]).start();
 
-      if (!isLiked) {
-        // Show heart animation for new likes
-        heartOpacity.value = withTiming(1, { duration: 200 });
-        heartScale.value = withSequence(
-          withSpring(1.3, { damping: 10, stiffness: 300 }),
-          withTiming(0, { duration: 150 }, () => {
-            runOnJS(() => {
-              heartOpacity.value = 0;
-              heartScale.value = 0;
-            })();
-          })
-        );
-
-        // Add subtle rotation for new likes
-        likeRotation.value = withSequence(
-          withTiming(8, { duration: 80 }),
-          withTiming(-8, { duration: 80 }),
-          withTiming(0, { duration: 80 })
-        );
-      }
-
-      runOnJS(onLike)(id);
-    } catch (error) {
-      console.error("Like animation error:", error);
-      // Fallback to just calling the onLike function
-      runOnJS(onLike)(id);
+    // Show heart animation for new likes only
+    if (!isLiked) {
+      Animated.parallel([
+        Animated.timing(heartOpacity, {
+          toValue: 1,
+          duration: 200,
+          useNativeDriver: true,
+        }),
+        Animated.spring(heartScale, {
+          toValue: 1.3,
+          useNativeDriver: true,
+        }),
+      ]).start(() => {
+        // Hide heart after animation
+        Animated.timing(heartOpacity, {
+          toValue: 0,
+          duration: 150,
+          useNativeDriver: true,
+        }).start(() => {
+          heartScale.setValue(0);
+        });
+      });
     }
+
+    // Call the like handler
+    onLike(id);
+  };
+
+  const handleComment = () => {
+    console.log("Comment button pressed for post:", id);
+    
+    // Simple card press animation
+    Animated.sequence([
+      Animated.timing(cardScale, {
+        toValue: 0.98,
+        duration: 80,
+        useNativeDriver: true,
+      }),
+      Animated.timing(cardScale, {
+        toValue: 1,
+        duration: 80,
+        useNativeDriver: true,
+      }),
+    ]).start();
+
+    // Call the comment handler
+    onComment(id);
+  };
+
+  const handleShare = () => {
+    console.log("Share button pressed for post:", id);
+    
+    // Simple card press animation
+    Animated.sequence([
+      Animated.timing(cardScale, {
+        toValue: 0.98,
+        duration: 80,
+        useNativeDriver: true,
+      }),
+      Animated.timing(cardScale, {
+        toValue: 1,
+        duration: 80,
+        useNativeDriver: true,
+      }),
+    ]).start();
+
+    // Call the share handler
+    onShare(id);
   };
 
   const handleLongPressLike = () => {
-    try {
-      setShowReactions(!showReactions);
-
-      if (!showReactions) {
-        reactionPanelScale.value = withSpring(1, { duration: 250 });
-        reactionPanelOpacity.value = withTiming(1, { duration: 150 });
-      } else {
-        reactionPanelScale.value = withTiming(0, { duration: 150 });
-        reactionPanelOpacity.value = withTiming(0, { duration: 150 });
-      }
-    } catch (error) {
-      console.error("Reaction panel error:", error);
-      setShowReactions(!showReactions);
+    console.log("Long press like for reactions:", id);
+    
+    if (!showReactions) {
+      setShowReactions(true);
+      Animated.parallel([
+        Animated.spring(reactionPanelScale, {
+          toValue: 1,
+          useNativeDriver: true,
+        }),
+        Animated.timing(reactionPanelOpacity, {
+          toValue: 1,
+          duration: 150,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    } else {
+      Animated.parallel([
+        Animated.timing(reactionPanelScale, {
+          toValue: 0,
+          duration: 150,
+          useNativeDriver: true,
+        }),
+        Animated.timing(reactionPanelOpacity, {
+          toValue: 0,
+          duration: 150,
+          useNativeDriver: true,
+        }),
+      ]).start(() => {
+        setShowReactions(false);
+      });
     }
   };
 
   const handleReaction = (reactionType: string) => {
-    try {
-      // Animate reaction selection
-      likeScale.value = withSequence(
-        withSpring(0.95, { damping: 10, stiffness: 300 }),
-        withSpring(1, { damping: 10, stiffness: 300 })
-      );
+    console.log("Reaction selected:", reactionType, "for post:", id);
+    
+    // Animate reaction selection
+    Animated.timing(likeScale, {
+      toValue: 0.95,
+      duration: 100,
+      useNativeDriver: true,
+    }).start(() => {
+      Animated.timing(likeScale, {
+        toValue: 1,
+        duration: 100,
+        useNativeDriver: true,
+      }).start();
+    });
 
-      // Hide reaction panel
-      reactionPanelScale.value = withTiming(0, { duration: 150 });
-      reactionPanelOpacity.value = withTiming(0, { duration: 150 });
-
-      runOnJS(() => {
-        setShowReactions(false);
-        onReaction(id, reactionType);
-      })();
-    } catch (error) {
-      console.error("Reaction handler error:", error);
+    // Hide reaction panel
+    Animated.parallel([
+      Animated.timing(reactionPanelScale, {
+        toValue: 0,
+        duration: 150,
+        useNativeDriver: true,
+      }),
+      Animated.timing(reactionPanelOpacity, {
+        toValue: 0,
+        duration: 150,
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
       setShowReactions(false);
-      onReaction(id, reactionType);
-    }
+    });
+
+    // Call the reaction handler
+    onReaction(id, reactionType);
   };
 
   const handleCardPress = () => {
-    try {
-      cardScale.value = withSequence(
-        withTiming(0.98, { duration: 80 }),
-        withTiming(1, { duration: 80 })
-      );
-    } catch (error) {
-      console.error("Card press animation error:", error);
-    }
+    Animated.sequence([
+      Animated.timing(cardScale, {
+        toValue: 0.98,
+        duration: 80,
+        useNativeDriver: true,
+      }),
+      Animated.timing(cardScale, {
+        toValue: 1,
+        duration: 80,
+        useNativeDriver: true,
+      }),
+    ]).start();
   };
 
   const renderImage = ({ item, index }: { item: PostImage; index: number }) => (
@@ -215,7 +273,14 @@ export default function AnimatedPostCard({
   );
 
   return (
-    <Animated.View style={[styles(theme).card, cardStyle]}>
+    <Animated.View 
+      style={[
+        styles(theme).card, 
+        {
+          transform: [{ scale: cardScale }],
+        }
+      ]}
+    >
       <TouchableOpacity
         onPress={handleCardPress}
         activeOpacity={0.95}
@@ -316,7 +381,7 @@ export default function AnimatedPostCard({
             onLongPress={handleLongPressLike}
             style={styles(theme).actionButton}
           >
-            <Animated.View style={likeButtonStyle}>
+            <Animated.View style={{ transform: [{ scale: likeScale }] }}>
               <Ionicons
                 name={isLiked ? "heart" : "heart-outline"}
                 size={24}
@@ -326,13 +391,21 @@ export default function AnimatedPostCard({
             <Text style={styles(theme).actionText}>{likeCount}</Text>
 
             {/* Floating heart animation */}
-            <Animated.View style={[styles(theme).floatingHeart, heartStyle]}>
+            <Animated.View 
+              style={[
+                styles(theme).floatingHeart, 
+                {
+                  opacity: heartOpacity,
+                  transform: [{ scale: heartScale }],
+                }
+              ]}
+            >
               <Text style={styles(theme).floatingHeartText}>❤️</Text>
             </Animated.View>
           </TouchableOpacity>
 
           <TouchableOpacity
-            onPress={() => onComment(id)}
+            onPress={handleComment}
             style={styles(theme).actionButton}
           >
             <Ionicons
@@ -344,7 +417,7 @@ export default function AnimatedPostCard({
           </TouchableOpacity>
 
           <TouchableOpacity
-            onPress={() => onShare(id)}
+            onPress={handleShare}
             style={styles(theme).actionButton}
           >
             <Ionicons
@@ -359,7 +432,13 @@ export default function AnimatedPostCard({
         {/* Reaction Panel */}
         {showReactions && (
           <Animated.View
-            style={[styles(theme).reactionPanel, reactionPanelStyle]}
+            style={[
+              styles(theme).reactionPanel,
+              {
+                opacity: reactionPanelOpacity,
+                transform: [{ scale: reactionPanelScale }],
+              }
+            ]}
           >
             {reactionTypes.map((reaction) => (
               <TouchableOpacity
@@ -389,7 +468,7 @@ const styles = (theme: any) =>
         Platform.OS === "android" ? theme.spacing.md : theme.spacing.lg,
       padding: theme.spacing.lg,
       ...theme.shadows.md,
-      elevation: 4, // Added elevation for Android shadow
+      elevation: 4,
     },
     header: {
       flexDirection: "row",
@@ -434,7 +513,7 @@ const styles = (theme: any) =>
       borderRadius: theme.borderRadius.lg,
       overflow: "hidden",
       marginBottom: theme.spacing.md,
-      height: 250, // Fixed height for image container
+      height: 250,
     },
     postImage: {
       height: "100%",
@@ -445,6 +524,7 @@ const styles = (theme: any) =>
       bottom: 10,
       flexDirection: "row",
       justifyContent: "center",
+      alignSelf: "center",
     },
     indicator: {
       width: 8,
@@ -488,22 +568,10 @@ const styles = (theme: any) =>
       marginLeft: theme.spacing.sm,
       color: theme.colors.text,
     },
-    likeText: {
-      ...theme.typography.button,
-      marginLeft: theme.spacing.sm,
-      color: theme.colors.primary,
-      fontWeight: "bold",
-    },
-    heartContainer: {
-      position: "absolute",
-      top: "40%",
-      left: "45%",
-      zIndex: 10,
-    },
     floatingHeart: {
       position: "absolute",
-      top: "40%",
-      left: "45%",
+      top: -10,
+      left: 10,
       zIndex: 10,
     },
     floatingHeartText: {
@@ -524,11 +592,7 @@ const styles = (theme: any) =>
       alignItems: "center",
       ...theme.shadows.lg,
       zIndex: 20,
-      elevation: 10, // Added elevation for Android shadow
-    },
-    reaction: {
-      padding: theme.spacing.sm,
-      borderRadius: theme.borderRadius.lg,
+      elevation: 10,
     },
     reactionButton: {
       padding: theme.spacing.sm,
