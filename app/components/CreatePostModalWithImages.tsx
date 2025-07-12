@@ -3,10 +3,10 @@ import * as ImagePicker from "expo-image-picker";
 import React, { useState } from "react";
 import {
   Alert,
+  Animated,
   Dimensions,
   Image,
   Modal,
-  Platform,
   ScrollView,
   StyleSheet,
   Text,
@@ -14,14 +14,6 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import Animated, {
-  useAnimatedKeyboard,
-  useAnimatedStyle,
-  useSharedValue,
-  withSequence,
-  withSpring,
-  withTiming,
-} from "react-native-reanimated";
 import { useThemeContext } from "./ThemeContext";
 
 const { width: screenWidth } = Dimensions.get("window");
@@ -47,40 +39,14 @@ export default function CreatePostModalWithImages({
   const [images, setImages] = useState<PostImage[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Animation values
-  const modalScale = useSharedValue(0);
-  const submitButtonScale = useSharedValue(1);
-  const keyboard = useAnimatedKeyboard();
+  // Simple React Native Animated API for submit button
+  const submitButtonScale = React.useRef(new Animated.Value(1)).current;
 
-  // Animated styles
-  const modalStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: modalScale.value }],
-  }));
-
-  const containerStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: -keyboard.height.value / 2 }],
-  }));
-
-  const submitButtonStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: submitButtonScale.value }],
-  }));
-
-  React.useEffect(() => {
-    if (visible) {
-      modalScale.value = withSpring(1, {
-        duration: Platform.OS === "android" ? 200 : 300,
-        dampingRatio: 0.8,
-      });
-    } else {
-      modalScale.value = withTiming(0, {
-        duration: Platform.OS === "android" ? 150 : 200,
-      });
-      // Reset form when modal closes
-      setContent("");
-      setImages([]);
-      setIsSubmitting(false);
-    }
-  }, [visible, modalScale]);
+  const resetForm = () => {
+    setContent("");
+    setImages([]);
+    setIsSubmitting(false);
+  };
 
   const requestPermissions = async () => {
     try {
@@ -178,20 +144,26 @@ export default function CreatePostModalWithImages({
       return;
     }
 
+    console.log("Creating post with content:", content, "and images:", images.length);
     setIsSubmitting(true);
 
-    // Animate submit button with error handling
-    try {
-      submitButtonScale.value = withSequence(
-        withSpring(0.95, { duration: 100 }),
-        withSpring(1, { duration: 100 })
-      );
-    } catch (animationError) {
-      console.error("Animation error:", animationError);
-    }
+    // Simple submit button animation
+    Animated.sequence([
+      Animated.timing(submitButtonScale, {
+        toValue: 0.95,
+        duration: 100,
+        useNativeDriver: true,
+      }),
+      Animated.timing(submitButtonScale, {
+        toValue: 1,
+        duration: 100,
+        useNativeDriver: true,
+      }),
+    ]).start();
 
     try {
       await onSubmit(content.trim(), images);
+      resetForm();
       onClose();
     } catch (error) {
       console.error("Failed to create post:", error);
@@ -201,134 +173,11 @@ export default function CreatePostModalWithImages({
   };
 
   const handleClose = () => {
-    modalScale.value = withTiming(0, { duration: 200 });
-    setTimeout(() => {
-      onClose();
-    }, 200);
+    resetForm();
+    onClose();
   };
 
-  return (
-    <Modal
-      visible={visible}
-      transparent
-      animationType="none"
-      statusBarTranslucent
-    >
-      <View style={styles(theme).overlay}>
-        <Animated.View style={[styles(theme).container, containerStyle]}>
-          <Animated.View style={[styles(theme).modal, modalStyle]}>
-            {/* Header */}
-            <View style={styles(theme).header}>
-              <TouchableOpacity onPress={handleClose}>
-                <Ionicons name="close" size={24} color={theme.colors.text} />
-              </TouchableOpacity>
-              <Text style={styles(theme).title}>Create Post</Text>
-              <Animated.View style={submitButtonStyle}>
-                <TouchableOpacity
-                  onPress={handleSubmit}
-                  disabled={isSubmitting}
-                  style={[
-                    styles(theme).submitButton,
-                    { opacity: isSubmitting ? 0.6 : 1 },
-                  ]}
-                >
-                  <Text style={styles(theme).submitButtonText}>
-                    {isSubmitting ? "Posting..." : "Post"}
-                  </Text>
-                </TouchableOpacity>
-              </Animated.View>
-            </View>
-
-            <ScrollView
-              style={styles(theme).scrollView}
-              showsVerticalScrollIndicator={false}
-            >
-              {/* Text Input */}
-              <TextInput
-                style={styles(theme).textInput}
-                placeholder="What's on your mind?"
-                placeholderTextColor={theme.colors.text + "60"}
-                multiline
-                numberOfLines={6}
-                value={content}
-                onChangeText={setContent}
-                textAlignVertical="top"
-              />
-
-              {/* Image Preview Grid */}
-              {images.length > 0 && (
-                <View style={styles(theme).imageGrid}>
-                  {images.map((image, index) => (
-                    <View key={image.id} style={styles(theme).imagePreview}>
-                      <Image
-                        source={{ uri: image.uri }}
-                        style={styles(theme).previewImage}
-                        resizeMode="cover"
-                      />
-                      <TouchableOpacity
-                        onPress={() => removeImage(image.id)}
-                        style={styles(theme).removeImageButton}
-                      >
-                        <Ionicons
-                          name="close-circle"
-                          size={24}
-                          color="#ff4444"
-                        />
-                      </TouchableOpacity>
-                    </View>
-                  ))}
-                </View>
-              )}
-
-              {/* Actions */}
-              <View style={styles(theme).actions}>
-                <TouchableOpacity
-                  onPress={showImageOptions}
-                  style={styles(theme).actionButton}
-                >
-                  <Ionicons
-                    name="image"
-                    size={24}
-                    color={theme.colors.primary}
-                  />
-                  <Text style={styles(theme).actionText}>Add Photo</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity style={styles(theme).actionButton}>
-                  <Ionicons
-                    name="location"
-                    size={24}
-                    color={theme.colors.primary}
-                  />
-                  <Text style={styles(theme).actionText}>Add Location</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity style={styles(theme).actionButton}>
-                  <Ionicons
-                    name="happy"
-                    size={24}
-                    color={theme.colors.primary}
-                  />
-                  <Text style={styles(theme).actionText}>Feeling</Text>
-                </TouchableOpacity>
-              </View>
-
-              {/* Character Count */}
-              <View style={styles(theme).characterCount}>
-                <Text style={styles(theme).characterCountText}>
-                  {content.length}/500
-                </Text>
-              </View>
-            </ScrollView>
-          </Animated.View>
-        </Animated.View>
-      </View>
-    </Modal>
-  );
-}
-
-const styles = (theme: any) =>
-  StyleSheet.create({
+  const styles = StyleSheet.create({
     overlay: {
       flex: 1,
       backgroundColor: "rgba(0, 0, 0, 0.5)",
@@ -338,8 +187,6 @@ const styles = (theme: any) =>
     container: {
       width: "90%",
       maxHeight: "80%",
-    },
-    modal: {
       backgroundColor: theme.colors.surface,
       borderRadius: theme.borderRadius.xl,
       overflow: "hidden",
@@ -415,7 +262,7 @@ const styles = (theme: any) =>
     },
     actions: {
       flexDirection: "row",
-      justifyContent: "space-around",
+      justifyContent: "center",
       padding: theme.spacing.lg,
       borderTopWidth: 1,
       borderTopColor: theme.colors.text + "20",
@@ -442,3 +289,106 @@ const styles = (theme: any) =>
       fontFamily: theme.fonts.body.fontFamily,
     },
   });
+
+  return (
+    <Modal
+      visible={visible}
+      transparent
+      animationType="slide"
+      statusBarTranslucent
+      onRequestClose={handleClose}
+    >
+      <View style={styles.overlay}>
+        <View style={styles.container}>
+          {/* Header */}
+          <View style={styles.header}>
+            <TouchableOpacity onPress={handleClose}>
+              <Ionicons name="close" size={24} color={theme.colors.text} />
+            </TouchableOpacity>
+            <Text style={styles.title}>Create Post</Text>
+            <Animated.View style={{ transform: [{ scale: submitButtonScale }] }}>
+              <TouchableOpacity
+                onPress={handleSubmit}
+                disabled={isSubmitting}
+                style={[
+                  styles.submitButton,
+                  { opacity: isSubmitting ? 0.6 : 1 },
+                ]}
+              >
+                <Text style={styles.submitButtonText}>
+                  {isSubmitting ? "Posting..." : "Post"}
+                </Text>
+              </TouchableOpacity>
+            </Animated.View>
+          </View>
+
+          <ScrollView
+            style={styles.scrollView}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+          >
+            {/* Text Input */}
+            <TextInput
+              style={styles.textInput}
+              placeholder="What's on your mind?"
+              placeholderTextColor={theme.colors.text + "60"}
+              multiline
+              numberOfLines={6}
+              value={content}
+              onChangeText={setContent}
+              textAlignVertical="top"
+              maxLength={500}
+            />
+
+            {/* Image Preview Grid */}
+            {images.length > 0 && (
+              <View style={styles.imageGrid}>
+                {images.map((image, index) => (
+                  <View key={image.id} style={styles.imagePreview}>
+                    <Image
+                      source={{ uri: image.uri }}
+                      style={styles.previewImage}
+                      resizeMode="cover"
+                    />
+                    <TouchableOpacity
+                      onPress={() => removeImage(image.id)}
+                      style={styles.removeImageButton}
+                    >
+                      <Ionicons
+                        name="close-circle"
+                        size={24}
+                        color="#ff4444"
+                      />
+                    </TouchableOpacity>
+                  </View>
+                ))}
+              </View>
+            )}
+
+            {/* Actions */}
+            <View style={styles.actions}>
+              <TouchableOpacity
+                onPress={showImageOptions}
+                style={styles.actionButton}
+              >
+                <Ionicons
+                  name="image"
+                  size={24}
+                  color={theme.colors.primary}
+                />
+                <Text style={styles.actionText}>Add Photo</Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Character Count */}
+            <View style={styles.characterCount}>
+              <Text style={styles.characterCountText}>
+                {content.length}/500
+              </Text>
+            </View>
+          </ScrollView>
+        </View>
+      </View>
+    </Modal>
+  );
+}
