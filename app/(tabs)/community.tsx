@@ -287,30 +287,45 @@ export default function CommunityScreen() {
         </TouchableOpacity>
       </View>
 
-      <FlatList
-        data={posts}
-        renderItem={({ item }) => (
-          <AnimatedPostCard
-            id={item.id}
-            username={item.author}
-            profileImage={item.avatar}
-            content={item.content}
-            images={item.images || []}
-            timestamp={item.timestamp}
-            likeCount={item.likes}
-            commentCount={item.comments.length}
-            isLiked={item.isLiked}
-            reactions={item.reactions || []}
-            onLike={handleLike}
-            onComment={handleComment}
-            onShare={handleShare}
-            onReaction={handleReaction}
-          />
-        )}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.postList}
-        showsVerticalScrollIndicator={false}
-      />
+      {loading ? (
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+          <ActivityIndicator size="large" color={theme.colors.primary} />
+          <Text style={{ color: theme.colors.text, marginTop: 10 }}>Loading posts...</Text>
+        </View>
+      ) : (
+        <FlatList
+          data={posts}
+          renderItem={({ item }) => (
+            <AnimatedPostCard
+              id={item.id}
+              username={item.author}
+              profileImage={item.avatar}
+              content={item.content}
+              images={item.images || []}
+              timestamp={item.timestamp}
+              likeCount={item.likes}
+              commentCount={item.comments.length}
+              isLiked={item.isLiked}
+              reactions={item.reactions || []}
+              onLike={handleLike}
+              onComment={handleComment}
+              onShare={handleShare}
+              onReaction={handleReaction}
+            />
+          )}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={styles.postList}
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={[theme.colors.primary]}
+              tintColor={theme.colors.primary}
+            />
+          }
+        />
+      )}
 
       <CreatePostModalWithImages
         visible={createPostVisible}
