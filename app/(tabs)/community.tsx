@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import {
   Alert,
   FlatList,
@@ -6,11 +6,15 @@ import {
   Text,
   TouchableOpacity,
   View,
+  ActivityIndicator,
+  RefreshControl,
 } from "react-native";
 import AnimatedPostCard from "../components/AnimatedPostCard";
 import CommentsModal from "../components/CommentsModal";
 import CreatePostModalWithImages from "../components/CreatePostModalWithImages";
 import { useThemeContext } from "../components/ThemeContext";
+import { communityAPI } from "../services/api";
+import { useFocusEffect } from "expo-router";
 
 interface Comment {
   id: string;
