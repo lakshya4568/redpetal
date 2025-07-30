@@ -273,7 +273,55 @@ export default function CommunityScreen() {
     postList: {
       padding: theme.spacing.lg,
     },
+    loadingContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      padding: theme.spacing.xl,
+    },
+    loadingText: {
+      ...theme.typography.bodyLarge,
+      color: theme.colors.text,
+      marginTop: theme.spacing.md,
+    },
+    emptyContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      padding: theme.spacing.xl,
+    },
+    emptyText: {
+      ...theme.typography.headlineSmall,
+      color: theme.colors.textSecondary,
+      textAlign: 'center',
+      marginBottom: theme.spacing.md,
+    },
+    emptySubtext: {
+      ...theme.typography.bodyMedium,
+      color: theme.colors.textMuted,
+      textAlign: 'center',
+    },
   });
+
+  if (loading && !refreshing) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.header}>
+          <Text style={styles.title}>Community</Text>
+          <TouchableOpacity
+            style={styles.newPostButton}
+            onPress={() => setCreatePostVisible(true)}
+          >
+            <Text style={styles.newPostButtonText}>New Post</Text>
+          </TouchableOpacity>
+        </View>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={theme.colors.primary} />
+          <Text style={styles.loadingText}>Loading community posts...</Text>
+        </View>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -287,10 +335,12 @@ export default function CommunityScreen() {
         </TouchableOpacity>
       </View>
 
-      {loading ? (
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-          <ActivityIndicator size="large" color={theme.colors.primary} />
-          <Text style={{ color: theme.colors.text, marginTop: 10 }}>Loading posts...</Text>
+      {posts.length === 0 ? (
+        <View style={styles.emptyContainer}>
+          <Text style={styles.emptyText}>No posts yet</Text>
+          <Text style={styles.emptySubtext}>
+            Be the first to share something with the community!
+          </Text>
         </View>
       ) : (
         <FlatList
@@ -320,7 +370,6 @@ export default function CommunityScreen() {
             <RefreshControl
               refreshing={refreshing}
               onRefresh={onRefresh}
-              colors={[theme.colors.primary]}
               tintColor={theme.colors.primary}
             />
           }
