@@ -1,296 +1,295 @@
-import { router } from "expo-router";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import {
-  Animated,
-  ImageBackground,
+  Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
   StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
   View,
 } from "react-native";
-import { Button, Text, TextInput } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { Link, router } from "expo-router";
 import { useThemeContext } from "../components/ThemeContext";
 import { useAuth } from "../services/auth";
 
-const BACKGROUND_IMAGE = require("../../assets/images/floral-background.png");
-
-// Define a type for the form errors
-interface FormErrors {
-  firstName?: string;
-  lastName?: string;
-  email?: string;
-  password?: string;
-  confirmPassword?: string;
-}
-
 export default function SignupScreen() {
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [errors, setErrors] = useState<FormErrors>({});
-  const { login } = useAuth(); // Using mock login for now
   const { theme } = useThemeContext();
-  const [fadeAnim] = useState(new Animated.Value(0));
+  const { register } = useAuth();
+  const [formData, setFormData] = useState({
+    email: "",
+    username: "",
+    password: "",
+    confirmPassword: "",
+    first_name: "",
+    last_name: "",
+  });
+  const [isLoading, setIsLoading] = useState(false);
 
-  // Validate form fields
-  const validateForm = () => {
-    let newErrors: FormErrors = {};
-
-    if (!firstName.trim()) newErrors.firstName = "First name is required";
-    if (!lastName.trim()) newErrors.lastName = "Last name is required";
-    if (!email.trim()) {
-      newErrors.email = "Email is required";
-    } else if (!/\S+@\S+\.\S+/.test(email)) {
-      newErrors.email = "Please enter a valid email address";
-    }
-    if (!password) {
-      newErrors.password = "Password is required";
-    } else if (password.length < 6) {
-      newErrors.password = "Password must be at least 6 characters";
-    }
-    if (!confirmPassword) {
-      newErrors.confirmPassword = "Please confirm your password";
-    } else if (password !== confirmPassword) {
-      newErrors.confirmPassword = "Passwords do not match";
+  const handleSignup = async () => {
+    if (!formData.email || !formData.username || !formData.password) {
+      Alert.alert("Error", "Please fill in all required fields");
+      return;
     }
 
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
+    if (formData.password !== formData.confirmPassword) {
+      Alert.alert("Error", "Passwords do not match");
+      return;
+    }
 
-  const handleSignup = () => {
-    if (validateForm()) {
-      console.log("Signup successful", {
-        firstName,
-        lastName,
-        email,
-        password,
+    if (formData.password.length < 6) {
+      Alert.alert("Error", "Password must be at least 6 characters long");
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      await register({
+        email: formData.email,
+        username: formData.username,
+        password: formData.password,
+        first_name: formData.first_name || undefined,
+        last_name: formData.last_name || undefined,
       });
-      // Clear form
-      setFirstName("");
-      setLastName("");
-      setEmail("");
-      setPassword("");
-      setConfirmPassword("");
-      setErrors({});
-
-      login(); // In a real app, this would be a signup function
       router.replace("/(tabs)");
+    } catch (error: any) {
+      Alert.alert("Registration Failed", error.message || "Please try again");
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  useEffect(() => {
-    Animated.timing(fadeAnim, {
-      toValue: 1,
-      duration: 1000,
-      useNativeDriver: true,
-    }).start();
-  }, [fadeAnim]);
-
-  return (
-    <ImageBackground source={BACKGROUND_IMAGE} style={styles(theme).background}>
-      <SafeAreaView style={styles(theme).safeArea}>
-        <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
-          style={styles(theme).keyboardAvoidingView}
-          keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
-        >
-          <ScrollView
-            contentContainerStyle={styles(theme).scrollContainer}
-            keyboardShouldPersistTaps="handled"
-            showsVerticalScrollIndicator={false}
-          >
-            <View style={styles(theme).overlay}>
-              <Text style={styles(theme).title}>Join RedPetal</Text>
-              <Text style={styles(theme).subtitle}>
-                Create your account to start tracking
-              </Text>
-              <Animated.View
-                style={[styles(theme).formContainer, { opacity: fadeAnim }]}
-              >
-                <TextInput
-                  label="First Name"
-                  value={firstName}
-                  onChangeText={setFirstName}
-                  style={styles(theme).input}
-                  error={!!errors.firstName}
-                  theme={{ colors: { primary: theme.colors.primary } }}
-                  autoCapitalize="words"
-                  autoComplete="given-name"
-                />
-                {errors.firstName && (
-                  <Text style={styles(theme).errorText}>
-                    {errors.firstName}
-                  </Text>
-                )}
-
-                <TextInput
-                  label="Last Name"
-                  value={lastName}
-                  onChangeText={setLastName}
-                  style={styles(theme).input}
-                  error={!!errors.lastName}
-                  theme={{ colors: { primary: theme.colors.primary } }}
-                  autoCapitalize="words"
-                  autoComplete="family-name"
-                />
-                {errors.lastName && (
-                  <Text style={styles(theme).errorText}>{errors.lastName}</Text>
-                )}
-
-                <TextInput
-                  label="Email"
-                  value={email}
-                  onChangeText={setEmail}
-                  style={styles(theme).input}
-                  error={!!errors.email}
-                  theme={{ colors: { primary: theme.colors.primary } }}
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                  autoComplete="email"
-                />
-                {errors.email && (
-                  <Text style={styles(theme).errorText}>{errors.email}</Text>
-                )}
-
-                <TextInput
-                  label="Password"
-                  value={password}
-                  onChangeText={setPassword}
-                  secureTextEntry
-                  style={styles(theme).input}
-                  error={!!errors.password}
-                  theme={{ colors: { primary: theme.colors.primary } }}
-                  autoComplete="new-password"
-                />
-                {errors.password && (
-                  <Text style={styles(theme).errorText}>{errors.password}</Text>
-                )}
-
-                <TextInput
-                  label="Confirm Password"
-                  value={confirmPassword}
-                  onChangeText={setConfirmPassword}
-                  secureTextEntry
-                  style={styles(theme).input}
-                  error={!!errors.confirmPassword}
-                  theme={{ colors: { primary: theme.colors.primary } }}
-                  autoComplete="new-password"
-                />
-                {errors.confirmPassword && (
-                  <Text style={styles(theme).errorText}>
-                    {errors.confirmPassword}
-                  </Text>
-                )}
-
-                <Button
-                  mode="contained"
-                  onPress={handleSignup}
-                  style={styles(theme).button}
-                  contentStyle={styles(theme).buttonContent}
-                >
-                  Create Account
-                </Button>
-
-                <View style={styles(theme).loginContainer}>
-                  <Text style={styles(theme).loginText}>
-                    Already have an account?{" "}
-                  </Text>
-                  <Button
-                    onPress={() => router.push("/auth/login")}
-                    mode="text"
-                    style={styles(theme).loginButton}
-                  >
-                    Sign In
-                  </Button>
-                </View>
-              </Animated.View>
-            </View>
-          </ScrollView>
-        </KeyboardAvoidingView>
-      </SafeAreaView>
-    </ImageBackground>
-  );
-}
-
-const styles = (theme: any) =>
-  StyleSheet.create({
-    safeArea: {
+  const styles = StyleSheet.create({
+    container: {
       flex: 1,
-      backgroundColor: "transparent", // Make SafeAreaView transparent
-    },
-    background: {
-      flex: 1,
-      resizeMode: "cover",
-    },
-    keyboardAvoidingView: {
-      flex: 1,
+      backgroundColor: theme.colors.background,
     },
     scrollContainer: {
       flexGrow: 1,
-      minHeight: "100%",
-    },
-    overlay: {
-      flex: 1,
-      backgroundColor: theme.colors.overlay,
       justifyContent: "center",
-      padding: theme.spacing.lg,
-    },
-    formContainer: {
-      width: Platform.OS === "web" ? "50%" : "100%",
-      maxWidth: 400,
-      alignSelf: "center",
-      backgroundColor: theme.colors.surface,
-      borderRadius: theme.borderRadius.xl,
       padding: theme.spacing.xl,
-      ...theme.shadows.lg,
+    },
+    titleContainer: {
+      alignItems: "center",
+      marginBottom: theme.spacing.xl,
     },
     title: {
       ...theme.typography.brand,
       color: theme.colors.primary,
+      fontSize: 40,
       textAlign: "center",
-      marginBottom: theme.spacing.sm,
     },
     subtitle: {
-      ...theme.typography.bodyLarge,
+      ...theme.typography.headlineSmall,
       color: theme.colors.textSecondary,
       textAlign: "center",
-      marginBottom: theme.spacing.xxl,
+      marginTop: theme.spacing.md,
+    },
+    form: {
+      marginBottom: theme.spacing.xl,
+    },
+    inputGroup: {
+      marginBottom: theme.spacing.lg,
+    },
+    label: {
+      ...theme.typography.labelLarge,
+      color: theme.colors.text,
+      marginBottom: theme.spacing.sm,
+    },
+    required: {
+      color: theme.colors.error,
     },
     input: {
-      marginBottom: theme.spacing.sm,
-      backgroundColor: theme.colors.surface,
+      ...theme.components.input,
+      fontSize: 16,
+      minHeight: 50,
     },
-    errorText: {
-      color: theme.colors.error,
-      fontSize: 12,
-      marginTop: -theme.spacing.sm,
-      marginBottom: theme.spacing.md,
-      marginLeft: theme.spacing.md,
-    },
-    button: {
+    signupButton: {
+      ...theme.components.button.primary,
+      alignItems: "center",
+      justifyContent: "center",
+      minHeight: 50,
       marginTop: theme.spacing.lg,
-      backgroundColor: theme.colors.primary,
-      borderRadius: theme.borderRadius.md,
     },
-    buttonContent: {
-      height: 48,
+    signupButtonDisabled: {
+      backgroundColor: theme.colors.textMuted,
+    },
+    signupButtonText: {
+      ...theme.typography.button,
+      color: theme.colors.textOnPrimary,
+      fontWeight: "600",
     },
     loginContainer: {
-      flexDirection: "row",
-      justifyContent: "center",
       alignItems: "center",
-      marginTop: theme.spacing.lg,
+      marginTop: theme.spacing.xl,
+      paddingTop: theme.spacing.lg,
+      borderTopWidth: 1,
+      borderTopColor: theme.colors.borderLight,
     },
     loginText: {
       ...theme.typography.bodyMedium,
       color: theme.colors.textSecondary,
+      textAlign: "center",
     },
-    loginButton: {
-      marginLeft: -theme.spacing.sm,
+    loginLink: {
+      ...theme.typography.bodyMedium,
+      color: theme.colors.primary,
+      fontWeight: "600",
+      marginTop: theme.spacing.sm,
     },
   });
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={styles.container}
+      >
+        <ScrollView
+          contentContainerStyle={styles.scrollContainer}
+          keyboardShouldPersistTaps="handled"
+        >
+          <View style={styles.titleContainer}>
+            <Text style={styles.title}>Join RedPetal</Text>
+            <Text style={styles.subtitle}>
+              Start your wellness journey
+            </Text>
+          </View>
+
+          <View style={styles.form}>
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>
+                Email <Text style={styles.required}>*</Text>
+              </Text>
+              <TextInput
+                style={styles.input}
+                value={formData.email}
+                onChangeText={(text) =>
+                  setFormData({ ...formData, email: text })
+                }
+                placeholder="Enter your email"
+                placeholderTextColor={theme.colors.textMuted}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoCorrect={false}
+                editable={!isLoading}
+              />
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>
+                Username <Text style={styles.required}>*</Text>
+              </Text>
+              <TextInput
+                style={styles.input}
+                value={formData.username}
+                onChangeText={(text) =>
+                  setFormData({ ...formData, username: text })
+                }
+                placeholder="Choose a username"
+                placeholderTextColor={theme.colors.textMuted}
+                autoCapitalize="none"
+                autoCorrect={false}
+                editable={!isLoading}
+              />
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>First Name</Text>
+              <TextInput
+                style={styles.input}
+                value={formData.first_name}
+                onChangeText={(text) =>
+                  setFormData({ ...formData, first_name: text })
+                }
+                placeholder="Your first name"
+                placeholderTextColor={theme.colors.textMuted}
+                autoCapitalize="words"
+                editable={!isLoading}
+              />
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Last Name</Text>
+              <TextInput
+                style={styles.input}
+                value={formData.last_name}
+                onChangeText={(text) =>
+                  setFormData({ ...formData, last_name: text })
+                }
+                placeholder="Your last name"
+                placeholderTextColor={theme.colors.textMuted}
+                autoCapitalize="words"
+                editable={!isLoading}
+              />
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>
+                Password <Text style={styles.required}>*</Text>
+              </Text>
+              <TextInput
+                style={styles.input}
+                value={formData.password}
+                onChangeText={(text) =>
+                  setFormData({ ...formData, password: text })
+                }
+                placeholder="Create a password (min 6 characters)"
+                placeholderTextColor={theme.colors.textMuted}
+                secureTextEntry
+                autoCapitalize="none"
+                autoCorrect={false}
+                editable={!isLoading}
+              />
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>
+                Confirm Password <Text style={styles.required}>*</Text>
+              </Text>
+              <TextInput
+                style={styles.input}
+                value={formData.confirmPassword}
+                onChangeText={(text) =>
+                  setFormData({ ...formData, confirmPassword: text })
+                }
+                placeholder="Confirm your password"
+                placeholderTextColor={theme.colors.textMuted}
+                secureTextEntry
+                autoCapitalize="none"
+                autoCorrect={false}
+                editable={!isLoading}
+              />
+            </View>
+
+            <TouchableOpacity
+              style={[
+                styles.signupButton,
+                isLoading && styles.signupButtonDisabled,
+              ]}
+              onPress={handleSignup}
+              disabled={isLoading}
+            >
+              <Text style={styles.signupButtonText}>
+                {isLoading ? "Creating Account..." : "Create Account"}
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.loginContainer}>
+            <Text style={styles.loginText}>
+              Already have an account?
+            </Text>
+            <Link href="/auth/login" asChild>
+              <TouchableOpacity disabled={isLoading}>
+                <Text style={styles.loginLink}>Sign In</Text>
+              </TouchableOpacity>
+            </Link>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
+  );
+}

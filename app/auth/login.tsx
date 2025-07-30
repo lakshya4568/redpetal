@@ -1,206 +1,205 @@
-import { router } from "expo-router";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import {
-  Animated,
-  ImageBackground,
+  Alert,
   KeyboardAvoidingView,
   Platform,
+  ScrollView,
   StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
   View,
 } from "react-native";
-import { Button, Text, TextInput } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { Link, router } from "expo-router";
 import { useThemeContext } from "../components/ThemeContext";
 import { useAuth } from "../services/auth";
 
-const BACKGROUND_IMAGE = require("../../assets/images/floral-background.png");
-
-// Define a type for the errors state
-interface FormErrors {
-  email?: string;
-  password?: string;
-}
-
 export default function LoginScreen() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  // Use the defined type for the errors state
-  const [errors, setErrors] = useState<FormErrors>({});
-  const { login } = useAuth();
   const { theme } = useThemeContext();
-  const [fadeAnim] = useState(new Animated.Value(0));
+  const { login, loading } = useAuth();
+  const [formData, setFormData] = useState({
+    email: "",
+    password: "",
+  });
+  const [isLoading, setIsLoading] = useState(false);
 
-  //validate email and password
-  const validateForm = () => {
-    // Initialize errors with the correct type
-    let errors: FormErrors = {};
+  const handleLogin = async () => {
+    if (!formData.email || !formData.password) {
+      Alert.alert("Error", "Please fill in all fields");
+      return;
+    }
 
-    if (!email) errors.email = "Email is required";
-    if (!password) errors.password = "Password is required";
-
-    setErrors(errors);
-    return Object.keys(errors).length === 0;
-  };
-
-  const handleLogin = () => {
-    if (validateForm()) {
-      console.log("Submitted", email, password);
-      setEmail("");
-      setPassword("");
-      setErrors({}); // Clear errors on successful validation
-
-      login();
+    setIsLoading(true);
+    try {
+      await login(formData.email, formData.password);
       router.replace("/(tabs)");
+    } catch (error: any) {
+      Alert.alert("Login Failed", error.message || "Please check your credentials");
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  useEffect(() => {
-    Animated.timing(fadeAnim, {
-      toValue: 1,
-      duration: 1000,
-      useNativeDriver: true,
-    }).start();
-  }, [fadeAnim]);
-
-  return (
-    <ImageBackground
-      source={BACKGROUND_IMAGE}
-      style={styles(theme).background}
-      imageStyle={{ opacity: 0.7 }} // Reduce opacity of the background image
-    >
-      <SafeAreaView style={styles(theme).safeArea}>
-        <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
-          keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
-          style={styles(theme).keyboardAvoidingView}
-        >
-          <View style={styles(theme).overlay}>
-            <Text style={styles(theme).title}>RedPetal</Text>
-            <Animated.View
-              style={[styles(theme).formContainer, { opacity: fadeAnim }]}
-            >
-              <TextInput
-                label="Email"
-                value={email}
-                onChangeText={setEmail}
-                style={styles(theme).input}
-                error={!!errors.email}
-                theme={{ colors: { primary: theme.colors.primary } }}
-                keyboardType="email-address"
-                autoCapitalize="none"
-                autoComplete="email"
-              />
-              {/* Add error message display if needed */}
-              {errors.email && (
-                <Text style={styles(theme).errorText}>{errors.email}</Text>
-              )}
-              <TextInput
-                label="Password"
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry
-                style={styles(theme).input}
-                error={!!errors.password}
-                theme={{ colors: { primary: theme.colors.primary } }}
-                autoComplete="current-password"
-              />
-              {/* Add error message display if needed */}
-              {errors.password && (
-                <Text style={styles(theme).errorText}>{errors.password}</Text>
-              )}
-              <Button
-                mode="contained"
-                onPress={handleLogin}
-                style={styles(theme).button}
-                contentStyle={styles(theme).buttonContent}
-              >
-                Login
-              </Button>
-              <View style={styles(theme).signupContainer}>
-                <Text style={styles(theme).signupText}>
-                  Don&apos;t have an account?{" "}
-                </Text>
-                <Button
-                  onPress={() => router.push("/auth/signup")}
-                  mode="text"
-                  style={styles(theme).signupButton}
-                >
-                  Sign Up
-                </Button>
-              </View>
-            </Animated.View>
-          </View>
-        </KeyboardAvoidingView>
-      </SafeAreaView>
-    </ImageBackground>
-  );
-}
-
-const styles = (theme: any) =>
-  StyleSheet.create({
-    safeArea: {
+  const styles = StyleSheet.create({
+    container: {
       flex: 1,
-      backgroundColor: "transparent", // Make SafeAreaView transparent
+      backgroundColor: theme.colors.background,
     },
-    background: {
-      flex: 1,
-      resizeMode: "cover",
-    },
-    keyboardAvoidingView: {
-      flex: 1,
+    scrollContainer: {
+      flexGrow: 1,
       justifyContent: "center",
-    },
-    overlay: {
-      flex: 1,
-      backgroundColor: theme.colors.overlay,
-      justifyContent: "center",
-      padding: theme.spacing.lg,
-    },
-    formContainer: {
-      width: Platform.OS === "web" ? "50%" : "100%",
-      maxWidth: 400,
-      alignSelf: "center",
-      backgroundColor: theme.colors.surface,
-      borderRadius: theme.borderRadius.xl,
       padding: theme.spacing.xl,
-      ...theme.shadows.lg,
+    },
+    titleContainer: {
+      alignItems: "center",
+      marginBottom: theme.spacing.xxxl,
     },
     title: {
       ...theme.typography.brand,
       color: theme.colors.primary,
+      fontSize: 48,
       textAlign: "center",
-      marginBottom: theme.spacing.xxl,
+    },
+    subtitle: {
+      ...theme.typography.headlineSmall,
+      color: theme.colors.textSecondary,
+      textAlign: "center",
+      marginTop: theme.spacing.md,
+    },
+    form: {
+      marginBottom: theme.spacing.xl,
+    },
+    inputGroup: {
+      marginBottom: theme.spacing.lg,
+    },
+    label: {
+      ...theme.typography.labelLarge,
+      color: theme.colors.text,
+      marginBottom: theme.spacing.sm,
     },
     input: {
-      marginBottom: theme.spacing.sm,
-      backgroundColor: theme.colors.surface,
+      ...theme.components.input,
+      fontSize: 16,
+      minHeight: 50,
     },
-    errorText: {
-      color: theme.colors.error,
-      fontSize: 12,
-      marginTop: -theme.spacing.sm,
-      marginBottom: theme.spacing.md,
-      marginLeft: theme.spacing.md,
+    inputFocused: {
+      borderColor: theme.colors.primary,
+      borderWidth: 2,
     },
-    button: {
-      marginTop: theme.spacing.lg,
-      backgroundColor: theme.colors.primary,
-      borderRadius: theme.borderRadius.md,
-    },
-    buttonContent: {
-      height: 48,
-    },
-    signupContainer: {
-      flexDirection: "row",
-      justifyContent: "center",
+    loginButton: {
+      ...theme.components.button.primary,
       alignItems: "center",
+      justifyContent: "center",
+      minHeight: 50,
       marginTop: theme.spacing.lg,
     },
-    signupText: {
+    loginButtonDisabled: {
+      backgroundColor: theme.colors.textMuted,
+    },
+    loginButtonText: {
+      ...theme.typography.button,
+      color: theme.colors.textOnPrimary,
+      fontWeight: "600",
+    },
+    registerContainer: {
+      alignItems: "center",
+      marginTop: theme.spacing.xl,
+      paddingTop: theme.spacing.lg,
+      borderTopWidth: 1,
+      borderTopColor: theme.colors.borderLight,
+    },
+    registerText: {
       ...theme.typography.bodyMedium,
       color: theme.colors.textSecondary,
+      textAlign: "center",
     },
-    signupButton: {
-      marginLeft: -theme.spacing.sm,
+    registerLink: {
+      ...theme.typography.bodyMedium,
+      color: theme.colors.primary,
+      fontWeight: "600",
+      marginTop: theme.spacing.sm,
     },
   });
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={styles.container}
+      >
+        <ScrollView
+          contentContainerStyle={styles.scrollContainer}
+          keyboardShouldPersistTaps="handled"
+        >
+          <View style={styles.titleContainer}>
+            <Text style={styles.title}>RedPetal</Text>
+            <Text style={styles.subtitle}>
+              Your personal period companion
+            </Text>
+          </View>
+
+          <View style={styles.form}>
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Email</Text>
+              <TextInput
+                style={styles.input}
+                value={formData.email}
+                onChangeText={(text) =>
+                  setFormData({ ...formData, email: text })
+                }
+                placeholder="Enter your email"
+                placeholderTextColor={theme.colors.textMuted}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoCorrect={false}
+                editable={!isLoading}
+              />
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Password</Text>
+              <TextInput
+                style={styles.input}
+                value={formData.password}
+                onChangeText={(text) =>
+                  setFormData({ ...formData, password: text })
+                }
+                placeholder="Enter your password"
+                placeholderTextColor={theme.colors.textMuted}
+                secureTextEntry
+                autoCapitalize="none"
+                autoCorrect={false}
+                editable={!isLoading}
+              />
+            </View>
+
+            <TouchableOpacity
+              style={[
+                styles.loginButton,
+                isLoading && styles.loginButtonDisabled,
+              ]}
+              onPress={handleLogin}
+              disabled={isLoading}
+            >
+              <Text style={styles.loginButtonText}>
+                {isLoading ? "Signing In..." : "Sign In"}
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.registerContainer}>
+            <Text style={styles.registerText}>
+              Don't have an account?
+            </Text>
+            <Link href="/auth/signup" asChild>
+              <TouchableOpacity disabled={isLoading}>
+                <Text style={styles.registerLink}>Create Account</Text>
+              </TouchableOpacity>
+            </Link>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
+  );
+}
