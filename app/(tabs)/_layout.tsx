@@ -49,6 +49,15 @@ export default function TabLayout() {
       ),
     },
     {
+      name: "remedies",
+      activeIcon: (
+        <FontAwesome name="leaf" color={theme.colors.textOnPrimary} size={25} />
+      ),
+      inactiveIcon: (
+        <FontAwesome name="leaf" color={theme.colors.textMuted} size={25} />
+      ),
+    },
+    {
       name: "resources",
       activeIcon: (
         <FontAwesome name="book" color={theme.colors.textOnPrimary} size={25} />
@@ -98,6 +107,7 @@ export default function TabLayout() {
       <Tabs.Screen name="index" />
       <Tabs.Screen name="calendar" />
       <Tabs.Screen name="community" />
+      <Tabs.Screen name="remedies" />
       <Tabs.Screen name="resources" />
       <Tabs.Screen name="profile" />
     </Tabs>
