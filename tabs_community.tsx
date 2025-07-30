@@ -273,6 +273,34 @@ export default function CommunityScreen() {
     postList: {
       padding: theme.spacing.lg,
     },
+    loadingContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      padding: theme.spacing.xl,
+    },
+    loadingText: {
+      ...theme.typography.bodyLarge,
+      color: theme.colors.text,
+      marginTop: theme.spacing.md,
+    },
+    emptyContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      padding: theme.spacing.xl,
+    },
+    emptyText: {
+      ...theme.typography.headlineSmall,
+      color: theme.colors.textSecondary,
+      textAlign: 'center',
+      marginBottom: theme.spacing.md,
+    },
+    emptySubtext: {
+      ...theme.typography.bodyMedium,
+      color: theme.colors.textMuted,
+      textAlign: 'center',
+    },
   });
 
   return (
