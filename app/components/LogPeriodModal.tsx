@@ -10,6 +10,7 @@ import {
   Dimensions 
 } from "react-native";
 import { TextInput } from "react-native-paper";
+import { Ionicons } from "@expo/vector-icons";
 import { useThemeContext } from "./ThemeContext";
 import { periodsAPI } from "../services/api";
 
@@ -120,7 +121,7 @@ export default function LogPeriodModal({
   const styles = StyleSheet.create({
     overlay: {
       flex: 1,
-      backgroundColor: 'rgba(0, 0, 0, 0.5)',
+      backgroundColor: 'rgba(0, 0, 0, 0.6)',
       justifyContent: 'center',
       alignItems: 'center',
     },
@@ -129,31 +130,47 @@ export default function LogPeriodModal({
       borderRadius: theme.borderRadius.xl,
       padding: theme.spacing.xl,
       margin: theme.spacing.lg,
-      maxHeight: '80%',
-      width: width * 0.9,
+      maxHeight: '85%',
+      width: width * 0.92,
+      ...theme.shadows.xl,
+    },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: theme.spacing.lg,
     },
     title: {
       ...theme.typography.headlineMedium,
       color: theme.colors.text,
-      textAlign: 'center',
-      marginBottom: theme.spacing.lg,
+      fontWeight: '600',
+      marginLeft: theme.spacing.sm,
     },
     dateText: {
       ...theme.typography.bodyLarge,
       color: theme.colors.textSecondary,
       textAlign: 'center',
       marginBottom: theme.spacing.xl,
+      backgroundColor: theme.colors.surfaceVariant,
+      padding: theme.spacing.md,
+      borderRadius: theme.borderRadius.lg,
     },
     scrollContent: {
-      maxHeight: 400,
+      maxHeight: 420,
     },
     section: {
       marginBottom: theme.spacing.xl,
     },
+    sectionHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginBottom: theme.spacing.md,
+    },
     sectionTitle: {
       ...theme.typography.titleMedium,
       color: theme.colors.text,
-      marginBottom: theme.spacing.md,
+      fontWeight: '600',
+      marginLeft: theme.spacing.sm,
     },
     flowGrid: {
       flexDirection: 'row',
@@ -163,15 +180,24 @@ export default function LogPeriodModal({
     flowOption: {
       width: '48%',
       padding: theme.spacing.md,
-      borderRadius: theme.borderRadius.md,
+      borderRadius: theme.borderRadius.lg,
       borderWidth: 2,
       borderColor: theme.colors.borderLight,
       alignItems: 'center',
       marginBottom: theme.spacing.sm,
+      backgroundColor: theme.colors.surfaceVariant,
     },
     flowOptionSelected: {
       borderColor: theme.colors.primary,
       backgroundColor: theme.colors.overlay,
+      ...theme.shadows.sm,
+    },
+    flowColorIndicator: {
+      width: 24,
+      height: 24,
+      borderRadius: 12,
+      marginBottom: theme.spacing.sm,
+      ...theme.shadows.sm,
     },
     flowLabel: {
       ...theme.typography.bodyMedium,
@@ -189,17 +215,21 @@ export default function LogPeriodModal({
       borderWidth: 1,
       borderColor: theme.colors.border,
       margin: theme.spacing.xs / 2,
+      backgroundColor: theme.colors.surfaceVariant,
     },
     symptomChipSelected: {
       backgroundColor: theme.colors.primary,
       borderColor: theme.colors.primary,
+      ...theme.shadows.sm,
     },
     symptomText: {
       ...theme.typography.bodySmall,
       color: theme.colors.text,
+      fontWeight: '500',
     },
     symptomTextSelected: {
       color: theme.colors.textOnPrimary,
+      fontWeight: '600',
     },
     moodGrid: {
       flexDirection: 'row',
@@ -209,57 +239,71 @@ export default function LogPeriodModal({
     moodOption: {
       width: '30%',
       padding: theme.spacing.md,
-      borderRadius: theme.borderRadius.md,
+      borderRadius: theme.borderRadius.lg,
       borderWidth: 2,
       borderColor: theme.colors.borderLight,
       alignItems: 'center',
       marginBottom: theme.spacing.sm,
+      backgroundColor: theme.colors.surfaceVariant,
     },
     moodOptionSelected: {
       borderColor: theme.colors.primary,
       backgroundColor: theme.colors.overlay,
+      ...theme.shadows.sm,
     },
     moodEmoji: {
-      fontSize: 24,
-      marginBottom: theme.spacing.xs,
+      fontSize: 28,
+      marginBottom: theme.spacing.sm,
     },
     moodLabel: {
       ...theme.typography.bodySmall,
       color: theme.colors.text,
+      fontWeight: '500',
+    },
+    notesContainer: {
+      position: 'relative',
     },
     notesInput: {
-      backgroundColor: theme.colors.background,
-      borderRadius: theme.borderRadius.md,
+      backgroundColor: theme.colors.surfaceVariant,
+      borderRadius: theme.borderRadius.lg,
       padding: theme.spacing.md,
       borderWidth: 1,
       borderColor: theme.colors.border,
-      minHeight: 80,
+      minHeight: 100,
       textAlignVertical: 'top',
+      fontSize: 16,
+      color: theme.colors.text,
     },
     buttonContainer: {
       flexDirection: 'row',
       justifyContent: 'space-between',
       marginTop: theme.spacing.xl,
+      gap: theme.spacing.md,
     },
     button: {
       flex: 1,
       paddingVertical: theme.spacing.md,
-      borderRadius: theme.borderRadius.md,
+      borderRadius: theme.borderRadius.lg,
       alignItems: 'center',
-      marginHorizontal: theme.spacing.sm,
+      flexDirection: 'row',
+      justifyContent: 'center',
     },
     saveButton: {
       backgroundColor: theme.colors.primary,
+      ...theme.shadows.md,
     },
     cancelButton: {
-      backgroundColor: 'transparent',
+      backgroundColor: theme.colors.surfaceVariant,
       borderWidth: 1,
       borderColor: theme.colors.border,
     },
     buttonText: {
       ...theme.typography.button,
-      color: theme.colors.textOnPrimary,
       fontWeight: '600',
+      marginLeft: theme.spacing.sm,
+    },
+    saveButtonText: {
+      color: theme.colors.textOnPrimary,
     },
     cancelButtonText: {
       color: theme.colors.text,
@@ -277,15 +321,35 @@ export default function LogPeriodModal({
     >
       <View style={styles.overlay}>
         <View style={styles.container}>
-          <Text style={styles.title}>Log Your Period</Text>
+          <View style={styles.header}>
+            <Ionicons 
+              name="calendar" 
+              size={24} 
+              color={theme.colors.primary} 
+            />
+            <Text style={styles.title}>Log Your Period</Text>
+          </View>
+          
           <Text style={styles.dateText}>
-            {selectedDate ? new Date(selectedDate).toLocaleDateString() : ''}
+            {selectedDate ? new Date(selectedDate).toLocaleDateString('en-US', { 
+              weekday: 'long',
+              month: 'long', 
+              day: 'numeric',
+              year: 'numeric'
+            }) : ''}
           </Text>
 
           <ScrollView style={styles.scrollContent} showsVerticalScrollIndicator={false}>
             {/* Flow Level */}
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Flow Level</Text>
+              <View style={styles.sectionHeader}>
+                <Ionicons 
+                  name="water" 
+                  size={20} 
+                  color={theme.colors.primary} 
+                />
+                <Text style={styles.sectionTitle}>Flow Level</Text>
+              </View>
               <View style={styles.flowGrid}>
                 {flowLevels.map(flow => (
                   <TouchableOpacity
@@ -297,13 +361,10 @@ export default function LogPeriodModal({
                     onPress={() => setFormData({ ...formData, flow: flow.value })}
                   >
                     <View 
-                      style={{ 
-                        width: 20, 
-                        height: 20, 
-                        backgroundColor: flow.color, 
-                        borderRadius: 10,
-                        marginBottom: theme.spacing.xs 
-                      }} 
+                      style={[
+                        styles.flowColorIndicator,
+                        { backgroundColor: flow.color }
+                      ]} 
                     />
                     <Text style={styles.flowLabel}>{flow.label}</Text>
                   </TouchableOpacity>
@@ -313,7 +374,14 @@ export default function LogPeriodModal({
 
             {/* Symptoms */}
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Symptoms</Text>
+              <View style={styles.sectionHeader}>
+                <Ionicons 
+                  name="medical" 
+                  size={20} 
+                  color={theme.colors.primary} 
+                />
+                <Text style={styles.sectionTitle}>Symptoms</Text>
+              </View>
               <View style={styles.symptomsGrid}>
                 {symptomOptions.map(symptom => (
                   <TouchableOpacity
@@ -337,7 +405,14 @@ export default function LogPeriodModal({
 
             {/* Mood */}
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Mood</Text>
+              <View style={styles.sectionHeader}>
+                <Ionicons 
+                  name="happy" 
+                  size={20} 
+                  color={theme.colors.primary} 
+                />
+                <Text style={styles.sectionTitle}>Mood</Text>
+              </View>
               <View style={styles.moodGrid}>
                 {moodOptions.map(mood => (
                   <TouchableOpacity
@@ -357,15 +432,24 @@ export default function LogPeriodModal({
 
             {/* Notes */}
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Notes</Text>
-              <TextInput
-                style={styles.notesInput}
-                value={formData.notes}
-                onChangeText={(text) => setFormData({ ...formData, notes: text })}
-                placeholder="Add any additional notes..."
-                placeholderTextColor={theme.colors.textMuted}
-                multiline
-              />
+              <View style={styles.sectionHeader}>
+                <Ionicons 
+                  name="document-text" 
+                  size={20} 
+                  color={theme.colors.primary} 
+                />
+                <Text style={styles.sectionTitle}>Notes</Text>
+              </View>
+              <View style={styles.notesContainer}>
+                <TextInput
+                  style={styles.notesInput}
+                  value={formData.notes}
+                  onChangeText={(text) => setFormData({ ...formData, notes: text })}
+                  placeholder="Add any additional notes about your day..."
+                  placeholderTextColor={theme.colors.textMuted}
+                  multiline
+                />
+              </View>
             </View>
           </ScrollView>
 
@@ -375,6 +459,11 @@ export default function LogPeriodModal({
               onPress={onClose}
               disabled={loading}
             >
+              <Ionicons 
+                name="close" 
+                size={20} 
+                color={theme.colors.text} 
+              />
               <Text style={[styles.buttonText, styles.cancelButtonText]}>
                 Cancel
               </Text>
@@ -385,7 +474,12 @@ export default function LogPeriodModal({
               onPress={handleSave}
               disabled={loading}
             >
-              <Text style={styles.buttonText}>
+              <Ionicons 
+                name="checkmark" 
+                size={20} 
+                color={theme.colors.textOnPrimary} 
+              />
+              <Text style={[styles.buttonText, styles.saveButtonText]}>
                 {loading ? 'Saving...' : 'Save'}
               </Text>
             </TouchableOpacity>

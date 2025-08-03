@@ -6,11 +6,13 @@ import {
   View, 
   Alert, 
   ActivityIndicator,
-  RefreshControl 
+  RefreshControl,
+  TouchableOpacity
 } from "react-native";
 import { Calendar } from "react-native-calendars";
 import { Text } from "react-native-paper";
 import { ScrollView } from "react-native-gesture-handler";
+import { Ionicons } from "@expo/vector-icons";
 import LogPeriodModal from "../components/LogPeriodModal";
 import { useThemeContext } from "../components/ThemeContext";
 import { periodsAPI } from "../services/api";
@@ -33,12 +35,13 @@ export default function CalendarScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [predictions, setPredictions] = useState<any>(null);
+  const [currentDate, setCurrentDate] = useState(new Date());
 
   // Fetch period data when screen comes into focus
   useFocusEffect(
     useCallback(() => {
       loadPeriodData();
-    }, [])
+    }, [loadPeriodData])
   );
 
   useEffect(() => {
@@ -49,7 +52,7 @@ export default function CalendarScreen() {
     }).start();
   }, [fadeAnim]);
 
-  const loadPeriodData = async () => {
+  const loadPeriodData = useCallback(async () => {
     try {
       setLoading(true);
       
@@ -201,7 +204,7 @@ export default function CalendarScreen() {
       setLoading(false);
       setRefreshing(false);
     }
-  };
+  }, [theme.colors, predictions]);
 
   const onRefresh = () => {
     setRefreshing(true);
@@ -218,148 +221,426 @@ export default function CalendarScreen() {
     loadPeriodData();
   };
 
+  const navigateMonth = (direction: 'prev' | 'next') => {
+    const newDate = new Date(currentDate);
+    if (direction === 'prev') {
+      newDate.setMonth(newDate.getMonth() - 1);
+    } else {
+      newDate.setMonth(newDate.getMonth() + 1);
+    }
+    setCurrentDate(newDate);
+  };
+
+  const formatMonthYear = (date: Date) => {
+    return date.toLocaleDateString('en-US', { 
+      month: 'long', 
+      year: 'numeric' 
+    });
+  };
+
   const styles = StyleSheet.create({
     container: {
       flex: 1,
       backgroundColor: theme.colors.background,
-      padding: theme.spacing.lg,
+    },
+    header: {
+      backgroundColor: theme.colors.surface,
+      paddingTop: Platform.OS === 'ios' ? 60 : 40,
+      paddingBottom: theme.spacing.lg,
+      paddingHorizontal: theme.spacing.lg,
+      borderBottomLeftRadius: theme.borderRadius.xl,
+      borderBottomRightRadius: theme.borderRadius.xl,
+      ...theme.shadows.md,
+    },
+    headerContent: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginBottom: theme.spacing.md,
     },
     title: {
       ...theme.typography.brand,
+      fontSize: 32,
       color: theme.colors.primary,
       textAlign: "center",
-      marginBottom: theme.spacing.lg,
+      flex: 1,
+    },
+    monthNavigation: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginTop: theme.spacing.sm,
+    },
+    navButton: {
+      padding: theme.spacing.md,
+      borderRadius: theme.borderRadius.round,
+      backgroundColor: theme.colors.surfaceVariant,
+      marginHorizontal: theme.spacing.lg,
+    },
+    monthText: {
+      ...theme.typography.headlineMedium,
+      color: theme.colors.text,
+      fontWeight: '600',
+      minWidth: 200,
+      textAlign: 'center',
+    },
+    scrollContent: {
+      paddingHorizontal: theme.spacing.lg,
+      paddingBottom: theme.spacing.xl,
     },
     calendarContainer: {
-      width: Platform.OS === "web" ? "70%" : "100%",
-      alignSelf: "center",
-    },
-    predictionContainer: {
       backgroundColor: theme.colors.surface,
-      borderRadius: theme.borderRadius.lg,
-      padding: theme.spacing.lg,
-      marginTop: theme.spacing.lg,
-    },
-    predictionTitle: {
-      ...theme.typography.titleMedium,
-      color: theme.colors.text,
-      marginBottom: theme.spacing.md,
-    },
-    predictionText: {
-      ...theme.typography.bodyMedium,
-      color: theme.colors.textSecondary,
-      marginBottom: theme.spacing.sm,
+      borderRadius: theme.borderRadius.xl,
+      marginVertical: theme.spacing.lg,
+      padding: theme.spacing.md,
+      ...theme.shadows.lg,
     },
     legendContainer: {
-      flexDirection: 'row',
-      justifyContent: 'space-around',
-      marginTop: theme.spacing.lg,
-      padding: theme.spacing.md,
       backgroundColor: theme.colors.surface,
-      borderRadius: theme.borderRadius.md,
+      borderRadius: theme.borderRadius.xl,
+      padding: theme.spacing.lg,
+      marginVertical: theme.spacing.md,
+      ...theme.shadows.md,
+    },
+    legendTitle: {
+      ...theme.typography.titleMedium,
+      color: theme.colors.text,
+      fontWeight: '600',
+      marginBottom: theme.spacing.md,
+      textAlign: 'center',
+    },
+    legendGrid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      justifyContent: 'space-between',
     },
     legendItem: {
+      flexDirection: 'row',
       alignItems: 'center',
+      width: '48%',
+      marginBottom: theme.spacing.sm,
+      padding: theme.spacing.sm,
+      backgroundColor: theme.colors.surfaceVariant,
+      borderRadius: theme.borderRadius.md,
     },
-    legendDot: {
-      width: 12,
-      height: 12,
-      borderRadius: 6,
-      marginBottom: theme.spacing.xs,
+    legendIcon: {
+      width: 16,
+      height: 16,
+      borderRadius: 8,
+      marginRight: theme.spacing.sm,
     },
     legendText: {
+      ...theme.typography.bodyMedium,
+      color: theme.colors.text,
+      fontWeight: '500',
+      flex: 1,
+    },
+    insightsContainer: {
+      backgroundColor: theme.colors.surface,
+      borderRadius: theme.borderRadius.xl,
+      padding: theme.spacing.lg,
+      marginVertical: theme.spacing.md,
+      ...theme.shadows.md,
+    },
+    insightsHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginBottom: theme.spacing.lg,
+    },
+    insightsTitle: {
+      ...theme.typography.titleLarge,
+      color: theme.colors.text,
+      fontWeight: '600',
+      marginLeft: theme.spacing.sm,
+    },
+    insightCard: {
+      backgroundColor: theme.colors.surfaceVariant,
+      borderRadius: theme.borderRadius.lg,
+      padding: theme.spacing.md,
+      marginBottom: theme.spacing.md,
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    insightIconContainer: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      backgroundColor: theme.colors.primary,
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginRight: theme.spacing.md,
+    },
+    insightContent: {
+      flex: 1,
+    },
+    insightLabel: {
       ...theme.typography.bodySmall,
       color: theme.colors.textSecondary,
+      marginBottom: theme.spacing.xs / 2,
+    },
+    insightValue: {
+      ...theme.typography.bodyLarge,
+      color: theme.colors.text,
+      fontWeight: '600',
     },
     loadingContainer: {
       flex: 1,
       justifyContent: 'center',
       alignItems: 'center',
+      backgroundColor: theme.colors.background,
+    },
+    loadingContent: {
+      alignItems: 'center',
+      backgroundColor: theme.colors.surface,
+      padding: theme.spacing.xl,
+      borderRadius: theme.borderRadius.xl,
+      ...theme.shadows.lg,
+    },
+    loadingText: {
+      ...theme.typography.bodyLarge,
+      color: theme.colors.text,
+      marginTop: theme.spacing.md,
+    },
+    emptyState: {
+      alignItems: 'center',
+      padding: theme.spacing.xl,
+      backgroundColor: theme.colors.surface,
+      borderRadius: theme.borderRadius.xl,
+      margin: theme.spacing.lg,
+      ...theme.shadows.md,
+    },
+    emptyStateIcon: {
+      marginBottom: theme.spacing.md,
+    },
+    emptyStateText: {
+      ...theme.typography.bodyLarge,
+      color: theme.colors.textSecondary,
+      textAlign: 'center',
+      marginBottom: theme.spacing.sm,
+    },
+    emptyStateSubtext: {
+      ...theme.typography.bodyMedium,
+      color: theme.colors.textMuted,
+      textAlign: 'center',
     },
   });
 
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={theme.colors.primary} />
-        <Text style={{ ...theme.typography.bodyLarge, color: theme.colors.text, marginTop: theme.spacing.md }}>
-          Loading calendar...
-        </Text>
+        <View style={styles.loadingContent}>
+          <ActivityIndicator size="large" color={theme.colors.primary} />
+          <Text style={styles.loadingText}>Loading your cycle data...</Text>
+        </View>
       </View>
     );
   }
 
   return (
-    <ScrollView 
-      style={styles.container}
-      refreshControl={
-        <RefreshControl
-          refreshing={refreshing}
-          onRefresh={onRefresh}
-          tintColor={theme.colors.primary}
-        />
-      }
-    >
-      <Text style={styles.title}>Period Calendar</Text>
-      
-      <Animated.View style={[styles.calendarContainer, { opacity: fadeAnim }]}>
-        <Calendar
-          markedDates={markedDates}
-          onDayPress={onDayPress}
-          markingType={"multi-dot"}
-          theme={{
-            calendarBackground: theme.colors.background,
-            textSectionTitleColor: theme.colors.primary,
-            selectedDayBackgroundColor: theme.colors.primary,
-            selectedDayTextColor: theme.colors.white,
-            todayTextColor: theme.colors.accent,
-            dayTextColor: theme.colors.text,
-            arrowColor: theme.colors.primary,
-            monthTextColor: theme.colors.primary,
-            textMonthFontFamily: theme.fonts.title.family,
-            textMonthFontSize: 32,
-          }}
-        />
-      </Animated.View>
-
-      {/* Legend */}
-      <View style={styles.legendContainer}>
-        <View style={styles.legendItem}>
-          <View style={[styles.legendDot, { backgroundColor: theme.colors.error }]} />
-          <Text style={styles.legendText}>Period</Text>
+    <View style={styles.container}>
+      {/* Modern Header with Navigation */}
+      <View style={styles.header}>
+        <View style={styles.headerContent}>
+          <Text style={styles.title}>Period Calendar</Text>
         </View>
-        <View style={styles.legendItem}>
-          <View style={[styles.legendDot, { backgroundColor: theme.colors.warning }]} />
-          <Text style={styles.legendText}>Predicted</Text>
-        </View>
-        <View style={styles.legendItem}>
-          <View style={[styles.legendDot, { backgroundColor: theme.colors.success }]} />
-          <Text style={styles.legendText}>Fertile</Text>
-        </View>
-        <View style={styles.legendItem}>
-          <View style={[styles.legendDot, { backgroundColor: theme.colors.info }]} />
-          <Text style={styles.legendText}>Symptoms</Text>
+        
+        <View style={styles.monthNavigation}>
+          <TouchableOpacity 
+            style={styles.navButton}
+            onPress={() => navigateMonth('prev')}
+          >
+            <Ionicons 
+              name="chevron-back" 
+              size={20} 
+              color={theme.colors.primary} 
+            />
+          </TouchableOpacity>
+          
+          <Text style={styles.monthText}>
+            {formatMonthYear(currentDate)}
+          </Text>
+          
+          <TouchableOpacity 
+            style={styles.navButton}
+            onPress={() => navigateMonth('next')}
+          >
+            <Ionicons 
+              name="chevron-forward" 
+              size={20} 
+              color={theme.colors.primary} 
+            />
+          </TouchableOpacity>
         </View>
       </View>
 
-      {/* Predictions */}
-      {predictions && (
-        <View style={styles.predictionContainer}>
-          <Text style={styles.predictionTitle}>Cycle Insights</Text>
-          <Text style={styles.predictionText}>
-            Next period predicted: {new Date(predictions.next_period_date).toLocaleDateString()}
-          </Text>
-          <Text style={styles.predictionText}>
-            Average cycle length: {predictions.avg_cycle_length} days
-          </Text>
-          <Text style={styles.predictionText}>
-            Average period length: {predictions.avg_period_length} days
-          </Text>
-          <Text style={styles.predictionText}>
-            Fertile window: {new Date(predictions.fertile_window.start).toLocaleDateString()} - {new Date(predictions.fertile_window.end).toLocaleDateString()}
-          </Text>
+      <ScrollView 
+        style={{ flex: 1 }}
+        contentContainerStyle={styles.scrollContent}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={theme.colors.primary}
+            colors={[theme.colors.primary]}
+          />
+        }
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Enhanced Calendar */}
+        <Animated.View style={[styles.calendarContainer, { opacity: fadeAnim }]}>
+          <Calendar
+            markedDates={markedDates}
+            onDayPress={onDayPress}
+            markingType={"multi-dot"}
+            current={currentDate.toISOString().split('T')[0]}
+            theme={{
+              calendarBackground: theme.colors.surface,
+              textSectionTitleColor: theme.colors.primary,
+              selectedDayBackgroundColor: theme.colors.primary,
+              selectedDayTextColor: theme.colors.white,
+              todayTextColor: theme.colors.accent,
+              dayTextColor: theme.colors.text,
+              textDisabledColor: theme.colors.textMuted,
+              arrowColor: theme.colors.primary,
+              monthTextColor: theme.colors.primary,
+              indicatorColor: theme.colors.primary,
+              textMonthFontFamily: theme.fonts.subtitle.family,
+              textMonthFontSize: 18,
+              textMonthFontWeight: '600',
+              textDayFontFamily: theme.fonts.body.family,
+              textDayFontSize: 16,
+              textDayHeaderFontFamily: theme.fonts.body.family,
+              textDayHeaderFontSize: 13,
+              textDayHeaderFontWeight: '500',
+            }}
+          />
+        </Animated.View>
+
+        {/* Modern Legend */}
+        <View style={styles.legendContainer}>
+          <Text style={styles.legendTitle}>Calendar Legend</Text>
+          <View style={styles.legendGrid}>
+            <View style={styles.legendItem}>
+              <View style={[styles.legendIcon, { backgroundColor: theme.colors.error }]} />
+              <Text style={styles.legendText}>Period Days</Text>
+            </View>
+            <View style={styles.legendItem}>
+              <View style={[styles.legendIcon, { backgroundColor: theme.colors.warning }]} />
+              <Text style={styles.legendText}>Predicted</Text>
+            </View>
+            <View style={styles.legendItem}>
+              <View style={[styles.legendIcon, { backgroundColor: theme.colors.success }]} />
+              <Text style={styles.legendText}>Fertile Window</Text>
+            </View>
+            <View style={styles.legendItem}>
+              <View style={[styles.legendIcon, { backgroundColor: theme.colors.info }]} />
+              <Text style={styles.legendText}>Symptoms/Mood</Text>
+            </View>
+          </View>
         </View>
-      )}
+
+        {/* Enhanced Cycle Insights */}
+        {predictions ? (
+          <View style={styles.insightsContainer}>
+            <View style={styles.insightsHeader}>
+              <Ionicons 
+                name="analytics" 
+                size={24} 
+                color={theme.colors.primary} 
+              />
+              <Text style={styles.insightsTitle}>Cycle Insights</Text>
+            </View>
+            
+            <View style={styles.insightCard}>
+              <View style={styles.insightIconContainer}>
+                <Ionicons 
+                  name="calendar" 
+                  size={20} 
+                  color={theme.colors.white} 
+                />
+              </View>
+              <View style={styles.insightContent}>
+                <Text style={styles.insightLabel}>Next Period Predicted</Text>
+                <Text style={styles.insightValue}>
+                  {new Date(predictions.next_period_date).toLocaleDateString('en-US', { 
+                    month: 'long', 
+                    day: 'numeric' 
+                  })}
+                </Text>
+              </View>
+            </View>
+
+            <View style={styles.insightCard}>
+              <View style={styles.insightIconContainer}>
+                <Ionicons 
+                  name="refresh" 
+                  size={20} 
+                  color={theme.colors.white} 
+                />
+              </View>
+              <View style={styles.insightContent}>
+                <Text style={styles.insightLabel}>Average Cycle Length</Text>
+                <Text style={styles.insightValue}>
+                  {predictions.avg_cycle_length} days
+                </Text>
+              </View>
+            </View>
+
+            <View style={styles.insightCard}>
+              <View style={styles.insightIconContainer}>
+                <Ionicons 
+                  name="time" 
+                  size={20} 
+                  color={theme.colors.white} 
+                />
+              </View>
+              <View style={styles.insightContent}>
+                <Text style={styles.insightLabel}>Average Period Length</Text>
+                <Text style={styles.insightValue}>
+                  {predictions.avg_period_length} days
+                </Text>
+              </View>
+            </View>
+
+            <View style={styles.insightCard}>
+              <View style={styles.insightIconContainer}>
+                <Ionicons 
+                  name="flower" 
+                  size={20} 
+                  color={theme.colors.white} 
+                />
+              </View>
+              <View style={styles.insightContent}>
+                <Text style={styles.insightLabel}>Fertile Window</Text>
+                <Text style={styles.insightValue}>
+                  {new Date(predictions.fertile_window.start).toLocaleDateString('en-US', { 
+                    month: 'short', 
+                    day: 'numeric' 
+                  })} - {new Date(predictions.fertile_window.end).toLocaleDateString('en-US', { 
+                    month: 'short', 
+                    day: 'numeric' 
+                  })}
+                </Text>
+              </View>
+            </View>
+          </View>
+        ) : (
+          <View style={styles.emptyState}>
+            <Ionicons 
+              name="information-circle-outline" 
+              size={48} 
+              color={theme.colors.textMuted} 
+              style={styles.emptyStateIcon}
+            />
+            <Text style={styles.emptyStateText}>
+              Track your period to see insights
+            </Text>
+            <Text style={styles.emptyStateSubtext}>
+              Tap on any date to log your period and get personalized predictions
+            </Text>
+          </View>
+        )}
+      </ScrollView>
 
       <LogPeriodModal
         visible={isModalVisible}
@@ -367,6 +648,6 @@ export default function CalendarScreen() {
         selectedDate={selectedDate}
         onPeriodLogged={handlePeriodLogged}
       />
-    </ScrollView>
+    </View>
   );
 }
