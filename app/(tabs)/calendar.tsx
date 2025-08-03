@@ -37,21 +37,6 @@ export default function CalendarScreen() {
   const [predictions, setPredictions] = useState<any>(null);
   const [currentDate, setCurrentDate] = useState(new Date());
 
-  // Fetch period data when screen comes into focus
-  useFocusEffect(
-    useCallback(() => {
-      loadPeriodData();
-    }, [loadPeriodData])
-  );
-
-  useEffect(() => {
-    Animated.timing(fadeAnim, {
-      toValue: 1,
-      duration: 1000,
-      useNativeDriver: true,
-    }).start();
-  }, [fadeAnim]);
-
   const loadPeriodData = useCallback(async () => {
     try {
       setLoading(true);
@@ -205,6 +190,21 @@ export default function CalendarScreen() {
       setRefreshing(false);
     }
   }, [theme.colors, predictions]);
+
+  // Fetch period data when screen comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      loadPeriodData();
+    }, [loadPeriodData])
+  );
+
+  useEffect(() => {
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 1000,
+      useNativeDriver: true,
+    }).start();
+  }, [fadeAnim]);
 
   const onRefresh = () => {
     setRefreshing(true);
