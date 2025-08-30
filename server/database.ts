@@ -1,21 +1,26 @@
-import { Pool } from 'pg';
-import dotenv from 'dotenv';
+import dotenv from "dotenv";
+import { Pool } from "pg";
 
 dotenv.config();
 
 // PostgreSQL connection configuration
 const pool = new Pool({
-  user: process.env.DB_USER || 'postgres',
-  host: process.env.DB_HOST || 'localhost',
-  database: process.env.DB_NAME || 'redpetal',
-  password: process.env.DB_PASSWORD || 'password',
-  port: parseInt(process.env.DB_PORT || '5432'),
+  user: process.env.DB_USER || "postgres",
+  host: process.env.DB_HOST || "localhost",
+  database: process.env.DB_NAME || "redpetal",
+  password: process.env.DB_PASSWORD || "password",
+  port: parseInt(process.env.DB_PORT || "5432"),
 });
 
 // Database schema creation
 export const createTables = async () => {
   const client = await pool.connect();
   try {
+    // Ensure required extensions are available
+    await client.query(`
+      CREATE EXTENSION IF NOT EXISTS pgcrypto;
+    `);
+
     // Users table
     await client.query(`
       CREATE TABLE IF NOT EXISTS users (
@@ -183,9 +188,9 @@ export const createTables = async () => {
       CREATE INDEX IF NOT EXISTS idx_likes_user_id ON likes(user_id);
     `);
 
-    console.log('Database tables created successfully');
+    console.log("Database tables created successfully");
   } catch (error) {
-    console.error('Error creating database tables:', error);
+    console.error("Error creating database tables:", error);
     throw error;
   } finally {
     client.release();
