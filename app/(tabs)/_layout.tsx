@@ -58,15 +58,6 @@ export default function TabLayout() {
       ),
     },
     {
-      name: "resources",
-      activeIcon: (
-        <FontAwesome name="book" color={theme.colors.textOnPrimary} size={25} />
-      ),
-      inactiveIcon: (
-        <FontAwesome name="book" color={theme.colors.textMuted} size={25} />
-      ),
-    },
-    {
       name: "profile",
       activeIcon: (
         <FontAwesome name="user" color={theme.colors.textOnPrimary} size={25} />
@@ -77,11 +68,19 @@ export default function TabLayout() {
     },
   ];
 
+  // The TabBar library supports max 5 tabs; enforce and log if exceeded.
+  const TAB_ITEMS = TABS.slice(0, 5);
+  if (TABS.length > 5) {
+    console.warn(
+      `TabBar only supports 5 tabs; received ${TABS.length}. Showing first 5.`
+    );
+  }
+
   return (
     <Tabs
       tabBar={(props) => (
         <TabBar
-          tabs={TABS}
+          tabs={TAB_ITEMS}
           containerWidth={windowWidth * 0.9}
           tabBarContainerBackground={theme.colors.primary}
           circleFillColor={theme.colors.accent}

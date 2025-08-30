@@ -6,8 +6,9 @@ import express, {
   Request,
   Response,
 } from "express";
-import rateLimit from "express-rate-limit";
+import expressRateLimit from "express-rate-limit";
 import helmet from "helmet";
+import path from "path";
 import { createTables } from "./database";
 
 // Import routes
@@ -17,7 +18,8 @@ import periodRoutes from "./routes/periods";
 import remedyRoutes from "./routes/remedies";
 import resourceRoutes from "./routes/resources";
 
-dotenv.config();
+// Load env from project root .env (../.env) so running from /server works
+dotenv.config({ path: path.resolve(__dirname, "../.env") });
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -37,7 +39,7 @@ app.use(
 );
 
 // Rate limiting
-const limiter = rateLimit({
+const limiter = expressRateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 100, // limit each IP to 100 requests per windowMs
   message: "Too many requests from this IP, please try again later.",
@@ -53,7 +55,7 @@ app.use(
     origin:
       process.env.NODE_ENV === "production"
         ? ["https://yourapp.com"] // Replace with your production domain
-        : ["http://localhost:3000", "http://127.0.0.1:3000", "exp://192.168.*"],
+        : true, // Reflect request origin in development (allows credentials)
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
@@ -137,8 +139,8 @@ const errorHandler: ErrorRequestHandler = (
   // do not call next after sending response
 };
 
-// 404 handler
-app.use("*", (req: Request, res: Response) => {
+// 404 handler (Express 5: avoid "*" wildcard; use no-path handler)
+app.use((req: Request, res: Response) => {
   res.status(404).json({
     error: "Endpoint not found",
     message: `Cannot ${req.method} ${req.originalUrl}`,

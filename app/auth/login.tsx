@@ -1,3 +1,4 @@
+import { Link, router } from "expo-router";
 import React, { useState } from "react";
 import {
   Alert,
@@ -11,13 +12,12 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Link, router } from "expo-router";
 import { useThemeContext } from "../components/ThemeContext";
 import { useAuth } from "../services/auth";
 
 export default function LoginScreen() {
   const { theme } = useThemeContext();
-  const { login, loading } = useAuth();
+  const { login, guestLogin } = useAuth();
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -35,7 +35,10 @@ export default function LoginScreen() {
       await login(formData.email, formData.password);
       router.replace("/(tabs)");
     } catch (error: any) {
-      Alert.alert("Login Failed", error.message || "Please check your credentials");
+      Alert.alert(
+        "Login Failed",
+        error.message || "Please check your credentials"
+      );
     } finally {
       setIsLoading(false);
     }
@@ -102,6 +105,18 @@ export default function LoginScreen() {
       color: theme.colors.textOnPrimary,
       fontWeight: "600",
     },
+    guestButton: {
+      ...theme.components.button.secondary,
+      alignItems: "center",
+      justifyContent: "center",
+      minHeight: 50,
+      marginTop: theme.spacing.md,
+    },
+    guestButtonText: {
+      ...theme.typography.button,
+      color: theme.colors.primary,
+      fontWeight: "600",
+    },
     registerContainer: {
       alignItems: "center",
       marginTop: theme.spacing.xl,
@@ -134,9 +149,7 @@ export default function LoginScreen() {
         >
           <View style={styles.titleContainer}>
             <Text style={styles.title}>RedPetal</Text>
-            <Text style={styles.subtitle}>
-              Your personal period companion
-            </Text>
+            <Text style={styles.subtitle}>Your personal period companion</Text>
           </View>
 
           <View style={styles.form}>
@@ -186,12 +199,26 @@ export default function LoginScreen() {
                 {isLoading ? "Signing In..." : "Sign In"}
               </Text>
             </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.guestButton}
+              onPress={async () => {
+                try {
+                  setIsLoading(true);
+                  await guestLogin();
+                  router.replace("/(tabs)");
+                } finally {
+                  setIsLoading(false);
+                }
+              }}
+              disabled={isLoading}
+            >
+              <Text style={styles.guestButtonText}>Continue as Guest</Text>
+            </TouchableOpacity>
           </View>
 
           <View style={styles.registerContainer}>
-            <Text style={styles.registerText}>
-              Don&apos;t have an account?
-            </Text>
+            <Text style={styles.registerText}>Don&apos;t have an account?</Text>
             <Link href="/auth/signup" asChild>
               <TouchableOpacity disabled={isLoading}>
                 <Text style={styles.registerLink}>Create Account</Text>
