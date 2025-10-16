@@ -17,7 +17,7 @@ import { useAuth } from "../services/auth";
 
 export default function LoginScreen() {
   const { theme } = useThemeContext();
-  const { login, loading } = useAuth();
+  const { login } = useAuth();
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -190,7 +190,7 @@ export default function LoginScreen() {
 
           <View style={styles.registerContainer}>
             <Text style={styles.registerText}>
-              Don't have an account?
+              Don&apos;t have an account?
             </Text>
             <Link href="/auth/signup" asChild>
               <TouchableOpacity disabled={isLoading}>
