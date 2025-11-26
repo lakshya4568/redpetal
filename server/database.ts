@@ -1,14 +1,16 @@
 import dotenv from "dotenv";
+import path from "path";
 import { Pool } from "pg";
 
-dotenv.config();
+// Load env from project root - must happen before Pool is created
+dotenv.config({ path: path.resolve(__dirname, "../.env") });
 
 // PostgreSQL connection configuration
 const pool = new Pool({
-  user: process.env.DB_USER || "postgres",
+  user: process.env.DB_USER || "proximus",
   host: process.env.DB_HOST || "localhost",
   database: process.env.DB_NAME || "redpetal",
-  password: process.env.DB_PASSWORD || "password",
+  password: process.env.DB_PASSWORD || "",
   port: parseInt(process.env.DB_PORT || "5432"),
 });
 
