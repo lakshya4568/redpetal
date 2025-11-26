@@ -12,8 +12,8 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useAuth } from "../../services/auth";
 import { useThemeContext } from "../components/ThemeContext";
-import { useAuth } from "../services/auth";
 
 export default function LoginScreen() {
   const { theme } = useThemeContext();

@@ -1,7 +1,7 @@
 import { useFonts } from "expo-font";
 import * as SplashScreen from "expo-splash-screen";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { Platform } from "react-native";
+import { ActivityIndicator, Platform, View } from "react-native";
 
 // Prevent auto hide initially
 SplashScreen.preventAutoHideAsync().catch(() => {
@@ -118,7 +118,19 @@ const FontProvider: React.FC<FontProviderProps> = ({ children }) => {
   }, [isMounted]);
 
   if (!appReady || !isMounted) {
-    return null;
+    // Show a loading indicator instead of blank screen
+    return (
+      <View
+        style={{
+          flex: 1,
+          justifyContent: "center",
+          alignItems: "center",
+          backgroundColor: "#FFF5F5",
+        }}
+      >
+        <ActivityIndicator size="large" color="#FF6B6B" />
+      </View>
+    );
   }
 
   return <>{children}</>;

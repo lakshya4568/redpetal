@@ -1,20 +1,20 @@
-import React, { useEffect, useState, useCallback } from "react";
-import { 
-  Animated, 
-  Platform, 
-  StyleSheet, 
-  View, 
-  Alert, 
+import { useFocusEffect } from "expo-router";
+import React, { useCallback, useEffect, useState } from "react";
+import {
   ActivityIndicator,
-  RefreshControl 
+  Alert,
+  Animated,
+  Platform,
+  RefreshControl,
+  StyleSheet,
+  View,
 } from "react-native";
 import { Calendar } from "react-native-calendars";
-import { Text } from "react-native-paper";
 import { ScrollView } from "react-native-gesture-handler";
+import { Text } from "react-native-paper";
+import { periodsAPI } from "../../services/api";
 import LogPeriodModal from "../components/LogPeriodModal";
 import { useThemeContext } from "../components/ThemeContext";
-import { periodsAPI } from "../services/api";
-import { useFocusEffect } from "expo-router";
 
 interface MarkedDate {
   selected?: boolean;
@@ -26,7 +26,9 @@ interface MarkedDate {
 
 export default function CalendarScreen() {
   const { theme } = useThemeContext();
-  const [markedDates, setMarkedDates] = useState<{ [key: string]: MarkedDate }>({});
+  const [markedDates, setMarkedDates] = useState<{ [key: string]: MarkedDate }>(
+    {}
+  );
   const [isModalVisible, setModalVisible] = useState(false);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [fadeAnim] = useState(new Animated.Value(0));
@@ -52,32 +54,32 @@ export default function CalendarScreen() {
   const loadPeriodData = async () => {
     try {
       setLoading(true);
-      
+
       // Load period history
       const historyResponse = await periodsAPI.getHistory(12, 0);
       const cycles = historyResponse.cycles || [];
-      
+
       // Load predictions
       const predictionsResponse = await periodsAPI.getPredictions();
       setPredictions(predictionsResponse.predictions);
-      
+
       // Load symptoms and moods for the last 3 months
       const threeMonthsAgo = new Date();
       threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
-      
+
       const symptomsResponse = await periodsAPI.getSymptoms(
-        threeMonthsAgo.toISOString().split('T')[0]
+        threeMonthsAgo.toISOString().split("T")[0]
       );
       const symptoms = symptomsResponse.symptoms || [];
-      
+
       const moodsResponse = await periodsAPI.getMoods(
-        threeMonthsAgo.toISOString().split('T')[0]
+        threeMonthsAgo.toISOString().split("T")[0]
       );
       const moods = moodsResponse.moods || [];
-      
+
       // Create marked dates object
       const newMarkedDates: { [key: string]: MarkedDate } = {};
-      
+
       // Mark period dates
       cycles.forEach((cycle: any) => {
         if (cycle.period_start_date) {
@@ -92,18 +94,22 @@ export default function CalendarScreen() {
               },
               text: {
                 color: theme.colors.white,
-                fontWeight: 'bold',
+                fontWeight: "bold",
               },
             },
           };
-          
+
           // Mark period duration if end date exists
           if (cycle.period_end_date) {
             const start = new Date(cycle.period_start_date);
             const end = new Date(cycle.period_end_date);
-            
-            for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-              const dateStr = d.toISOString().split('T')[0];
+
+            for (
+              let d = new Date(start);
+              d <= end;
+              d.setDate(d.getDate() + 1)
+            ) {
+              const dateStr = d.toISOString().split("T")[0];
               newMarkedDates[dateStr] = {
                 marked: true,
                 selectedColor: theme.colors.error,
@@ -114,7 +120,7 @@ export default function CalendarScreen() {
                   },
                   text: {
                     color: theme.colors.text,
-                    fontWeight: 'bold',
+                    fontWeight: "bold",
                   },
                 },
               };
@@ -122,7 +128,7 @@ export default function CalendarScreen() {
           }
         }
       });
-      
+
       // Mark predicted next period
       if (predictions?.next_period_date) {
         const predictedDate = predictions.next_period_date;
@@ -138,19 +144,23 @@ export default function CalendarScreen() {
             },
             text: {
               color: theme.colors.white,
-              fontWeight: 'bold',
+              fontWeight: "bold",
             },
           },
         };
       }
-      
+
       // Mark fertile window
       if (predictions?.fertile_window) {
         const fertileStart = new Date(predictions.fertile_window.start);
         const fertileEnd = new Date(predictions.fertile_window.end);
-        
-        for (let d = new Date(fertileStart); d <= fertileEnd; d.setDate(d.getDate() + 1)) {
-          const dateStr = d.toISOString().split('T')[0];
+
+        for (
+          let d = new Date(fertileStart);
+          d <= fertileEnd;
+          d.setDate(d.getDate() + 1)
+        ) {
+          const dateStr = d.toISOString().split("T")[0];
           if (!newMarkedDates[dateStr]) {
             newMarkedDates[dateStr] = {
               marked: true,
@@ -168,7 +178,7 @@ export default function CalendarScreen() {
           }
         }
       }
-      
+
       // Mark symptom days
       symptoms.forEach((symptom: any) => {
         const dateStr = symptom.date;
@@ -177,10 +187,10 @@ export default function CalendarScreen() {
         }
         newMarkedDates[dateStr].dots = [
           ...(newMarkedDates[dateStr].dots || []),
-          { key: 'symptom', color: theme.colors.warning }
+          { key: "symptom", color: theme.colors.warning },
         ];
       });
-      
+
       // Mark mood days
       moods.forEach((mood: any) => {
         const dateStr = mood.date;
@@ -189,14 +199,14 @@ export default function CalendarScreen() {
         }
         newMarkedDates[dateStr].dots = [
           ...(newMarkedDates[dateStr].dots || []),
-          { key: 'mood', color: theme.colors.info }
+          { key: "mood", color: theme.colors.info },
         ];
       });
-      
+
       setMarkedDates(newMarkedDates);
     } catch (error: any) {
-      console.error('Error loading period data:', error);
-      Alert.alert('Error', 'Failed to load period data');
+      console.error("Error loading period data:", error);
+      Alert.alert("Error", "Failed to load period data");
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -251,15 +261,15 @@ export default function CalendarScreen() {
       marginBottom: theme.spacing.sm,
     },
     legendContainer: {
-      flexDirection: 'row',
-      justifyContent: 'space-around',
+      flexDirection: "row",
+      justifyContent: "space-around",
       marginTop: theme.spacing.lg,
       padding: theme.spacing.md,
       backgroundColor: theme.colors.surface,
       borderRadius: theme.borderRadius.md,
     },
     legendItem: {
-      alignItems: 'center',
+      alignItems: "center",
     },
     legendDot: {
       width: 12,
@@ -273,8 +283,8 @@ export default function CalendarScreen() {
     },
     loadingContainer: {
       flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
+      justifyContent: "center",
+      alignItems: "center",
     },
   });
 
@@ -282,7 +292,13 @@ export default function CalendarScreen() {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={theme.colors.primary} />
-        <Text style={{ ...theme.typography.bodyLarge, color: theme.colors.text, marginTop: theme.spacing.md }}>
+        <Text
+          style={{
+            ...theme.typography.bodyLarge,
+            color: theme.colors.text,
+            marginTop: theme.spacing.md,
+          }}
+        >
           Loading calendar...
         </Text>
       </View>
@@ -290,7 +306,7 @@ export default function CalendarScreen() {
   }
 
   return (
-    <ScrollView 
+    <ScrollView
       style={styles.container}
       refreshControl={
         <RefreshControl
@@ -301,7 +317,7 @@ export default function CalendarScreen() {
       }
     >
       <Text style={styles.title}>Period Calendar</Text>
-      
+
       <Animated.View style={[styles.calendarContainer, { opacity: fadeAnim }]}>
         <Calendar
           markedDates={markedDates}
@@ -325,19 +341,33 @@ export default function CalendarScreen() {
       {/* Legend */}
       <View style={styles.legendContainer}>
         <View style={styles.legendItem}>
-          <View style={[styles.legendDot, { backgroundColor: theme.colors.error }]} />
+          <View
+            style={[styles.legendDot, { backgroundColor: theme.colors.error }]}
+          />
           <Text style={styles.legendText}>Period</Text>
         </View>
         <View style={styles.legendItem}>
-          <View style={[styles.legendDot, { backgroundColor: theme.colors.warning }]} />
+          <View
+            style={[
+              styles.legendDot,
+              { backgroundColor: theme.colors.warning },
+            ]}
+          />
           <Text style={styles.legendText}>Predicted</Text>
         </View>
         <View style={styles.legendItem}>
-          <View style={[styles.legendDot, { backgroundColor: theme.colors.success }]} />
+          <View
+            style={[
+              styles.legendDot,
+              { backgroundColor: theme.colors.success },
+            ]}
+          />
           <Text style={styles.legendText}>Fertile</Text>
         </View>
         <View style={styles.legendItem}>
-          <View style={[styles.legendDot, { backgroundColor: theme.colors.info }]} />
+          <View
+            style={[styles.legendDot, { backgroundColor: theme.colors.info }]}
+          />
           <Text style={styles.legendText}>Symptoms</Text>
         </View>
       </View>
@@ -347,7 +377,8 @@ export default function CalendarScreen() {
         <View style={styles.predictionContainer}>
           <Text style={styles.predictionTitle}>Cycle Insights</Text>
           <Text style={styles.predictionText}>
-            Next period predicted: {new Date(predictions.next_period_date).toLocaleDateString()}
+            Next period predicted:{" "}
+            {new Date(predictions.next_period_date).toLocaleDateString()}
           </Text>
           <Text style={styles.predictionText}>
             Average cycle length: {predictions.avg_cycle_length} days
@@ -356,7 +387,9 @@ export default function CalendarScreen() {
             Average period length: {predictions.avg_period_length} days
           </Text>
           <Text style={styles.predictionText}>
-            Fertile window: {new Date(predictions.fertile_window.start).toLocaleDateString()} - {new Date(predictions.fertile_window.end).toLocaleDateString()}
+            Fertile window:{" "}
+            {new Date(predictions.fertile_window.start).toLocaleDateString()} -{" "}
+            {new Date(predictions.fertile_window.end).toLocaleDateString()}
           </Text>
         </View>
       )}

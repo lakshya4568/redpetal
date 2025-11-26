@@ -1,20 +1,19 @@
-import React, { useEffect, useState, useCallback } from "react";
+import { FontAwesome } from "@expo/vector-icons";
+import { useFocusEffect } from "expo-router";
+import React, { useCallback, useState } from "react";
 import {
-  View,
-  Text,
-  StyleSheet,
-  FlatList,
-  TouchableOpacity,
-  Alert,
   ActivityIndicator,
+  Alert,
+  FlatList,
   RefreshControl,
-  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { FontAwesome } from "@expo/vector-icons";
+import { remediesAPI } from "../../services/api";
 import { useThemeContext } from "../components/ThemeContext";
-import { remediesAPI } from "../services/api";
-import { useFocusEffect } from "expo-router";
 
 interface Remedy {
   id: string;
@@ -28,14 +27,14 @@ interface Remedy {
 }
 
 const CATEGORIES = [
-  { key: 'all', label: 'All', icon: '🌿' },
-  { key: 'cramps', label: 'Cramps', icon: '💊' },
-  { key: 'bloating', label: 'Bloating', icon: '🫧' },
-  { key: 'mood', label: 'Mood', icon: '😌' },
-  { key: 'headaches', label: 'Headaches', icon: '🤕' },
-  { key: 'nausea', label: 'Nausea', icon: '🤢' },
-  { key: 'fatigue', label: 'Fatigue', icon: '😴' },
-  { key: 'skin', label: 'Skin', icon: '✨' },
+  { key: "all", label: "All", icon: "🌿" },
+  { key: "cramps", label: "Cramps", icon: "💊" },
+  { key: "bloating", label: "Bloating", icon: "🫧" },
+  { key: "mood", label: "Mood", icon: "😌" },
+  { key: "headaches", label: "Headaches", icon: "🤕" },
+  { key: "nausea", label: "Nausea", icon: "🤢" },
+  { key: "fatigue", label: "Fatigue", icon: "😴" },
+  { key: "skin", label: "Skin", icon: "✨" },
 ];
 
 export default function RemediesScreen() {
@@ -43,8 +42,8 @@ export default function RemediesScreen() {
   const [remedies, setRemedies] = useState<Remedy[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState('all');
-  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Fetch remedies when screen comes into focus
   useFocusEffect(
@@ -59,11 +58,11 @@ export default function RemediesScreen() {
       const params: any = {
         limit: 50,
         offset: 0,
-        sort_by: 'effectiveness_rating',
-        sort_order: 'DESC'
+        sort_by: "effectiveness_rating",
+        sort_order: "DESC",
       };
 
-      if (selectedCategory !== 'all') {
+      if (selectedCategory !== "all") {
         params.category = selectedCategory;
       }
 
@@ -74,8 +73,8 @@ export default function RemediesScreen() {
       const response = await remediesAPI.getRemedies(params);
       setRemedies(response.remedies || []);
     } catch (error: any) {
-      console.error('Error loading remedies:', error);
-      Alert.alert('Error', 'Failed to load remedies');
+      console.error("Error loading remedies:", error);
+      Alert.alert("Error", "Failed to load remedies");
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -91,27 +90,42 @@ export default function RemediesScreen() {
     const stars = [];
     const fullStars = Math.floor(rating);
     const hasHalfStar = rating % 1 >= 0.5;
-    
+
     for (let i = 0; i < 5; i++) {
       if (i < fullStars) {
         stars.push(
-          <FontAwesome key={i} name="star" size={16} color={theme.colors.warning} />
+          <FontAwesome
+            key={i}
+            name="star"
+            size={16}
+            color={theme.colors.warning}
+          />
         );
       } else if (i === fullStars && hasHalfStar) {
         stars.push(
-          <FontAwesome key={i} name="star-half-empty" size={16} color={theme.colors.warning} />
+          <FontAwesome
+            key={i}
+            name="star-half-empty"
+            size={16}
+            color={theme.colors.warning}
+          />
         );
       } else {
         stars.push(
-          <FontAwesome key={i} name="star-o" size={16} color={theme.colors.textMuted} />
+          <FontAwesome
+            key={i}
+            name="star-o"
+            size={16}
+            color={theme.colors.textMuted}
+          />
         );
       }
     }
-    
+
     return <View style={styles(theme).starsContainer}>{stars}</View>;
   };
 
-  const renderCategory = ({ item }: { item: typeof CATEGORIES[0] }) => (
+  const renderCategory = ({ item }: { item: (typeof CATEGORIES)[0] }) => (
     <TouchableOpacity
       style={[
         styles(theme).categoryChip,
@@ -139,25 +153,21 @@ export default function RemediesScreen() {
         </Text>
         <View style={styles(theme).ratingContainer}>
           {renderStars(item.effectiveness_rating)}
-          <Text style={styles(theme).ratingText}>
-            ({item.total_ratings})
-          </Text>
+          <Text style={styles(theme).ratingText}>({item.total_ratings})</Text>
         </View>
       </View>
-      
+
       <Text style={styles(theme).remedyDescription} numberOfLines={3}>
         {item.description}
       </Text>
-      
+
       <View style={styles(theme).remedyFooter}>
         <View style={styles(theme).categoryTag}>
           <Text style={styles(theme).categoryTagText}>
             {item.category.charAt(0).toUpperCase() + item.category.slice(1)}
           </Text>
         </View>
-        <Text style={styles(theme).authorText}>
-          by {item.username}
-        </Text>
+        <Text style={styles(theme).authorText}>by {item.username}</Text>
       </View>
     </TouchableOpacity>
   );
@@ -175,20 +185,20 @@ export default function RemediesScreen() {
       title: {
         ...theme.typography.headlineLarge,
         color: theme.colors.text,
-        textAlign: 'center',
+        textAlign: "center",
         marginBottom: theme.spacing.md,
       },
       subtitle: {
         ...theme.typography.bodyMedium,
         color: theme.colors.textSecondary,
-        textAlign: 'center',
+        textAlign: "center",
       },
       categoriesContainer: {
         paddingVertical: theme.spacing.md,
       },
       categoryChip: {
-        flexDirection: 'row',
-        alignItems: 'center',
+        flexDirection: "row",
+        alignItems: "center",
         paddingHorizontal: theme.spacing.md,
         paddingVertical: theme.spacing.sm,
         borderRadius: theme.borderRadius.xl,
@@ -208,7 +218,7 @@ export default function RemediesScreen() {
       categoryText: {
         ...theme.typography.bodyMedium,
         color: theme.colors.text,
-        fontWeight: '500',
+        fontWeight: "500",
       },
       categoryTextSelected: {
         color: theme.colors.textOnPrimary,
@@ -225,9 +235,9 @@ export default function RemediesScreen() {
         ...theme.shadows.md,
       },
       remedyHeader: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'flex-start',
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "flex-start",
         marginBottom: theme.spacing.md,
       },
       remedyTitle: {
@@ -237,10 +247,10 @@ export default function RemediesScreen() {
         marginRight: theme.spacing.md,
       },
       ratingContainer: {
-        alignItems: 'flex-end',
+        alignItems: "flex-end",
       },
       starsContainer: {
-        flexDirection: 'row',
+        flexDirection: "row",
         marginBottom: theme.spacing.xs / 2,
       },
       ratingText: {
@@ -254,9 +264,9 @@ export default function RemediesScreen() {
         marginBottom: theme.spacing.md,
       },
       remedyFooter: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
       },
       categoryTag: {
         backgroundColor: theme.colors.primary,
@@ -267,17 +277,17 @@ export default function RemediesScreen() {
       categoryTagText: {
         ...theme.typography.labelSmall,
         color: theme.colors.textOnPrimary,
-        fontWeight: '600',
+        fontWeight: "600",
       },
       authorText: {
         ...theme.typography.bodySmall,
         color: theme.colors.textMuted,
-        fontStyle: 'italic',
+        fontStyle: "italic",
       },
       loadingContainer: {
         flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
+        justifyContent: "center",
+        alignItems: "center",
         padding: theme.spacing.xl,
       },
       loadingText: {
@@ -287,31 +297,31 @@ export default function RemediesScreen() {
       },
       emptyContainer: {
         flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
+        justifyContent: "center",
+        alignItems: "center",
         padding: theme.spacing.xl,
       },
       emptyText: {
         ...theme.typography.headlineSmall,
         color: theme.colors.textSecondary,
-        textAlign: 'center',
+        textAlign: "center",
         marginBottom: theme.spacing.md,
       },
       emptySubtext: {
         ...theme.typography.bodyMedium,
         color: theme.colors.textMuted,
-        textAlign: 'center',
+        textAlign: "center",
       },
       addButton: {
-        position: 'absolute',
+        position: "absolute",
         bottom: theme.spacing.xl,
         right: theme.spacing.xl,
         width: 56,
         height: 56,
         borderRadius: 28,
         backgroundColor: theme.colors.primary,
-        justifyContent: 'center',
-        alignItems: 'center',
+        justifyContent: "center",
+        alignItems: "center",
         ...theme.shadows.lg,
       },
     });
@@ -352,14 +362,11 @@ export default function RemediesScreen() {
       <View style={styles(theme).content}>
         {remedies.length === 0 ? (
           <View style={styles(theme).emptyContainer}>
-            <Text style={styles(theme).emptyText}>
-              No remedies found
-            </Text>
+            <Text style={styles(theme).emptyText}>No remedies found</Text>
             <Text style={styles(theme).emptySubtext}>
-              {selectedCategory === 'all' 
-                ? 'Be the first to share a remedy!'
-                : `No remedies in ${selectedCategory} category yet.`
-              }
+              {selectedCategory === "all"
+                ? "Be the first to share a remedy!"
+                : `No remedies in ${selectedCategory} category yet.`}
             </Text>
           </View>
         ) : (
@@ -380,9 +387,14 @@ export default function RemediesScreen() {
       </View>
 
       {/* Add Button */}
-      <TouchableOpacity 
+      <TouchableOpacity
         style={styles(theme).addButton}
-        onPress={() => Alert.alert('Coming Soon', 'Add remedy feature will be available soon!')}
+        onPress={() =>
+          Alert.alert(
+            "Coming Soon",
+            "Add remedy feature will be available soon!"
+          )
+        }
       >
         <FontAwesome name="plus" size={24} color={theme.colors.textOnPrimary} />
       </TouchableOpacity>

@@ -1,3 +1,4 @@
+import { Link, router } from "expo-router";
 import React, { useState } from "react";
 import {
   Alert,
@@ -11,9 +12,8 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Link, router } from "expo-router";
+import { useAuth } from "../../services/auth";
 import { useThemeContext } from "../components/ThemeContext";
-import { useAuth } from "../services/auth";
 
 export default function SignupScreen() {
   const { theme } = useThemeContext();
@@ -153,9 +153,7 @@ export default function SignupScreen() {
         >
           <View style={styles.titleContainer}>
             <Text style={styles.title}>Join RedPetal</Text>
-            <Text style={styles.subtitle}>
-              Start your wellness journey
-            </Text>
+            <Text style={styles.subtitle}>Start your wellness journey</Text>
           </View>
 
           <View style={styles.form}>
@@ -279,9 +277,7 @@ export default function SignupScreen() {
           </View>
 
           <View style={styles.loginContainer}>
-            <Text style={styles.loginText}>
-              Already have an account?
-            </Text>
+            <Text style={styles.loginText}>Already have an account?</Text>
             <Link href="/auth/login" asChild>
               <TouchableOpacity disabled={isLoading}>
                 <Text style={styles.loginLink}>Sign In</Text>

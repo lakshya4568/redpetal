@@ -1,17 +1,17 @@
 import React, { useState } from "react";
-import { 
-  Modal, 
-  StyleSheet, 
-  View, 
-  Text, 
-  TouchableOpacity, 
-  ScrollView, 
+import {
   Alert,
-  Dimensions 
+  Dimensions,
+  Modal,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { TextInput } from "react-native-paper";
+import { periodsAPI } from "../../services/api";
 import { useThemeContext } from "./ThemeContext";
-import { periodsAPI } from "../services/api";
 
 interface LogPeriodModalProps {
   visible: boolean;
@@ -20,7 +20,7 @@ interface LogPeriodModalProps {
   onPeriodLogged?: () => void;
 }
 
-const { width } = Dimensions.get('window');
+const { width } = Dimensions.get("window");
 
 export default function LogPeriodModal({
   visible,
@@ -31,31 +31,39 @@ export default function LogPeriodModal({
   const { theme } = useThemeContext();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
-    flow: '',
-    notes: '',
+    flow: "",
+    notes: "",
     symptoms: [] as string[],
-    mood: '',
+    mood: "",
   });
 
   const flowLevels = [
-    { value: 'light', label: 'Light', color: '#FFB6C1' },
-    { value: 'medium', label: 'Medium', color: '#FF69B4' },
-    { value: 'heavy', label: 'Heavy', color: '#DC143C' },
-    { value: 'spotting', label: 'Spotting', color: '#FFC0CB' },
+    { value: "light", label: "Light", color: "#FFB6C1" },
+    { value: "medium", label: "Medium", color: "#FF69B4" },
+    { value: "heavy", label: "Heavy", color: "#DC143C" },
+    { value: "spotting", label: "Spotting", color: "#FFC0CB" },
   ];
 
   const symptomOptions = [
-    'Cramps', 'Bloating', 'Headache', 'Nausea', 'Fatigue', 
-    'Back Pain', 'Breast Tenderness', 'Acne', 'Mood Swings', 'Diarrhea'
+    "Cramps",
+    "Bloating",
+    "Headache",
+    "Nausea",
+    "Fatigue",
+    "Back Pain",
+    "Breast Tenderness",
+    "Acne",
+    "Mood Swings",
+    "Diarrhea",
   ];
 
   const moodOptions = [
-    { value: 'happy', emoji: '😊', label: 'Happy' },
-    { value: 'sad', emoji: '😢', label: 'Sad' },
-    { value: 'angry', emoji: '😠', label: 'Angry' },
-    { value: 'anxious', emoji: '😰', label: 'Anxious' },
-    { value: 'tired', emoji: '😴', label: 'Tired' },
-    { value: 'energetic', emoji: '😄', label: 'Energetic' },
+    { value: "happy", emoji: "😊", label: "Happy" },
+    { value: "sad", emoji: "😢", label: "Sad" },
+    { value: "angry", emoji: "😠", label: "Angry" },
+    { value: "anxious", emoji: "😰", label: "Anxious" },
+    { value: "tired", emoji: "😴", label: "Tired" },
+    { value: "energetic", emoji: "😄", label: "Energetic" },
   ];
 
   const handleSave = async () => {
@@ -66,7 +74,7 @@ export default function LogPeriodModal({
       // Log the period
       await periodsAPI.logPeriod({
         period_start_date: selectedDate,
-        notes: formData.notes
+        notes: formData.notes,
       });
 
       // Log symptoms if any selected
@@ -76,7 +84,7 @@ export default function LogPeriodModal({
             date: selectedDate,
             symptom_type: symptom.toLowerCase(),
             severity: 3, // Default severity
-            notes: `Flow: ${formData.flow}`
+            notes: `Flow: ${formData.flow}`,
           });
         }
       }
@@ -87,20 +95,20 @@ export default function LogPeriodModal({
           date: selectedDate,
           mood_type: formData.mood,
           intensity: 3, // Default intensity
-          notes: formData.notes
+          notes: formData.notes,
         });
       }
 
       Alert.alert("Success", "Period data logged successfully!");
-      
+
       // Reset form
       setFormData({
-        flow: '',
-        notes: '',
+        flow: "",
+        notes: "",
         symptoms: [],
-        mood: '',
+        mood: "",
       });
-      
+
       onPeriodLogged?.();
       onClose();
     } catch (error: any) {
@@ -112,7 +120,7 @@ export default function LogPeriodModal({
 
   const toggleSymptom = (symptom: string) => {
     const newSymptoms = formData.symptoms.includes(symptom)
-      ? formData.symptoms.filter(s => s !== symptom)
+      ? formData.symptoms.filter((s) => s !== symptom)
       : [...formData.symptoms, symptom];
     setFormData({ ...formData, symptoms: newSymptoms });
   };
@@ -120,28 +128,28 @@ export default function LogPeriodModal({
   const styles = StyleSheet.create({
     overlay: {
       flex: 1,
-      backgroundColor: 'rgba(0, 0, 0, 0.5)',
-      justifyContent: 'center',
-      alignItems: 'center',
+      backgroundColor: "rgba(0, 0, 0, 0.5)",
+      justifyContent: "center",
+      alignItems: "center",
     },
     container: {
       backgroundColor: theme.colors.surface,
       borderRadius: theme.borderRadius.xl,
       padding: theme.spacing.xl,
       margin: theme.spacing.lg,
-      maxHeight: '80%',
+      maxHeight: "80%",
       width: width * 0.9,
     },
     title: {
       ...theme.typography.headlineMedium,
       color: theme.colors.text,
-      textAlign: 'center',
+      textAlign: "center",
       marginBottom: theme.spacing.lg,
     },
     dateText: {
       ...theme.typography.bodyLarge,
       color: theme.colors.textSecondary,
-      textAlign: 'center',
+      textAlign: "center",
       marginBottom: theme.spacing.xl,
     },
     scrollContent: {
@@ -156,17 +164,17 @@ export default function LogPeriodModal({
       marginBottom: theme.spacing.md,
     },
     flowGrid: {
-      flexDirection: 'row',
-      flexWrap: 'wrap',
-      justifyContent: 'space-between',
+      flexDirection: "row",
+      flexWrap: "wrap",
+      justifyContent: "space-between",
     },
     flowOption: {
-      width: '48%',
+      width: "48%",
       padding: theme.spacing.md,
       borderRadius: theme.borderRadius.md,
       borderWidth: 2,
       borderColor: theme.colors.borderLight,
-      alignItems: 'center',
+      alignItems: "center",
       marginBottom: theme.spacing.sm,
     },
     flowOptionSelected: {
@@ -176,11 +184,11 @@ export default function LogPeriodModal({
     flowLabel: {
       ...theme.typography.bodyMedium,
       color: theme.colors.text,
-      fontWeight: '600',
+      fontWeight: "600",
     },
     symptomsGrid: {
-      flexDirection: 'row',
-      flexWrap: 'wrap',
+      flexDirection: "row",
+      flexWrap: "wrap",
     },
     symptomChip: {
       paddingHorizontal: theme.spacing.md,
@@ -202,17 +210,17 @@ export default function LogPeriodModal({
       color: theme.colors.textOnPrimary,
     },
     moodGrid: {
-      flexDirection: 'row',
-      flexWrap: 'wrap',
-      justifyContent: 'space-between',
+      flexDirection: "row",
+      flexWrap: "wrap",
+      justifyContent: "space-between",
     },
     moodOption: {
-      width: '30%',
+      width: "30%",
       padding: theme.spacing.md,
       borderRadius: theme.borderRadius.md,
       borderWidth: 2,
       borderColor: theme.colors.borderLight,
-      alignItems: 'center',
+      alignItems: "center",
       marginBottom: theme.spacing.sm,
     },
     moodOptionSelected: {
@@ -234,32 +242,32 @@ export default function LogPeriodModal({
       borderWidth: 1,
       borderColor: theme.colors.border,
       minHeight: 80,
-      textAlignVertical: 'top',
+      textAlignVertical: "top",
     },
     buttonContainer: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
+      flexDirection: "row",
+      justifyContent: "space-between",
       marginTop: theme.spacing.xl,
     },
     button: {
       flex: 1,
       paddingVertical: theme.spacing.md,
       borderRadius: theme.borderRadius.md,
-      alignItems: 'center',
+      alignItems: "center",
       marginHorizontal: theme.spacing.sm,
     },
     saveButton: {
       backgroundColor: theme.colors.primary,
     },
     cancelButton: {
-      backgroundColor: 'transparent',
+      backgroundColor: "transparent",
       borderWidth: 1,
       borderColor: theme.colors.border,
     },
     buttonText: {
       ...theme.typography.button,
       color: theme.colors.textOnPrimary,
-      fontWeight: '600',
+      fontWeight: "600",
     },
     cancelButtonText: {
       color: theme.colors.text,
@@ -279,31 +287,36 @@ export default function LogPeriodModal({
         <View style={styles.container}>
           <Text style={styles.title}>Log Your Period</Text>
           <Text style={styles.dateText}>
-            {selectedDate ? new Date(selectedDate).toLocaleDateString() : ''}
+            {selectedDate ? new Date(selectedDate).toLocaleDateString() : ""}
           </Text>
 
-          <ScrollView style={styles.scrollContent} showsVerticalScrollIndicator={false}>
+          <ScrollView
+            style={styles.scrollContent}
+            showsVerticalScrollIndicator={false}
+          >
             {/* Flow Level */}
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Flow Level</Text>
               <View style={styles.flowGrid}>
-                {flowLevels.map(flow => (
+                {flowLevels.map((flow) => (
                   <TouchableOpacity
                     key={flow.value}
                     style={[
                       styles.flowOption,
                       formData.flow === flow.value && styles.flowOptionSelected,
                     ]}
-                    onPress={() => setFormData({ ...formData, flow: flow.value })}
+                    onPress={() =>
+                      setFormData({ ...formData, flow: flow.value })
+                    }
                   >
-                    <View 
-                      style={{ 
-                        width: 20, 
-                        height: 20, 
-                        backgroundColor: flow.color, 
+                    <View
+                      style={{
+                        width: 20,
+                        height: 20,
+                        backgroundColor: flow.color,
                         borderRadius: 10,
-                        marginBottom: theme.spacing.xs 
-                      }} 
+                        marginBottom: theme.spacing.xs,
+                      }}
                     />
                     <Text style={styles.flowLabel}>{flow.label}</Text>
                   </TouchableOpacity>
@@ -315,19 +328,23 @@ export default function LogPeriodModal({
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Symptoms</Text>
               <View style={styles.symptomsGrid}>
-                {symptomOptions.map(symptom => (
+                {symptomOptions.map((symptom) => (
                   <TouchableOpacity
                     key={symptom}
                     style={[
                       styles.symptomChip,
-                      formData.symptoms.includes(symptom) && styles.symptomChipSelected,
+                      formData.symptoms.includes(symptom) &&
+                        styles.symptomChipSelected,
                     ]}
                     onPress={() => toggleSymptom(symptom)}
                   >
-                    <Text style={[
-                      styles.symptomText,
-                      formData.symptoms.includes(symptom) && styles.symptomTextSelected,
-                    ]}>
+                    <Text
+                      style={[
+                        styles.symptomText,
+                        formData.symptoms.includes(symptom) &&
+                          styles.symptomTextSelected,
+                      ]}
+                    >
                       {symptom}
                     </Text>
                   </TouchableOpacity>
@@ -339,14 +356,16 @@ export default function LogPeriodModal({
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Mood</Text>
               <View style={styles.moodGrid}>
-                {moodOptions.map(mood => (
+                {moodOptions.map((mood) => (
                   <TouchableOpacity
                     key={mood.value}
                     style={[
                       styles.moodOption,
                       formData.mood === mood.value && styles.moodOptionSelected,
                     ]}
-                    onPress={() => setFormData({ ...formData, mood: mood.value })}
+                    onPress={() =>
+                      setFormData({ ...formData, mood: mood.value })
+                    }
                   >
                     <Text style={styles.moodEmoji}>{mood.emoji}</Text>
                     <Text style={styles.moodLabel}>{mood.label}</Text>
@@ -361,7 +380,9 @@ export default function LogPeriodModal({
               <TextInput
                 style={styles.notesInput}
                 value={formData.notes}
-                onChangeText={(text) => setFormData({ ...formData, notes: text })}
+                onChangeText={(text) =>
+                  setFormData({ ...formData, notes: text })
+                }
                 placeholder="Add any additional notes..."
                 placeholderTextColor={theme.colors.textMuted}
                 multiline
@@ -379,14 +400,14 @@ export default function LogPeriodModal({
                 Cancel
               </Text>
             </TouchableOpacity>
-            
+
             <TouchableOpacity
               style={[styles.button, styles.saveButton]}
               onPress={handleSave}
               disabled={loading}
             >
               <Text style={styles.buttonText}>
-                {loading ? 'Saving...' : 'Save'}
+                {loading ? "Saving..." : "Save"}
               </Text>
             </TouchableOpacity>
           </View>
