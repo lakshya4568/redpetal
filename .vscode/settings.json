@@ -3,5 +3,10 @@
     "source.fixAll": "explicit",
     "source.organizeImports": "explicit",
     "source.sortMembers": "explicit"
+  },
+  "react-native-tools.projectRoot": "${workspaceFolder}",
+  "react-native-tools.showUserTips": false,
+  "react-native": {
+    "packager.port": 8081
   }
 }
