@@ -1,0 +1,74 @@
+{
+  "doctors": [
+    {
+      "id": "1",
+      "name": "Dr. Priya Sharma",
+      "specialty": "Gynecologist",
+      "qualification": "MBBS, MD (OBG)",
+      "experience": "15 years",
+      "distance": "1.2 km",
+      "phone": "+911234567890",
+      "rating": 4.8,
+      "consultationFee": "₹500",
+      "available": true,
+      "languages": ["Hindi", "English"],
+      "clinic": "Molarband Health Clinic"
+    },
+    {
+      "id": "2",
+      "name": "Dr. Anjali Gupta",
+      "specialty": "Women's Health Specialist",
+      "qualification": "MBBS, DNB",
+      "experience": "10 years",
+      "distance": "2.5 km",
+      "phone": "+919876543210",
+      "rating": 4.6,
+      "consultationFee": "₹400",
+      "available": true,
+      "languages": ["Hindi", "English", "Punjabi"],
+      "clinic": "Saket Care Center"
+    },
+    {
+      "id": "3",
+      "name": "Dr. Meera Reddy",
+      "specialty": "Gynecologist & Obstetrician",
+      "qualification": "MBBS, MS (OBG)",
+      "experience": "20 years",
+      "distance": "3.8 km",
+      "phone": "+919988776655",
+      "rating": 4.9,
+      "consultationFee": "₹700",
+      "available": false,
+      "languages": ["Hindi", "English", "Telugu"],
+      "clinic": "Apollo Clinic Badarpur"
+    },
+    {
+      "id": "4",
+      "name": "Dr. Sunita Verma",
+      "specialty": "General Physician (Women's Health)",
+      "qualification": "MBBS",
+      "experience": "8 years",
+      "distance": "0.8 km",
+      "phone": "+918877665544",
+      "rating": 4.3,
+      "consultationFee": "₹300",
+      "available": true,
+      "languages": ["Hindi"],
+      "clinic": "Community Health Center"
+    },
+    {
+      "id": "5",
+      "name": "Dr. Kavita Singh",
+      "specialty": "Reproductive Health Specialist",
+      "qualification": "MBBS, DGO",
+      "experience": "12 years",
+      "distance": "4.2 km",
+      "phone": "+917766554433",
+      "rating": 4.7,
+      "consultationFee": "₹600",
+      "available": true,
+      "languages": ["Hindi", "English"],
+      "clinic": "Max Hospital Saket"
+    }
+  ]
+}

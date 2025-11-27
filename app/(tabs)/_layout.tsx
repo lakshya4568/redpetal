@@ -1,113 +1,25 @@
-import { FontAwesome } from "@expo/vector-icons";
-import {
-  TabBar,
-  TabsType,
-} from "@mindinventory/react-native-tab-bar-interaction";
 import { Tabs } from "expo-router";
 import React from "react";
-import { Dimensions } from "react-native";
+import FloatingTabBar from "../components/FloatingTabBar";
 import { useThemeContext } from "../components/ThemeContext";
 
 export default function TabLayout() {
   const { theme } = useThemeContext();
-  const windowWidth = Dimensions.get("window").width;
-
-  const TABS = [
-    {
-      name: "index",
-      activeIcon: (
-        <FontAwesome name="home" color={theme.colors.textOnPrimary} size={25} />
-      ),
-      inactiveIcon: (
-        <FontAwesome name="home" color={theme.colors.textMuted} size={25} />
-      ),
-    },
-    {
-      name: "calendar",
-      activeIcon: (
-        <FontAwesome
-          name="calendar"
-          color={theme.colors.textOnPrimary}
-          size={25}
-        />
-      ),
-      inactiveIcon: (
-        <FontAwesome name="calendar" color={theme.colors.textMuted} size={25} />
-      ),
-    },
-    {
-      name: "community",
-      activeIcon: (
-        <FontAwesome
-          name="users"
-          color={theme.colors.textOnPrimary}
-          size={25}
-        />
-      ),
-      inactiveIcon: (
-        <FontAwesome name="users" color={theme.colors.textMuted} size={25} />
-      ),
-    },
-    {
-      name: "remedies",
-      activeIcon: (
-        <FontAwesome name="leaf" color={theme.colors.textOnPrimary} size={25} />
-      ),
-      inactiveIcon: (
-        <FontAwesome name="leaf" color={theme.colors.textMuted} size={25} />
-      ),
-    },
-    {
-      name: "profile",
-      activeIcon: (
-        <FontAwesome name="user" color={theme.colors.textOnPrimary} size={25} />
-      ),
-      inactiveIcon: (
-        <FontAwesome name="user" color={theme.colors.textMuted} size={25} />
-      ),
-    },
-  ];
-
-  // The TabBar library supports max 5 tabs; enforce and log if exceeded.
-  const TAB_ITEMS = TABS.slice(0, 5);
-  if (TABS.length > 5) {
-    console.warn(
-      `TabBar only supports 5 tabs; received ${TABS.length}. Showing first 5.`
-    );
-  }
 
   return (
     <Tabs
       tabBar={(props) => (
-        <TabBar
-          tabs={TAB_ITEMS}
-          containerWidth={windowWidth * 0.9}
-          tabBarContainerBackground={theme.colors.primary}
-          circleFillColor={theme.colors.accent}
-          containerBottomSpace={theme.spacing.lg}
-          containerTopLeftRadius={theme.borderRadius.none}
-          containerTopRightRadius={theme.borderRadius.none}
-          containerBottomLeftRadius={theme.borderRadius.xl}
-          containerBottomRightRadius={theme.borderRadius.xl}
-          transitionSpeed={theme.animation.slow}
-          defaultActiveTabIndex={0}
-          onTabChange={(tab: TabsType, index: number) => {
-            // Use immediate navigation instead of setTimeout to prevent race conditions
-            try {
-              props.navigation.navigate(tab.name);
-            } catch (error) {
-              console.warn("Navigation error:", error);
-            }
-          }}
-        />
+        <FloatingTabBar state={props.state} navigation={props.navigation} />
       )}
-      screenOptions={{ headerShown: false }}
+      screenOptions={{
+        headerShown: false,
+        tabBarStyle: { display: "none" }, // Hide default tab bar
+      }}
     >
       <Tabs.Screen name="index" />
       <Tabs.Screen name="calendar" />
       <Tabs.Screen name="community" />
       <Tabs.Screen name="remedies" />
-      <Tabs.Screen name="resources" />
       <Tabs.Screen name="profile" />
     </Tabs>
   );

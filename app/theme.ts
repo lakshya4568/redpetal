@@ -17,6 +17,9 @@ export const colorPalettes = {
     borderLight: "#F9E5E4",
     shadow: "#F7CAC9",
     overlay: "rgba(247, 202, 201, 0.1)",
+    // V2 Gradient Colors
+    gradientStart: "#FF9A9E",
+    gradientEnd: "#FECFEF",
   },
   roseRed: {
     primary: "#E63946", // Rose Red - feminine and modern
@@ -33,6 +36,9 @@ export const colorPalettes = {
     borderLight: "#F5C2C7",
     shadow: "#E63946",
     overlay: "rgba(230, 57, 70, 0.1)",
+    // V2 Gradient Colors
+    gradientStart: "#E63946",
+    gradientEnd: "#F5C2C7",
   },
   terracotta: {
     primary: "#E06E5A", // Terracotta - natural and earthy
@@ -49,6 +55,9 @@ export const colorPalettes = {
     borderLight: "#F0C3B7",
     shadow: "#E06E5A",
     overlay: "rgba(224, 110, 90, 0.1)",
+    // V2 Gradient Colors
+    gradientStart: "#E06E5A",
+    gradientEnd: "#F0C3B7",
   },
   dustyMauve: {
     primary: "#D8A7B1", // Dusty Mauve - soothing and mature
@@ -65,6 +74,9 @@ export const colorPalettes = {
     borderLight: "#E8CDD3",
     shadow: "#D8A7B1",
     overlay: "rgba(216, 167, 177, 0.1)",
+    // V2 Gradient Colors
+    gradientStart: "#D8A7B1",
+    gradientEnd: "#E8CDD3",
   },
 };
 
@@ -325,6 +337,36 @@ export const animation = {
   slower: 750,
 };
 
+// V2: Glass Effect Styles (for expo-blur)
+export const glassStyles = {
+  light: {
+    intensity: 50,
+    tint: "light" as const,
+    backgroundColor: "rgba(255, 255, 255, 0.7)",
+  },
+  dark: {
+    intensity: 80,
+    tint: "dark" as const,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+  },
+  prominent: {
+    intensity: 100,
+    tint: "prominent" as const,
+    backgroundColor: "rgba(255, 255, 255, 0.9)",
+  },
+};
+
+// V2: Card Style Constants (Organic Modernism)
+export const organicCard = {
+  backgroundColor: "#FFFFFF",
+  borderRadius: 20,
+  elevation: 4,
+  shadowColor: "#000",
+  shadowOffset: { width: 0, height: 2 },
+  shadowOpacity: 0.1,
+  shadowRadius: 8,
+};
+
 // Current theme selection (change this to switch themes)
 const currentPalette: keyof typeof colorPalettes = "blushPink";
 const activeColorPalette = colorPalettes[currentPalette];
@@ -347,6 +389,22 @@ export const theme = {
     black: "#000000",
     transparent: "transparent",
   },
+  // V2: Gradient colors for expo-linear-gradient
+  gradients: {
+    primary: [
+      activeColorPalette.gradientStart,
+      activeColorPalette.gradientEnd,
+    ] as [string, string],
+    accent: [activeColorPalette.accent, activeColorPalette.primary] as [
+      string,
+      string
+    ],
+    surface: ["#FFFFFF", activeColorPalette.surfaceVariant] as [string, string],
+  },
+  // V2: Glass effect configuration
+  glass: glassStyles,
+  // V2: Organic card style
+  organicCard,
   fonts,
   typography,
   spacing,
@@ -450,6 +508,15 @@ export const switchTheme = (paletteName: keyof typeof colorPalettes) => {
       white: "#FFFFFF",
       black: "#000000",
       transparent: "transparent",
+    },
+    // V2: Dynamic gradient colors
+    gradients: {
+      primary: [newPalette.gradientStart, newPalette.gradientEnd] as [
+        string,
+        string
+      ],
+      accent: [newPalette.accent, newPalette.primary] as [string, string],
+      surface: ["#FFFFFF", newPalette.surfaceVariant] as [string, string],
     },
     components: {
       ...theme.components,
