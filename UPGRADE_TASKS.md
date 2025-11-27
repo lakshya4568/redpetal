@@ -14,7 +14,7 @@ This file tracks the progress of the RedPetal V2 "Super App" upgrade as outlined
 | 1     | Setup & Dependencies  | ✅ Done | Installed maps, location, bottom-sheet, gradient |
 | 2     | Theme System Upgrade  | ✅ Done | Added gradients, glass effects, organic card     |
 | 3     | Tab Bar Redesign      | ✅ Done | Custom floating glass tab bar with blur          |
-| 4     | Petal Find (Map)      | ✅ Done | Washroom finder with Google Maps                 |
+| 4     | Petal Find (Map)      | ✅ Done | Washroom finder with Expo Go fallback list view  |
 | 5     | Doctor Connect        | ✅ Done | Doctor cards with phone dialer                   |
 | 6     | Sister AI Placeholder | ✅ Done | Coming Soon card on home screen                  |
 
@@ -49,10 +49,11 @@ This file tracks the progress of the RedPetal V2 "Super App" upgrade as outlined
 
 - [x] Create `app/features/map/index.tsx`
 - [x] Implement `expo-location` for real user location
-- [x] Add `MapView` with `PROVIDER_GOOGLE`
+- [x] Add `MapView` with `PROVIDER_GOOGLE` (for development builds)
+- [x] Add Expo Go fallback with list view
 - [x] Create mock washroom data for Molarband Extension
-- [x] Implement `@gorhom/bottom-sheet` for washroom details
-- [x] Add custom map markers
+- [x] Implement detail bottom sheet for washroom details
+- [x] Add custom map markers (dev build only)
 - [x] Add entry point card on Home screen
 
 ### Phase 5: Doctor Connect
@@ -71,6 +72,24 @@ This file tracks the progress of the RedPetal V2 "Super App" upgrade as outlined
 ---
 
 ## Completed Tasks Log
+
+### November 27, 2025 - Bug Fixes (Expo Go Compatibility)
+
+**Issue:** `react-native-maps` requires native code and doesn't work in Expo Go.
+
+**Solution:** Implemented conditional rendering:
+
+- Detects Expo Go using `Constants.appOwnership === "expo"`
+- Shows informative banner explaining map unavailability
+- Falls back to a beautiful list view of washrooms with all features
+- Map view available in development builds (after `npx expo prebuild`)
+
+**Files Modified:**
+
+- `app/features/map/index.tsx` - Complete rewrite with dual-mode support
+- `app/features/_layout.tsx` - Fixed route naming (map, doctors)
+
+---
 
 ### November 27, 2025 - V2 Initial Implementation Complete
 
