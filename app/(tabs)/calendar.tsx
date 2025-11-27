@@ -1,28 +1,118 @@
+/**
+ * CalendarScreen - Redesigned for RedPetal V2
+ * Clean calendar view with smooth transitions and animated legends
+ */
+
 import { useFocusEffect } from "expo-router";
 import React, { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
-  Animated,
   Platform,
   RefreshControl,
+  ScrollView,
   StyleSheet,
+  Text,
   View,
 } from "react-native";
 import { Calendar } from "react-native-calendars";
-import { ScrollView } from "react-native-gesture-handler";
-import { Text } from "react-native-paper";
+import Animated, {
+  Extrapolation,
+  interpolate,
+  useAnimatedStyle,
+  useSharedValue,
+  withDelay,
+  withSpring,
+  withTiming,
+} from "react-native-reanimated";
 import { periodsAPI } from "../../services/api";
 import LogPeriodModal from "../components/LogPeriodModal";
-import { useThemeContext } from "../components/ThemeContext";
+import { AppTheme, useThemeContext } from "../components/ThemeContext";
+import { responsive, springConfigs, timingConfigs } from "../utils/animations";
 
 interface MarkedDate {
   selected?: boolean;
   marked?: boolean;
   selectedColor?: string;
   dots?: { key: string; color: string }[];
-  customStyles?: any;
+  customStyles?: Record<string, unknown>;
 }
+
+// Memoized Legend Item
+const LegendItem = React.memo(
+  ({
+    color,
+    label,
+    index,
+    theme,
+  }: {
+    color: string;
+    label: string;
+    index: number;
+    theme: AppTheme;
+  }) => {
+    const opacity = useSharedValue(0);
+    const translateY = useSharedValue(10);
+
+    useEffect(() => {
+      const delay = index * 80;
+      opacity.value = withDelay(delay, withTiming(1, timingConfigs.normal));
+      translateY.value = withDelay(delay, withSpring(0, springConfigs.gentle));
+    }, [index, opacity, translateY]);
+
+    const animatedStyle = useAnimatedStyle(() => ({
+      opacity: opacity.value,
+      transform: [{ translateY: translateY.value }],
+    }));
+
+    return (
+      <Animated.View style={[styles(theme).legendItem, animatedStyle]}>
+        <View style={[styles(theme).legendDot, { backgroundColor: color }]} />
+        <Text style={styles(theme).legendText}>{label}</Text>
+      </Animated.View>
+    );
+  }
+);
+
+LegendItem.displayName = "LegendItem";
+
+// Memoized Info Card
+const InfoCard = React.memo(
+  ({
+    label,
+    value,
+    index,
+    theme,
+  }: {
+    label: string;
+    value: string;
+    index: number;
+    theme: AppTheme;
+  }) => {
+    const scale = useSharedValue(0.9);
+    const opacity = useSharedValue(0);
+
+    useEffect(() => {
+      const delay = 200 + index * 100;
+      scale.value = withDelay(delay, withSpring(1, springConfigs.bouncy));
+      opacity.value = withDelay(delay, withTiming(1, timingConfigs.normal));
+    }, [index, scale, opacity]);
+
+    const animatedStyle = useAnimatedStyle(() => ({
+      transform: [{ scale: scale.value }],
+      opacity: opacity.value,
+    }));
+
+    return (
+      <Animated.View style={[styles(theme).infoCard, animatedStyle]}>
+        <Text style={styles(theme).infoValue}>{value}</Text>
+        <Text style={styles(theme).infoLabel}>{label}</Text>
+      </Animated.View>
+    );
+  }
+);
+
+InfoCard.displayName = "InfoCard";
 
 export default function CalendarScreen() {
   const { theme } = useThemeContext();
@@ -31,10 +121,17 @@ export default function CalendarScreen() {
   );
   const [isModalVisible, setModalVisible] = useState(false);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
-  const [fadeAnim] = useState(new Animated.Value(0));
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [predictions, setPredictions] = useState<any>(null);
+  const [predictions, setPredictions] = useState<Record<
+    string,
+    unknown
+  > | null>(null);
+
+  // Animation values
+  const titleOpacity = useSharedValue(0);
+  const calendarOpacity = useSharedValue(0);
+  const calendarScale = useSharedValue(0.95);
 
   // Fetch period data when screen comes into focus
   useFocusEffect(
@@ -43,13 +140,12 @@ export default function CalendarScreen() {
     }, [])
   );
 
+  // Animate on mount
   useEffect(() => {
-    Animated.timing(fadeAnim, {
-      toValue: 1,
-      duration: 1000,
-      useNativeDriver: true,
-    }).start();
-  }, [fadeAnim]);
+    titleOpacity.value = withTiming(1, { duration: 400 });
+    calendarOpacity.value = withDelay(200, withTiming(1, { duration: 500 }));
+    calendarScale.value = withDelay(200, withSpring(1, springConfigs.gentle));
+  }, [titleOpacity, calendarOpacity, calendarScale]);
 
   const loadPeriodData = async () => {
     try {
@@ -81,9 +177,9 @@ export default function CalendarScreen() {
       const newMarkedDates: { [key: string]: MarkedDate } = {};
 
       // Mark period dates
-      cycles.forEach((cycle: any) => {
+      cycles.forEach((cycle: Record<string, unknown>) => {
         if (cycle.period_start_date) {
-          const startDate = cycle.period_start_date;
+          const startDate = cycle.period_start_date as string;
           newMarkedDates[startDate] = {
             marked: true,
             selectedColor: theme.colors.error,
@@ -101,8 +197,8 @@ export default function CalendarScreen() {
 
           // Mark period duration if end date exists
           if (cycle.period_end_date) {
-            const start = new Date(cycle.period_start_date);
-            const end = new Date(cycle.period_end_date);
+            const start = new Date(cycle.period_start_date as string);
+            const end = new Date(cycle.period_end_date as string);
 
             for (
               let d = new Date(start);
@@ -129,59 +225,9 @@ export default function CalendarScreen() {
         }
       });
 
-      // Mark predicted next period
-      if (predictions?.next_period_date) {
-        const predictedDate = predictions.next_period_date;
-        newMarkedDates[predictedDate] = {
-          ...newMarkedDates[predictedDate],
-          marked: true,
-          customStyles: {
-            container: {
-              backgroundColor: theme.colors.warning,
-              borderRadius: 16,
-              borderWidth: 2,
-              borderColor: theme.colors.primary,
-            },
-            text: {
-              color: theme.colors.white,
-              fontWeight: "bold",
-            },
-          },
-        };
-      }
-
-      // Mark fertile window
-      if (predictions?.fertile_window) {
-        const fertileStart = new Date(predictions.fertile_window.start);
-        const fertileEnd = new Date(predictions.fertile_window.end);
-
-        for (
-          let d = new Date(fertileStart);
-          d <= fertileEnd;
-          d.setDate(d.getDate() + 1)
-        ) {
-          const dateStr = d.toISOString().split("T")[0];
-          if (!newMarkedDates[dateStr]) {
-            newMarkedDates[dateStr] = {
-              marked: true,
-              customStyles: {
-                container: {
-                  backgroundColor: theme.colors.success,
-                  borderRadius: 16,
-                  opacity: 0.6,
-                },
-                text: {
-                  color: theme.colors.white,
-                },
-              },
-            };
-          }
-        }
-      }
-
       // Mark symptom days
-      symptoms.forEach((symptom: any) => {
-        const dateStr = symptom.date;
+      symptoms.forEach((symptom: Record<string, unknown>) => {
+        const dateStr = symptom.date as string;
         if (!newMarkedDates[dateStr]) {
           newMarkedDates[dateStr] = { marked: true };
         }
@@ -192,8 +238,8 @@ export default function CalendarScreen() {
       });
 
       // Mark mood days
-      moods.forEach((mood: any) => {
-        const dateStr = mood.date;
+      moods.forEach((mood: Record<string, unknown>) => {
+        const dateStr = mood.date as string;
         if (!newMarkedDates[dateStr]) {
           newMarkedDates[dateStr] = { marked: true };
         }
@@ -204,7 +250,7 @@ export default function CalendarScreen() {
       });
 
       setMarkedDates(newMarkedDates);
-    } catch (error: any) {
+    } catch (error) {
       console.error("Error loading period data:", error);
       Alert.alert("Error", "Failed to load period data");
     } finally {
@@ -224,101 +270,67 @@ export default function CalendarScreen() {
   };
 
   const handlePeriodLogged = () => {
-    // Refresh the calendar data
     loadPeriodData();
   };
 
-  const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: theme.colors.background,
-      padding: theme.spacing.lg,
-    },
-    title: {
-      ...theme.typography.brand,
-      color: theme.colors.primary,
-      textAlign: "center",
-      marginBottom: theme.spacing.lg,
-    },
-    calendarContainer: {
-      width: Platform.OS === "web" ? "70%" : "100%",
-      alignSelf: "center",
-    },
-    predictionContainer: {
-      backgroundColor: theme.colors.surface,
-      borderRadius: theme.borderRadius.lg,
-      padding: theme.spacing.lg,
-      marginTop: theme.spacing.lg,
-    },
-    predictionTitle: {
-      ...theme.typography.titleMedium,
-      color: theme.colors.text,
-      marginBottom: theme.spacing.md,
-    },
-    predictionText: {
-      ...theme.typography.bodyMedium,
-      color: theme.colors.textSecondary,
-      marginBottom: theme.spacing.sm,
-    },
-    legendContainer: {
-      flexDirection: "row",
-      justifyContent: "space-around",
-      marginTop: theme.spacing.lg,
-      padding: theme.spacing.md,
-      backgroundColor: theme.colors.surface,
-      borderRadius: theme.borderRadius.md,
-    },
-    legendItem: {
-      alignItems: "center",
-    },
-    legendDot: {
-      width: 12,
-      height: 12,
-      borderRadius: 6,
-      marginBottom: theme.spacing.xs,
-    },
-    legendText: {
-      ...theme.typography.bodySmall,
-      color: theme.colors.textSecondary,
-    },
-    loadingContainer: {
-      flex: 1,
-      justifyContent: "center",
-      alignItems: "center",
-    },
-  });
+  // Animated styles
+  const titleAnimatedStyle = useAnimatedStyle(() => ({
+    opacity: titleOpacity.value,
+    transform: [
+      {
+        translateY: interpolate(
+          titleOpacity.value,
+          [0, 1],
+          [-20, 0],
+          Extrapolation.CLAMP
+        ),
+      },
+    ],
+  }));
+
+  const calendarAnimatedStyle = useAnimatedStyle(() => ({
+    opacity: calendarOpacity.value,
+    transform: [{ scale: calendarScale.value }],
+  }));
+
+  const legendItems = [
+    { color: theme.colors.error, label: "Period" },
+    { color: theme.colors.warning, label: "Predicted" },
+    { color: theme.colors.success, label: "Fertile" },
+    { color: theme.colors.info, label: "Symptoms" },
+  ];
 
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
+      <View style={styles(theme).loadingContainer}>
         <ActivityIndicator size="large" color={theme.colors.primary} />
-        <Text
-          style={{
-            ...theme.typography.bodyLarge,
-            color: theme.colors.text,
-            marginTop: theme.spacing.md,
-          }}
-        >
-          Loading calendar...
-        </Text>
+        <Text style={styles(theme).loadingText}>Loading calendar...</Text>
       </View>
     );
   }
 
   return (
     <ScrollView
-      style={styles.container}
+      style={styles(theme).container}
+      showsVerticalScrollIndicator={false}
       refreshControl={
         <RefreshControl
           refreshing={refreshing}
           onRefresh={onRefresh}
           tintColor={theme.colors.primary}
+          colors={[theme.colors.primary]}
         />
       }
     >
-      <Text style={styles.title}>Period Calendar</Text>
+      {/* Title */}
+      <Animated.Text style={[styles(theme).title, titleAnimatedStyle]}>
+        Period Calendar
+      </Animated.Text>
 
-      <Animated.View style={[styles.calendarContainer, { opacity: fadeAnim }]}>
+      {/* Calendar */}
+      <Animated.View
+        style={[styles(theme).calendarContainer, calendarAnimatedStyle]}
+      >
         <Calendar
           markedDates={markedDates}
           onDayPress={onDayPress}
@@ -332,67 +344,57 @@ export default function CalendarScreen() {
             dayTextColor: theme.colors.text,
             arrowColor: theme.colors.primary,
             monthTextColor: theme.colors.primary,
-            textMonthFontFamily: theme.fonts.title.family,
-            textMonthFontSize: 32,
+            textMonthFontFamily: theme.fonts.subtitle.family,
+            textMonthFontSize: responsive.fs(24),
+            textDayFontFamily: theme.fonts.body.family,
+            textDayFontSize: responsive.fs(14),
+            textDayHeaderFontFamily: theme.fonts.body.family,
+            textDayHeaderFontSize: responsive.fs(12),
           }}
+          style={styles(theme).calendar}
         />
       </Animated.View>
 
       {/* Legend */}
-      <View style={styles.legendContainer}>
-        <View style={styles.legendItem}>
-          <View
-            style={[styles.legendDot, { backgroundColor: theme.colors.error }]}
+      <View style={styles(theme).legendContainer}>
+        {legendItems.map((item, index) => (
+          <LegendItem
+            key={item.label}
+            color={item.color}
+            label={item.label}
+            index={index}
+            theme={theme}
           />
-          <Text style={styles.legendText}>Period</Text>
-        </View>
-        <View style={styles.legendItem}>
-          <View
-            style={[
-              styles.legendDot,
-              { backgroundColor: theme.colors.warning },
-            ]}
-          />
-          <Text style={styles.legendText}>Predicted</Text>
-        </View>
-        <View style={styles.legendItem}>
-          <View
-            style={[
-              styles.legendDot,
-              { backgroundColor: theme.colors.success },
-            ]}
-          />
-          <Text style={styles.legendText}>Fertile</Text>
-        </View>
-        <View style={styles.legendItem}>
-          <View
-            style={[styles.legendDot, { backgroundColor: theme.colors.info }]}
-          />
-          <Text style={styles.legendText}>Symptoms</Text>
-        </View>
+        ))}
       </View>
 
-      {/* Predictions */}
+      {/* Cycle Insights */}
       {predictions && (
-        <View style={styles.predictionContainer}>
-          <Text style={styles.predictionTitle}>Cycle Insights</Text>
-          <Text style={styles.predictionText}>
-            Next period predicted:{" "}
-            {new Date(predictions.next_period_date).toLocaleDateString()}
-          </Text>
-          <Text style={styles.predictionText}>
-            Average cycle length: {predictions.avg_cycle_length} days
-          </Text>
-          <Text style={styles.predictionText}>
-            Average period length: {predictions.avg_period_length} days
-          </Text>
-          <Text style={styles.predictionText}>
-            Fertile window:{" "}
-            {new Date(predictions.fertile_window.start).toLocaleDateString()} -{" "}
-            {new Date(predictions.fertile_window.end).toLocaleDateString()}
-          </Text>
+        <View style={styles(theme).insightsContainer}>
+          <Text style={styles(theme).insightsTitle}>Cycle Insights</Text>
+          <View style={styles(theme).infoCardsRow}>
+            <InfoCard
+              label="Avg. Cycle"
+              value={`${
+                (predictions as Record<string, unknown>).avg_cycle_length || 28
+              } days`}
+              index={0}
+              theme={theme}
+            />
+            <InfoCard
+              label="Avg. Period"
+              value={`${
+                (predictions as Record<string, unknown>).avg_period_length || 5
+              } days`}
+              index={1}
+              theme={theme}
+            />
+          </View>
         </View>
       )}
+
+      {/* Bottom spacer for tab bar */}
+      <View style={styles(theme).bottomSpacer} />
 
       <LogPeriodModal
         visible={isModalVisible}
@@ -403,3 +405,140 @@ export default function CalendarScreen() {
     </ScrollView>
   );
 }
+
+const styles = (theme: AppTheme) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.colors.background,
+    },
+    loadingContainer: {
+      flex: 1,
+      justifyContent: "center",
+      alignItems: "center",
+      backgroundColor: theme.colors.background,
+    },
+    loadingText: {
+      fontFamily: theme.fonts.body.family,
+      fontSize: responsive.fs(16),
+      color: theme.colors.text,
+      marginTop: responsive.sp(16),
+    },
+    title: {
+      fontFamily: theme.fonts.title.family,
+      fontSize: responsive.fs(48),
+      color: theme.colors.primary,
+      textAlign: "center",
+      paddingTop:
+        Platform.OS === "android" ? responsive.sp(50) : responsive.sp(60),
+      paddingBottom: responsive.sp(16),
+    },
+    calendarContainer: {
+      marginHorizontal: responsive.sp(16),
+      backgroundColor: theme.colors.surface,
+      borderRadius: responsive.sp(20),
+      overflow: "hidden",
+      ...Platform.select({
+        ios: {
+          shadowColor: theme.colors.shadow,
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: 0.1,
+          shadowRadius: 12,
+        },
+        android: {
+          elevation: 4,
+        },
+      }),
+    },
+    calendar: {
+      paddingBottom: responsive.sp(16),
+    },
+    legendContainer: {
+      flexDirection: "row",
+      justifyContent: "space-around",
+      marginTop: responsive.sp(20),
+      marginHorizontal: responsive.sp(16),
+      paddingVertical: responsive.sp(16),
+      paddingHorizontal: responsive.sp(12),
+      backgroundColor: theme.colors.surface,
+      borderRadius: responsive.sp(16),
+      ...Platform.select({
+        ios: {
+          shadowColor: theme.colors.shadow,
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.08,
+          shadowRadius: 8,
+        },
+        android: {
+          elevation: 2,
+        },
+      }),
+    },
+    legendItem: {
+      alignItems: "center",
+    },
+    legendDot: {
+      width: responsive.sp(12),
+      height: responsive.sp(12),
+      borderRadius: responsive.sp(6),
+      marginBottom: responsive.sp(6),
+    },
+    legendText: {
+      fontFamily: theme.fonts.body.family,
+      fontSize: responsive.fs(11),
+      color: theme.colors.textSecondary,
+      fontWeight: "500",
+    },
+    insightsContainer: {
+      marginTop: responsive.sp(24),
+      marginHorizontal: responsive.sp(16),
+      padding: responsive.sp(20),
+      backgroundColor: theme.colors.surface,
+      borderRadius: responsive.sp(20),
+      ...Platform.select({
+        ios: {
+          shadowColor: theme.colors.shadow,
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.08,
+          shadowRadius: 8,
+        },
+        android: {
+          elevation: 3,
+        },
+      }),
+    },
+    insightsTitle: {
+      fontFamily: theme.fonts.subtitle.family,
+      fontSize: responsive.fs(18),
+      fontWeight: "600",
+      color: theme.colors.text,
+      marginBottom: responsive.sp(16),
+    },
+    infoCardsRow: {
+      flexDirection: "row",
+      justifyContent: "space-around",
+    },
+    infoCard: {
+      alignItems: "center",
+      paddingVertical: responsive.sp(16),
+      paddingHorizontal: responsive.sp(24),
+      backgroundColor: theme.colors.surfaceVariant,
+      borderRadius: responsive.sp(16),
+      minWidth: responsive.wp(35),
+    },
+    infoValue: {
+      fontFamily: theme.fonts.subtitle.family,
+      fontSize: responsive.fs(20),
+      fontWeight: "700",
+      color: theme.colors.primary,
+      marginBottom: responsive.sp(4),
+    },
+    infoLabel: {
+      fontFamily: theme.fonts.body.family,
+      fontSize: responsive.fs(12),
+      color: theme.colors.textSecondary,
+    },
+    bottomSpacer: {
+      height: responsive.sp(120),
+    },
+  });

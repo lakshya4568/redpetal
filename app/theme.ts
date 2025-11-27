@@ -337,6 +337,61 @@ export const animation = {
   slower: 750,
 };
 
+// V2: Reanimated 2 Spring Configurations (60fps optimized)
+export const springConfigs = {
+  snappy: {
+    damping: 15,
+    stiffness: 400,
+    mass: 0.8,
+  },
+  smooth: {
+    damping: 20,
+    stiffness: 200,
+    mass: 1,
+  },
+  bouncy: {
+    damping: 10,
+    stiffness: 180,
+    mass: 0.7,
+  },
+  gentle: {
+    damping: 25,
+    stiffness: 120,
+    mass: 1.2,
+  },
+};
+
+// V2: Timing Configurations
+export const timingConfigs = {
+  fast: { duration: 150 },
+  normal: { duration: 250 },
+  slow: { duration: 400 },
+};
+
+// V2: Responsive Design Tokens (based on 375px design width)
+export const responsiveTokens = {
+  baseWidth: 375,
+  baseHeight: 812,
+  cardWidth: {
+    small: 150,
+    medium: 200,
+    large: 280,
+    full: "100%",
+  },
+  cardHeight: {
+    small: 120,
+    medium: 150,
+    large: 200,
+  },
+  iconSize: {
+    xs: 14,
+    sm: 18,
+    md: 24,
+    lg: 32,
+    xl: 48,
+  },
+};
+
 // V2: Glass Effect Styles (for expo-blur)
 export const glassStyles = {
   light: {
