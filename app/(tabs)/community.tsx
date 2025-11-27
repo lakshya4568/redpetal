@@ -1,12 +1,16 @@
-import React, { useState } from "react";
+import { useFocusEffect } from "expo-router";
+import React, { useCallback, useState } from "react";
 import {
+  ActivityIndicator,
   Alert,
   FlatList,
+  RefreshControl,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
+import { communityAPI } from "../../services/api";
 import AnimatedPostCard from "../components/AnimatedPostCard";
 import CommentsModal from "../components/CommentsModal";
 import CreatePostModalWithImages from "../components/CreatePostModalWithImages";
@@ -49,113 +53,143 @@ export default function CommunityScreen() {
   const [createPostVisible, setCreatePostVisible] = useState(false);
   const [commentsVisible, setCommentsVisible] = useState(false);
   const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
-  // Mock data with enhanced structure
-  const [posts, setPosts] = useState<Post[]>([
-    {
-      id: "1",
-      author: "Alice Johnson",
-      avatar: "https://randomuser.me/api/portraits/women/1.jpg",
-      content:
-        "Feeling great today! Remember to stay hydrated during your cycle. Water helps so much with bloating and cramps. 💧✨",
-      likes: 15,
-      comments: [
-        {
-          id: "c1",
-          author: "Sarah",
-          content:
-            "Thanks for the reminder! I always forget to drink enough water.",
-          timestamp: "2h ago",
-        },
-        {
-          id: "c2",
-          author: "Emma",
-          content:
-            "So true! I noticed such a difference when I started drinking more water.",
-          timestamp: "1h ago",
-        },
-      ],
-      timestamp: "4h ago",
-      isLiked: false,
-    },
-    {
-      id: "2",
-      author: "Maria Garcia",
-      avatar: "https://randomuser.me/api/portraits/women/2.jpg",
-      content:
-        "Just tried a new healthy recipe for period-friendly smoothies! Spinach, banana, berries and ginger - surprisingly delicious! 🥤",
-      likes: 22,
-      comments: [
-        {
-          id: "c3",
-          author: "Lisa",
-          content: "Could you share the recipe? Sounds amazing!",
-          timestamp: "3h ago",
-        },
-      ],
-      timestamp: "6h ago",
-      isLiked: true,
-    },
-    {
-      id: "3",
-      author: "Jennifer Smith",
-      avatar: "https://randomuser.me/api/portraits/women/3.jpg",
-      content:
-        "Any tips for managing period cramps naturally? Looking for alternatives to painkillers. Heat pads help but wondering what else works for you all? 🤗",
-      likes: 10,
-      comments: [
-        {
-          id: "c4",
-          author: "Anna",
-          content: "Yoga and gentle stretching really help me!",
-          timestamp: "2h ago",
-        },
-        {
-          id: "c5",
-          author: "Kate",
-          content: "Chamomile tea and warm baths work wonders for me",
-          timestamp: "1h ago",
-        },
-      ],
-      timestamp: "8h ago",
-      isLiked: false,
-    },
-  ]);
+  // Fetch posts when screen comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      loadPosts();
+    }, [])
+  );
 
-  const handleCreatePost = (content: string, images: PostImage[] = []) => {
-    const newPost: Post = {
-      id: Date.now().toString(),
-      author: "You",
-      avatar: "https://randomuser.me/api/portraits/women/10.jpg",
-      content,
-      images,
-      likes: 0,
-      comments: [],
-      timestamp: "now",
-      isLiked: false,
-      reactions: [],
-    };
-    setPosts([newPost, ...posts]);
-    Alert.alert("Success", "Your post has been shared with the community!");
+  const loadPosts = async () => {
+    try {
+      setLoading(true);
+      const response = await communityAPI.getPosts({
+        limit: 50,
+        offset: 0,
+      });
+
+      // Transform API response to match component interface
+      const transformedPosts = response.posts.map((post: any) => ({
+        id: post.id,
+        author: post.is_anonymous
+          ? "Anonymous"
+          : post.first_name && post.last_name
+          ? `${post.first_name} ${post.last_name}`
+          : post.username,
+        avatar:
+          post.profile_image_url ||
+          "https://randomuser.me/api/portraits/women/10.jpg",
+        content: post.content,
+        images: post.images || [],
+        likes: post.like_count || 0,
+        comments: [], // Comments will be loaded separately when needed
+        timestamp: formatTimestamp(post.created_at),
+        isLiked: post.is_liked || false,
+        reactions: [],
+      }));
+
+      setPosts(transformedPosts);
+    } catch (error: any) {
+      console.error("Error loading posts:", error);
+      Alert.alert("Error", "Failed to load community posts");
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
   };
 
-  const handleLike = (postId: string) => {
-    setPosts(
-      posts.map((post) =>
-        post.id === postId
-          ? {
-              ...post,
-              isLiked: !post.isLiked,
-              likes: post.isLiked ? post.likes - 1 : post.likes + 1,
-            }
-          : post
-      )
+  const formatTimestamp = (timestamp: string) => {
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diffInHours = Math.floor(
+      (now.getTime() - date.getTime()) / (1000 * 60 * 60)
     );
+
+    if (diffInHours < 1) return "now";
+    if (diffInHours < 24) return `${diffInHours}h ago`;
+    return `${Math.floor(diffInHours / 24)}d ago`;
   };
 
-  const handleComment = (postId: string) => {
-    setSelectedPostId(postId);
-    setCommentsVisible(true);
+  const onRefresh = () => {
+    setRefreshing(true);
+    loadPosts();
+  };
+
+  const handleCreatePost = async (
+    content: string,
+    images: PostImage[] = []
+  ) => {
+    try {
+      const imageUrls = images.map((img) => img.uri);
+      await communityAPI.createPost({
+        content,
+        images: imageUrls,
+        category: "general",
+      });
+
+      Alert.alert("Success", "Your post has been shared with the community!");
+      loadPosts(); // Refresh posts after creating new one
+    } catch (error: any) {
+      Alert.alert("Error", error.message || "Failed to create post");
+    }
+  };
+
+  const handleLike = async (postId: string) => {
+    try {
+      await communityAPI.likePost(postId);
+
+      // Update local state
+      setPosts(
+        posts.map((post) =>
+          post.id === postId
+            ? {
+                ...post,
+                isLiked: !post.isLiked,
+                likes: post.isLiked ? post.likes - 1 : post.likes + 1,
+              }
+            : post
+        )
+      );
+    } catch (error: any) {
+      Alert.alert("Error", error.message || "Failed to like post");
+    }
+  };
+
+  const handleComment = async (postId: string) => {
+    try {
+      // Load comments for the selected post
+      const response = await communityAPI.getComments(postId);
+
+      // Update the post with loaded comments
+      setPosts(
+        posts.map((post) =>
+          post.id === postId
+            ? {
+                ...post,
+                comments: response.comments.map((comment: any) => ({
+                  id: comment.id,
+                  author: comment.is_anonymous
+                    ? "Anonymous"
+                    : comment.first_name && comment.last_name
+                    ? `${comment.first_name} ${comment.last_name}`
+                    : comment.username,
+                  content: comment.content,
+                  timestamp: formatTimestamp(comment.created_at),
+                })),
+              }
+            : post
+        )
+      );
+
+      setSelectedPostId(postId);
+      setCommentsVisible(true);
+    } catch (error: any) {
+      Alert.alert("Error", error.message || "Failed to load comments");
+    }
   };
 
   const handleShare = (postId: string) => {
@@ -163,6 +197,7 @@ export default function CommunityScreen() {
   };
 
   const handleReaction = (postId: string, reactionType: string) => {
+    // Mock reaction handling for now
     setPosts(
       posts.map((post) => {
         if (post.id === postId) {
@@ -172,12 +207,10 @@ export default function CommunityScreen() {
           let updatedReactions = post.reactions || [];
 
           if (existingReaction) {
-            // Increment existing reaction
             updatedReactions = updatedReactions.map((r) =>
               r.type === reactionType ? { ...r, count: r.count + 1 } : r
             );
           } else {
-            // Add new reaction
             const reactionEmojis: { [key: string]: string } = {
               like: "👍",
               love: "❤️",
@@ -203,22 +236,21 @@ export default function CommunityScreen() {
     );
   };
 
-  const handleAddComment = (comment: string) => {
+  const handleAddComment = async (comment: string) => {
     if (selectedPostId) {
-      const newComment: Comment = {
-        id: Date.now().toString(),
-        author: "You",
-        content: comment,
-        timestamp: "now",
-      };
+      try {
+        await communityAPI.addComment(selectedPostId, {
+          content: comment,
+          is_anonymous: false,
+        });
 
-      setPosts(
-        posts.map((post) =>
-          post.id === selectedPostId
-            ? { ...post, comments: [...post.comments, newComment] }
-            : post
-        )
-      );
+        // Refresh comments for the post
+        await handleComment(selectedPostId);
+
+        Alert.alert("Success", "Comment added successfully!");
+      } catch (error: any) {
+        Alert.alert("Error", error.message || "Failed to add comment");
+      }
     }
   };
 
@@ -255,7 +287,55 @@ export default function CommunityScreen() {
     postList: {
       padding: theme.spacing.lg,
     },
+    loadingContainer: {
+      flex: 1,
+      justifyContent: "center",
+      alignItems: "center",
+      padding: theme.spacing.xl,
+    },
+    loadingText: {
+      ...theme.typography.bodyLarge,
+      color: theme.colors.text,
+      marginTop: theme.spacing.md,
+    },
+    emptyContainer: {
+      flex: 1,
+      justifyContent: "center",
+      alignItems: "center",
+      padding: theme.spacing.xl,
+    },
+    emptyText: {
+      ...theme.typography.headlineSmall,
+      color: theme.colors.textSecondary,
+      textAlign: "center",
+      marginBottom: theme.spacing.md,
+    },
+    emptySubtext: {
+      ...theme.typography.bodyMedium,
+      color: theme.colors.textMuted,
+      textAlign: "center",
+    },
   });
+
+  if (loading && !refreshing) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.header}>
+          <Text style={styles.title}>Community</Text>
+          <TouchableOpacity
+            style={styles.newPostButton}
+            onPress={() => setCreatePostVisible(true)}
+          >
+            <Text style={styles.newPostButtonText}>New Post</Text>
+          </TouchableOpacity>
+        </View>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={theme.colors.primary} />
+          <Text style={styles.loadingText}>Loading community posts...</Text>
+        </View>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -269,30 +349,46 @@ export default function CommunityScreen() {
         </TouchableOpacity>
       </View>
 
-      <FlatList
-        data={posts}
-        renderItem={({ item }) => (
-          <AnimatedPostCard
-            id={item.id}
-            username={item.author}
-            profileImage={item.avatar}
-            content={item.content}
-            images={item.images || []}
-            timestamp={item.timestamp}
-            likeCount={item.likes}
-            commentCount={item.comments.length}
-            isLiked={item.isLiked}
-            reactions={item.reactions || []}
-            onLike={handleLike}
-            onComment={handleComment}
-            onShare={handleShare}
-            onReaction={handleReaction}
-          />
-        )}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.postList}
-        showsVerticalScrollIndicator={false}
-      />
+      {posts.length === 0 ? (
+        <View style={styles.emptyContainer}>
+          <Text style={styles.emptyText}>No posts yet</Text>
+          <Text style={styles.emptySubtext}>
+            Be the first to share something with the community!
+          </Text>
+        </View>
+      ) : (
+        <FlatList
+          data={posts}
+          renderItem={({ item }) => (
+            <AnimatedPostCard
+              id={item.id}
+              username={item.author}
+              profileImage={item.avatar}
+              content={item.content}
+              images={item.images || []}
+              timestamp={item.timestamp}
+              likeCount={item.likes}
+              commentCount={item.comments.length}
+              isLiked={item.isLiked}
+              reactions={item.reactions || []}
+              onLike={handleLike}
+              onComment={handleComment}
+              onShare={handleShare}
+              onReaction={handleReaction}
+            />
+          )}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={styles.postList}
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              tintColor={theme.colors.primary}
+            />
+          }
+        />
+      )}
 
       <CreatePostModalWithImages
         visible={createPostVisible}

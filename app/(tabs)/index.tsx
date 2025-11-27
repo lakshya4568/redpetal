@@ -10,12 +10,13 @@ import {
 import ArticleCard from "../components/ArticleCard";
 import CalendarHeader from "../components/CalendarHeader";
 import CycleSummaryCard from "../components/CycleSummaryCard";
+import FeatureEntryCard from "../components/FeatureEntryCard";
 import InsightCard from "../components/InsightCard";
 import NotesCard from "../components/NotesCard";
 import PeriodTrackerCard from "../components/PeriodTrackerCard";
 import SectionHeader from "../components/SectionHeader";
 import SymptomPatternsCard from "../components/SymptomPatternsCard";
-import { useThemeContext } from "../components/ThemeContext";
+import { AppTheme, useThemeContext } from "../components/ThemeContext";
 
 const insights = [
   { title: "Time for a pregnancy test?", icon: "🧪" },
@@ -35,6 +36,29 @@ export default function HomeScreen() {
     <ScrollView style={styles(theme).container}>
       <CalendarHeader />
       <PeriodTrackerCard />
+
+      {/* V2 Feature Entry Cards */}
+      <SectionHeader title="Quick Access" />
+      <FeatureEntryCard
+        title="Petal Find"
+        description="Find safe and clean washrooms near you"
+        icon="map-marker"
+        route="/features/map"
+      />
+      <FeatureEntryCard
+        title="Doctor Connect"
+        description="Book appointments with healthcare specialists"
+        icon="user-md"
+        route="/features/doctors"
+      />
+      <FeatureEntryCard
+        title="Sister AI"
+        description="Your caring Hinglish health assistant"
+        icon="comments"
+        comingSoon={true}
+        gradientColors={[theme.colors.accent, theme.colors.primary]}
+      />
+
       <SectionHeader title="My daily insights" />
       <FlatList
         horizontal
@@ -84,7 +108,7 @@ export default function HomeScreen() {
   );
 }
 
-const styles = (theme: any) =>
+const styles = (theme: AppTheme) =>
   StyleSheet.create({
     container: {
       flex: 1,
@@ -95,5 +119,5 @@ const styles = (theme: any) =>
       color: theme.colors.textSecondary,
       marginTop: theme.spacing.sm,
       marginLeft: theme.spacing.lg,
-    }
+    },
   });

@@ -9,8 +9,8 @@ import {
   ViewStyle,
 } from "react-native";
 import { Button } from "react-native-paper";
+import { useAuth } from "../../services/auth";
 import { useThemeContext } from "../components/ThemeContext";
-import { useAuth } from "../services/auth";
 
 export default function ProfileScreen() {
   const { logout } = useAuth();

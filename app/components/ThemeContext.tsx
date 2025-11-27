@@ -9,9 +9,12 @@ import React, {
 import { Appearance } from "react-native";
 import { colorPalettes, switchTheme } from "../theme";
 
+// V2: Define the Theme type based on the actual theme structure
+export type AppTheme = ReturnType<typeof switchTheme>;
+
 // Define the shape of the context
 interface ThemeContextType {
-  theme: any;
+  theme: AppTheme;
   palette: keyof typeof colorPalettes;
   setPalette: (palette: keyof typeof colorPalettes) => void;
   resetPalette: () => void;

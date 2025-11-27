@@ -1,0 +1,87 @@
+{
+  "washrooms": [
+    {
+      "id": "1",
+      "name": "Molarband Metro Station Washroom",
+      "type": "public",
+      "latitude": 28.5009,
+      "longitude": 77.3077,
+      "rating": 4.2,
+      "cleanliness": "Good",
+      "cost": "Free",
+      "amenities": ["Accessible", "Baby Changing"],
+      "hours": "5:00 AM - 11:00 PM",
+      "verified": true
+    },
+    {
+      "id": "2",
+      "name": "Molarband Extension Community Center",
+      "type": "public",
+      "latitude": 28.5015,
+      "longitude": 77.3092,
+      "rating": 3.8,
+      "cleanliness": "Average",
+      "cost": "Free",
+      "amenities": ["Accessible"],
+      "hours": "6:00 AM - 9:00 PM",
+      "verified": true
+    },
+    {
+      "id": "3",
+      "name": "Apollo Pharmacy Washroom",
+      "type": "semi-public",
+      "latitude": 28.4998,
+      "longitude": 77.3065,
+      "rating": 4.5,
+      "cleanliness": "Excellent",
+      "cost": "₹5",
+      "amenities": ["Clean", "Sanitary Pads Available"],
+      "hours": "8:00 AM - 10:00 PM",
+      "verified": true
+    },
+    {
+      "id": "4",
+      "name": "Saket District Center Mall",
+      "type": "mall",
+      "latitude": 28.5255,
+      "longitude": 77.2131,
+      "rating": 4.7,
+      "cleanliness": "Excellent",
+      "cost": "Free",
+      "amenities": [
+        "Accessible",
+        "Baby Changing",
+        "Sanitary Pads Available",
+        "Clean"
+      ],
+      "hours": "10:00 AM - 10:00 PM",
+      "verified": true
+    },
+    {
+      "id": "5",
+      "name": "DDA Park Washroom - Molarband",
+      "type": "public",
+      "latitude": 28.5022,
+      "longitude": 77.3085,
+      "rating": 3.2,
+      "cleanliness": "Average",
+      "cost": "Free",
+      "amenities": [],
+      "hours": "6:00 AM - 8:00 PM",
+      "verified": false
+    },
+    {
+      "id": "6",
+      "name": "Petrol Pump Washroom - Badarpur",
+      "type": "semi-public",
+      "latitude": 28.5033,
+      "longitude": 77.3038,
+      "rating": 3.5,
+      "cleanliness": "Average",
+      "cost": "Free",
+      "amenities": [],
+      "hours": "24 Hours",
+      "verified": true
+    }
+  ]
+}
