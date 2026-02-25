@@ -1,91 +1,81 @@
-# RedPetal
+# Red Petal
 
-RedPetal is a community-driven platform and hub designed for girls and women of all ages, including mothers and daughters, to share, discuss, and track their periods and other related topics. It is a safe and supportive space where users can connect, learn, and support each other.
+Red Petal is a modern, privacy-focused women's health and period tracking application. It features a responsive React Native frontend built with Expo and a reliable Express.js backend.
 
 ## Features
 
-### 1. **Period Tracking**
+- **Period Tracking**: Log cycles, symptoms, mood, and flow.
+- **Calendar View**: Visual overview of past and predicted cycles.
+- **Insights & Reports**: Advanced analytics on symptoms and cycle history.
+- **Community Forum**: Connect with others anonymously.
+- **Remedies**: Discover tips and natural remedies for common symptoms.
+- **Find Doctors**: Locate healthcare professionals near you (Map integration).
 
-- Track your menstrual cycle with ease.
+## Tech Stack
 
-- Get reminders and insights about your cycle.
+- **Frontend**: React Native, Expo, React Navigation, React Native Reanimated.
+- **Backend**: Node.js, Express.js.
+- **Styling**: Custom Theme System.
 
-### 2. **Community Discussions**
+## Project Structure
 
-- Join discussions on various topics related to periods, health, and wellness.
+```
+redpetal/
+├── app/                  # Frontend: Expo Router app directory
+│   ├── (tabs)/           # Main tab navigation screens
+│   ├── components/       # Reusable UI components
+│   ├── features/         # Feature-specific modules (Map, Reports, etc.)
+│   └── utils/            # Shared utilities
+├── assets/               # Frontend: Fonts and images
+├── server/               # Backend: Express API server
+│   ├── routes/           # API endpoints (auth, posts, log, etc.)
+│   └── tests/            # Backend unit tests
+└── services/             # Frontend: API integration and auth services
+```
 
-- Share experiences and advice with others in the community.
+## Getting Started
 
-### 3. **Home Remedies for Period Relief**
+### Prerequisites
 
-- Access a curated list of home remedies to alleviate period pain and discomfort.
+- Node.js (v18+)
+- npm or yarn or pnpm
+- Expo CLI
 
-- Share your own recipes and tips with the community.
+### Setup & Run
 
-### 4. **Resource Sharing**
+1. **Install Dependencies (Frontend & Backend)**
 
-- Discover articles, videos, and other resources about menstrual health and wellness.
+Run install from the root:
 
-- Share helpful resources with the community.
+```sh
+npm install
+```
 
-### 5. **Personalized Themes**
+And for the backend:
 
-- Customize the app's appearance with themes that suit your style.
+```sh
+cd server
+npm install
+cd ..
+```
 
-## How to Use
+2. **Run Backend API**
 
-1. **Sign Up**: Create an account to join the community.
+```sh
+cd server
+npm start # or npm run dev
+```
 
-2. **Explore**: Navigate through the app to explore features like period tracking, discussions, and resources.
+3. **Run Mobile App**
 
-3. **Engage**: Participate in discussions, share your experiences, and connect with others.
+In a new terminal, from the root directory:
 
-4. **Contribute**: Add your own home remedies, tips, and resources to help others.
+```sh
+npm start
+```
 
-## Technology Stack
-
-- **Frontend**: React Native
-
-- **Backend**: Node.js (server-side logic)
-
-- **Database**: TBD
-
-- **Other Tools**: Expo, TypeScript, Babel, ESLint
-
-## Installation
-
-1. Clone the repository:
-
-   ```bash
-   git clone <repository-url>
-   ```
-
-2. Navigate to the project directory:
-
-   ```bash
-   cd redpetal
-   ```
-
-3. Install dependencies:
-
-   ```bash
-   npm install
-   ```
-
-4. Start the development server:
-
-   ```bash
-   npm start
-   ```
-
-## Contributing
-
-We welcome contributions from the community! If you have ideas, suggestions, or code to contribute, please feel free to open a pull request or issue.
+Use the Expo Go app on your phone to scan the QR code to run the app, or press `i`/`a` to run on the iOS/Android emulator.
 
 ## License
 
-This project is licensed under the MIT License. See the LICENSE file for details.
-
-## Contact
-
-For any questions or feedback, please contact us at [support@redpetal.com](mailto:support@redpetal.com).
+This project is proprietary and confidential.
