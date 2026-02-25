@@ -1,18 +1,23 @@
+/**
+ * FloatingTabBar — Redesigned to match Stitch navigation
+ * 4-tab layout: Home | Cycle | Community | Me
+ * With center "+" FAB for quick logging
+ */
+
 import { FontAwesome } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
-import { LinearGradient } from "expo-linear-gradient";
 import React from "react";
 import {
   Dimensions,
   Platform,
   Pressable,
   StyleSheet,
+  Text,
   View,
 } from "react-native";
-import Animated, {
-  useAnimatedStyle,
+import {
   useSharedValue,
-  withSpring,
+  withSpring
 } from "react-native-reanimated";
 import { AppTheme, useThemeContext } from "./ThemeContext";
 
@@ -34,15 +39,13 @@ interface FloatingTabBarProps {
 
 const TABS: TabItem[] = [
   { name: "index", icon: "home", label: "Home" },
-  { name: "calendar", icon: "calendar", label: "Calendar" },
-  { name: "community", icon: "users", label: "Community" },
-  { name: "remedies", icon: "leaf", label: "Remedies" },
-  { name: "profile", icon: "user", label: "Profile" },
+  { name: "calendar", icon: "calendar", label: "Cycle" },
+  { name: "community", icon: "group", label: "Community" },
+  { name: "profile", icon: "user", label: "Me" },
 ];
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
-const TAB_BAR_WIDTH = SCREEN_WIDTH * 0.9;
-const TAB_WIDTH = TAB_BAR_WIDTH / TABS.length;
+const TAB_BAR_WIDTH = SCREEN_WIDTH * 0.88;
 
 export default function FloatingTabBar({
   state,
@@ -51,72 +54,111 @@ export default function FloatingTabBar({
   const { theme } = useThemeContext();
   const activeIndex = useSharedValue(state.index);
 
-  // Update animation when tab changes
   React.useEffect(() => {
-    activeIndex.value = withSpring(state.index, {
-      damping: 15,
-      stiffness: 150,
+    // Map state index to our 4-tab display
+    const displayIndex = getDisplayIndex(state.index, state.routes);
+    activeIndex.value = withSpring(displayIndex, {
+      damping: 18,
+      stiffness: 180,
     });
-  }, [state.index, activeIndex]);
+  }, [state.index, activeIndex, state.routes]);
 
-  // Animated indicator style
-  const indicatorStyle = useAnimatedStyle(() => {
-    return {
-      transform: [{ translateX: activeIndex.value * TAB_WIDTH }],
-    };
-  });
-
-  const handleTabPress = (tabName: string, index: number) => {
-    if (state.index !== index) {
-      navigation.navigate(tabName);
-    }
+  const getDisplayIndex = (
+    routeIndex: number,
+    routes: { name: string }[]
+  ): number => {
+    const routeName = routes[routeIndex]?.name;
+    return TABS.findIndex((t) => t.name === routeName);
   };
+
+  const handleTabPress = (tabName: string) => {
+    navigation.navigate(tabName);
+  };
+
+  const currentRouteName = state.routes[state.index]?.name;
 
   return (
     <View style={styles(theme).container}>
       <BlurView
-        intensity={theme.glass.light.intensity}
-        tint={theme.glass.light.tint}
+        intensity={80}
+        tint="light"
         style={styles(theme).blurContainer}
       >
-        <LinearGradient
-          colors={theme.gradients.primary}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
-          style={styles(theme).gradientOverlay}
-        >
-          {/* Active Tab Indicator */}
-          <Animated.View style={[styles(theme).indicator, indicatorStyle]}>
-            <View style={styles(theme).indicatorInner} />
-          </Animated.View>
+        <View style={styles(theme).tabsContainer}>
+          {TABS.map((tab, index) => {
+            const isActive = currentRouteName === tab.name;
 
-          {/* Tab Items */}
-          <View style={styles(theme).tabsContainer}>
-            {TABS.map((tab, index) => {
-              const isActive = state.index === index;
+            // Insert center FAB between Cycle and Community
+            if (index === 2) {
               return (
-                <Pressable
-                  key={tab.name}
-                  onPress={() => handleTabPress(tab.name, index)}
-                  style={styles(theme).tabItem}
-                  accessibilityRole="tab"
-                  accessibilityState={{ selected: isActive }}
-                  accessibilityLabel={tab.label}
-                >
-                  <FontAwesome
-                    name={tab.icon}
-                    size={24}
-                    color={
-                      isActive
-                        ? theme.colors.textOnPrimary
-                        : theme.colors.textOnPrimary + "80"
-                    }
-                  />
-                </Pressable>
+                <React.Fragment key={tab.name}>
+                  {/* Center FAB */}
+                  <Pressable
+                    onPress={() => navigation.navigate("features/log" as any)}
+                    style={styles(theme).centerFab}
+                  >
+                    <FontAwesome name="plus" size={22} color="#FFFFFF" />
+                  </Pressable>
+                  {/* Tab item */}
+                  <Pressable
+                    onPress={() => handleTabPress(tab.name)}
+                    style={styles(theme).tabItem}
+                    accessibilityRole="tab"
+                    accessibilityState={{ selected: isActive }}
+                    accessibilityLabel={tab.label}
+                  >
+                    <FontAwesome
+                      name={tab.icon}
+                      size={22}
+                      color={
+                        isActive
+                          ? theme.colors.primary
+                          : theme.colors.textMuted
+                      }
+                    />
+                    <Text
+                      style={[
+                        styles(theme).tabLabel,
+                        isActive && { color: theme.colors.primary, fontWeight: "700" },
+                      ]}
+                    >
+                      {tab.label}
+                    </Text>
+                  </Pressable>
+                </React.Fragment>
               );
-            })}
-          </View>
-        </LinearGradient>
+            }
+
+            return (
+              <Pressable
+                key={tab.name}
+                onPress={() => handleTabPress(tab.name)}
+                style={styles(theme).tabItem}
+                accessibilityRole="tab"
+                accessibilityState={{ selected: isActive }}
+                accessibilityLabel={tab.label}
+              >
+                <FontAwesome
+                  name={tab.icon}
+                  size={22}
+                  color={
+                    isActive
+                      ? theme.colors.primary
+                      : theme.colors.textMuted
+                  }
+                />
+                <Text
+                  style={[
+                    styles(theme).tabLabel,
+                    isActive && { color: theme.colors.primary, fontWeight: "700" },
+                  ]}
+                >
+                  {tab.label}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
       </BlurView>
     </View>
   );
@@ -126,61 +168,65 @@ const styles = (theme: AppTheme) =>
   StyleSheet.create({
     container: {
       position: "absolute",
-      bottom: theme.spacing.lg,
+      bottom: 24,
       left: (SCREEN_WIDTH - TAB_BAR_WIDTH) / 2,
       width: TAB_BAR_WIDTH,
-      height: 70,
-      borderRadius: theme.borderRadius.xxl,
+      height: 68,
+      borderRadius: 999,
       overflow: "hidden",
       ...Platform.select({
         ios: {
-          shadowColor: theme.colors.shadow,
-          shadowOffset: { width: 0, height: 4 },
-          shadowOpacity: 0.3,
-          shadowRadius: 12,
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: 8 },
+          shadowOpacity: 0.15,
+          shadowRadius: 24,
         },
         android: {
-          elevation: 8,
+          elevation: 12,
         },
       }),
     },
     blurContainer: {
       flex: 1,
-      borderRadius: theme.borderRadius.xxl,
+      borderRadius: 999,
       overflow: "hidden",
-    },
-    gradientOverlay: {
-      flex: 1,
-      flexDirection: "row",
-      alignItems: "center",
-      justifyContent: "space-around",
-      paddingHorizontal: theme.spacing.sm,
+      borderWidth: 1,
+      borderColor: "rgba(255, 255, 255, 0.2)",
     },
     tabsContainer: {
       flex: 1,
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "space-around",
+      paddingHorizontal: 8,
     },
     tabItem: {
-      flex: 1,
       alignItems: "center",
       justifyContent: "center",
-      height: "100%",
-      paddingVertical: theme.spacing.md,
+      paddingVertical: 8,
+      gap: 4,
+      minWidth: 50,
     },
-    indicator: {
-      position: "absolute",
-      width: TAB_WIDTH,
-      height: 50,
+    tabLabel: {
+      fontSize: 9,
+      fontFamily: theme.fonts.body.family,
+      fontWeight: "700",
+      color: theme.colors.textMuted,
+      textTransform: "uppercase",
+      letterSpacing: 0.5,
+    },
+    centerFab: {
+      width: 48,
+      height: 48,
+      borderRadius: 24,
+      backgroundColor: theme.colors.primary,
       alignItems: "center",
       justifyContent: "center",
-    },
-    indicatorInner: {
-      width: 50,
-      height: 50,
-      borderRadius: 25,
-      backgroundColor: theme.colors.accent,
-      opacity: 0.3,
+      marginTop: -24,
+      shadowColor: theme.colors.primary,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.3,
+      shadowRadius: 8,
+      elevation: 6,
     },
   });

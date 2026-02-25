@@ -1,518 +1,380 @@
 /**
- * CommunityScreen - Redesigned for RedPetal V2
- * Modern post cards with optimized animations and interactions
+ * CommunityScreen — Red Petal Community Hub
+ * Redesigned to match Stitch community design
+ * Features: Search, Trending Circles, Post Feed, Compose FAB
  */
 
-import { useFocusEffect } from "expo-router";
-import React, { useCallback, useEffect, useState } from "react";
+import { FontAwesome } from "@expo/vector-icons";
+import React, { useState } from "react";
 import {
-  ActivityIndicator,
-  Alert,
-  FlatList,
-  Platform,
-  Pressable,
-  RefreshControl,
+  ScrollView,
+  StatusBar,
   StyleSheet,
   Text,
-  View,
+  TextInput,
+  TouchableOpacity,
+  View
 } from "react-native";
 import Animated, {
-  useAnimatedStyle,
-  useSharedValue,
-  withSpring,
-  withTiming,
+  FadeInDown,
+  FadeInRight,
 } from "react-native-reanimated";
-import { communityAPI } from "../../services/api";
-import AnimatedPostCard from "../components/AnimatedPostCard";
-import CommentsModal from "../components/CommentsModal";
-import CreatePostModalWithImages from "../components/CreatePostModalWithImages";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AppTheme, useThemeContext } from "../components/ThemeContext";
-import { responsive, springConfigs } from "../utils/animations";
+import TrendingCircle from "../components/TrendingCircle";
 
-interface Comment {
-  id: string;
-  author: string;
-  content: string;
-  timestamp: string;
-}
+// Mock data
+const TRENDING_CIRCLES = [
+  { id: "1", label: "PCOS\nSupport", icon: "💗", color: "#ee2b3b", bgColor: "#fce4ec" },
+  { id: "2", label: "First\nPeriod", icon: "📖", color: "#e65100", bgColor: "#fff3e0" },
+  { id: "3", label: "Cycle\nSync", icon: "🔄", color: "#2e7d32", bgColor: "#e8f5e9" },
+  { id: "4", label: "Mindfulness", icon: "🌿", color: "#1565c0", bgColor: "#e3f2fd" },
+  { id: "5", label: "Nutrition", icon: "🥗", color: "#6a1b9a", bgColor: "#f3e5f5" },
+];
 
-interface PostImage {
-  id: string;
-  uri: string;
-}
-
-interface Reaction {
-  id: string;
-  type: "like" | "love" | "laugh" | "wow" | "sad" | "angry";
-  emoji: string;
-  count: number;
-}
-
-interface Post {
-  id: string;
-  author: string;
-  avatar: string;
-  content: string;
-  images?: PostImage[];
-  likes: number;
-  comments: Comment[];
-  timestamp: string;
-  isLiked: boolean;
-  reactions?: Reaction[];
-}
-
-const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
-
-// Memoized New Post Button
-const NewPostButton = React.memo(
-  ({ onPress, theme }: { onPress: () => void; theme: AppTheme }) => {
-    const scale = useSharedValue(1);
-
-    const animatedStyle = useAnimatedStyle(() => ({
-      transform: [{ scale: scale.value }],
-    }));
-
-    const handlePressIn = useCallback(() => {
-      scale.value = withSpring(0.95, springConfigs.snappy);
-    }, [scale]);
-
-    const handlePressOut = useCallback(() => {
-      scale.value = withSpring(1, springConfigs.snappy);
-    }, [scale]);
-
-    return (
-      <AnimatedPressable
-        style={[styles(theme).newPostButton, animatedStyle]}
-        onPress={onPress}
-        onPressIn={handlePressIn}
-        onPressOut={handlePressOut}
-      >
-        <Text style={styles(theme).newPostButtonText}>+ New</Text>
-      </AnimatedPressable>
-    );
-  }
-);
-
-NewPostButton.displayName = "NewPostButton";
+const POSTS = [
+  {
+    id: "1",
+    author: "Elena R.",
+    time: "2 hours ago",
+    tag: "Shared Wisdom",
+    tagColor: "#ee2b3b",
+    tagBg: "#fce4ec",
+    title: "My journey with cycle-syncing yoga",
+    excerpt:
+      "After three months of adjusting my practice to my phases, I've noticed a significant drop in my day 1 fatigue...",
+    likes: 124,
+    comments: 18,
+  },
+  {
+    id: "2",
+    author: "Maya Chen",
+    time: "5 hours ago",
+    tag: "Support",
+    tagColor: "#2e7d32",
+    tagBg: "#e8f5e9",
+    title: "Finding the right magnesium supplement?",
+    excerpt:
+      "Does anyone have recommendations for a brand that doesn't cause stomach upset? Trying to help with cramps.",
+    likes: 42,
+    comments: 31,
+  },
+  {
+    id: "3",
+    author: "Sasha K.",
+    time: "Yesterday",
+    tag: "Story",
+    tagColor: "#e65100",
+    tagBg: "#fff3e0",
+    title: "A message to my younger self...",
+    excerpt:
+      "I wish I knew that it was okay to rest during my period. For years I pushed through and felt burnt out...",
+    likes: 256,
+    comments: 45,
+  },
+];
 
 export default function CommunityScreen() {
   const { theme } = useThemeContext();
-  const [createPostVisible, setCreatePostVisible] = useState(false);
-  const [commentsVisible, setCommentsVisible] = useState(false);
-  const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
-  const [posts, setPosts] = useState<Post[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
+  const insets = useSafeAreaInsets();
+  const [searchQuery, setSearchQuery] = useState("");
 
-  // Animation values
-  const headerOpacity = useSharedValue(0);
-  const headerTranslateY = useSharedValue(-20);
-
-  // Animate header on mount
-  useEffect(() => {
-    headerOpacity.value = withTiming(1, { duration: 400 });
-    headerTranslateY.value = withSpring(0, springConfigs.gentle);
-  }, [headerOpacity, headerTranslateY]);
-
-  // Fetch posts when screen comes into focus
-  useFocusEffect(
-    useCallback(() => {
-      loadPosts();
-    }, [])
-  );
-
-  const loadPosts = async () => {
-    try {
-      setLoading(true);
-      const response = await communityAPI.getPosts({
-        limit: 50,
-        offset: 0,
-      });
-
-      // Transform API response to match component interface
-      const transformedPosts = response.posts.map(
-        (post: Record<string, unknown>) => ({
-          id: post.id,
-          author: post.is_anonymous
-            ? "Anonymous"
-            : post.first_name && post.last_name
-            ? `${post.first_name} ${post.last_name}`
-            : post.username,
-          avatar:
-            (post.profile_image_url as string) ||
-            "https://randomuser.me/api/portraits/women/10.jpg",
-          content: post.content,
-          images: post.images || [],
-          likes: (post.like_count as number) || 0,
-          comments: [],
-          timestamp: formatTimestamp(post.created_at as string),
-          isLiked: (post.is_liked as boolean) || false,
-          reactions: [],
-        })
-      );
-
-      setPosts(transformedPosts);
-    } catch (error) {
-      console.error("Error loading posts:", error);
-      Alert.alert("Error", "Failed to load community posts");
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  };
-
-  const formatTimestamp = (timestamp: string) => {
-    const date = new Date(timestamp);
-    const now = new Date();
-    const diffInHours = Math.floor(
-      (now.getTime() - date.getTime()) / (1000 * 60 * 60)
-    );
-
-    if (diffInHours < 1) return "now";
-    if (diffInHours < 24) return `${diffInHours}h ago`;
-    return `${Math.floor(diffInHours / 24)}d ago`;
-  };
-
-  const onRefresh = () => {
-    setRefreshing(true);
-    loadPosts();
-  };
-
-  const handleCreatePost = async (
-    content: string,
-    images: PostImage[] = []
-  ) => {
-    try {
-      const imageUrls = images.map((img) => img.uri);
-      await communityAPI.createPost({
-        content,
-        images: imageUrls,
-        category: "general",
-      });
-
-      Alert.alert("Success", "Your post has been shared with the community!");
-      loadPosts();
-    } catch (error: unknown) {
-      Alert.alert("Error", (error as Error).message || "Failed to create post");
-    }
-  };
-
-  const handleLike = async (postId: string) => {
-    try {
-      await communityAPI.likePost(postId);
-
-      setPosts(
-        posts.map((post) =>
-          post.id === postId
-            ? {
-                ...post,
-                isLiked: !post.isLiked,
-                likes: post.isLiked ? post.likes - 1 : post.likes + 1,
-              }
-            : post
-        )
-      );
-    } catch (error: unknown) {
-      Alert.alert("Error", (error as Error).message || "Failed to like post");
-    }
-  };
-
-  const handleComment = async (postId: string) => {
-    try {
-      const response = await communityAPI.getComments(postId);
-
-      setPosts(
-        posts.map((post) =>
-          post.id === postId
-            ? {
-                ...post,
-                comments: response.comments.map(
-                  (comment: Record<string, unknown>) => ({
-                    id: comment.id,
-                    author: comment.is_anonymous
-                      ? "Anonymous"
-                      : comment.first_name && comment.last_name
-                      ? `${comment.first_name} ${comment.last_name}`
-                      : comment.username,
-                    content: comment.content,
-                    timestamp: formatTimestamp(comment.created_at as string),
-                  })
-                ),
-              }
-            : post
-        )
-      );
-
-      setSelectedPostId(postId);
-      setCommentsVisible(true);
-    } catch (error: unknown) {
-      Alert.alert(
-        "Error",
-        (error as Error).message || "Failed to load comments"
-      );
-    }
-  };
-
-  const handleShare = (postId: string) => {
-    Alert.alert("Shared!", "Post link copied to clipboard");
-  };
-
-  const handleReaction = (postId: string, reactionType: string) => {
-    setPosts(
-      posts.map((post) => {
-        if (post.id === postId) {
-          const existingReaction = post.reactions?.find(
-            (r) => r.type === reactionType
-          );
-          let updatedReactions = post.reactions || [];
-
-          if (existingReaction) {
-            updatedReactions = updatedReactions.map((r) =>
-              r.type === reactionType ? { ...r, count: r.count + 1 } : r
-            );
-          } else {
-            const reactionEmojis: { [key: string]: string } = {
-              like: "👍",
-              love: "❤️",
-              laugh: "😂",
-              wow: "😮",
-              sad: "😢",
-              angry: "😠",
-            };
-
-            const newReaction: Reaction = {
-              id: Date.now().toString(),
-              type: reactionType as Reaction["type"],
-              emoji: reactionEmojis[reactionType] || "👍",
-              count: 1,
-            };
-            updatedReactions = [...updatedReactions, newReaction];
-          }
-
-          return { ...post, reactions: updatedReactions };
-        }
-        return post;
-      })
-    );
-  };
-
-  const handleAddComment = async (comment: string) => {
-    if (selectedPostId) {
-      try {
-        await communityAPI.addComment(selectedPostId, {
-          content: comment,
-          is_anonymous: false,
-        });
-
-        await handleComment(selectedPostId);
-        Alert.alert("Success", "Comment added successfully!");
-      } catch (error: unknown) {
-        Alert.alert(
-          "Error",
-          (error as Error).message || "Failed to add comment"
-        );
-      }
-    }
-  };
-
-  const selectedPost = posts.find((post) => post.id === selectedPostId);
-
-  // Animated header style
-  const headerAnimatedStyle = useAnimatedStyle(() => ({
-    opacity: headerOpacity.value,
-    transform: [{ translateY: headerTranslateY.value }],
-  }));
-
-  // Render post item
-  const renderPostItem = useCallback(
-    ({ item, index }: { item: Post; index: number }) => (
-      <AnimatedPostCard
-        id={item.id}
-        username={item.author}
-        profileImage={item.avatar}
-        content={item.content}
-        images={item.images || []}
-        timestamp={item.timestamp}
-        likeCount={item.likes}
-        commentCount={item.comments.length}
-        isLiked={item.isLiked}
-        reactions={item.reactions || []}
-        onLike={handleLike}
-        onComment={handleComment}
-        onShare={handleShare}
-        onReaction={handleReaction}
-      />
-    ),
-    [handleLike, handleComment, handleShare, handleReaction]
-  );
-
-  const keyExtractor = useCallback((item: Post) => item.id, []);
-
-  if (loading && !refreshing) {
-    return (
-      <View style={styles(theme).container}>
-        <Animated.View style={[styles(theme).header, headerAnimatedStyle]}>
-          <Text style={styles(theme).title}>Community</Text>
-          <NewPostButton
-            onPress={() => setCreatePostVisible(true)}
-            theme={theme}
-          />
-        </Animated.View>
-        <View style={styles(theme).loadingContainer}>
-          <ActivityIndicator size="large" color={theme.colors.primary} />
-          <Text style={styles(theme).loadingText}>Loading posts...</Text>
+  const renderPostCard = (post: typeof POSTS[0], index: number) => (
+    <Animated.View
+      key={post.id}
+      entering={FadeInDown.delay(index * 100).duration(400)}
+      style={styles(theme).postCard}
+    >
+      {/* Author row */}
+      <View style={styles(theme).authorRow}>
+        <View style={styles(theme).authorAvatarPlaceholder}>
+          <FontAwesome name="user" size={14} color={theme.colors.textMuted} />
         </View>
-      </View>
-    );
-  }
-
-  return (
-    <View style={styles(theme).container}>
-      {/* Header */}
-      <Animated.View style={[styles(theme).header, headerAnimatedStyle]}>
-        <Text style={styles(theme).title}>Community</Text>
-        <NewPostButton
-          onPress={() => setCreatePostVisible(true)}
-          theme={theme}
-        />
-      </Animated.View>
-
-      {posts.length === 0 ? (
-        <View style={styles(theme).emptyContainer}>
-          <Text style={styles(theme).emptyIcon}>💬</Text>
-          <Text style={styles(theme).emptyText}>No posts yet</Text>
-          <Text style={styles(theme).emptySubtext}>
-            Be the first to share something with the community!
+        <View style={{ flex: 1 }}>
+          <Text style={styles(theme).authorName}>{post.author}</Text>
+          <Text style={styles(theme).authorTime}>{post.time}</Text>
+        </View>
+        <View style={[styles(theme).tagBadge, { backgroundColor: post.tagBg }]}>
+          <Text style={[styles(theme).tagText, { color: post.tagColor }]}>
+            {post.tag}
           </Text>
         </View>
-      ) : (
-        <FlatList
-          data={posts}
-          renderItem={renderPostItem}
-          keyExtractor={keyExtractor}
-          contentContainerStyle={styles(theme).postList}
-          showsVerticalScrollIndicator={false}
-          initialNumToRender={5}
-          maxToRenderPerBatch={5}
-          windowSize={7}
-          removeClippedSubviews={Platform.OS === "android"}
-          refreshControl={
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={onRefresh}
-              tintColor={theme.colors.primary}
-              colors={[theme.colors.primary]}
+      </View>
+
+      {/* Content */}
+      <Text style={styles(theme).postTitle}>{post.title}</Text>
+      <Text style={styles(theme).postExcerpt} numberOfLines={2}>
+        {post.excerpt}
+      </Text>
+
+      {/* Stats */}
+      <View style={styles(theme).statsRow}>
+        <View style={styles(theme).statItem}>
+          <FontAwesome name="heart" size={13} color={theme.colors.textMuted} />
+          <Text style={styles(theme).statCount}>{post.likes}</Text>
+        </View>
+        <View style={styles(theme).statItem}>
+          <FontAwesome name="comment" size={13} color={theme.colors.textMuted} />
+          <Text style={styles(theme).statCount}>{post.comments}</Text>
+        </View>
+      </View>
+    </Animated.View>
+  );
+
+  return (
+    <View style={[styles(theme).screen, { paddingTop: insets.top }]}>
+      <StatusBar barStyle="dark-content" backgroundColor={theme.colors.background} />
+
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles(theme).scrollContent}
+      >
+        {/* Header */}
+        <Animated.View
+          entering={FadeInDown.duration(500)}
+          style={styles(theme).header}
+        >
+          <Text style={styles(theme).headerTitle}>Community</Text>
+          <TouchableOpacity style={styles(theme).notificationBtn}>
+            <FontAwesome
+              name="bell-o"
+              size={20}
+              color={theme.colors.textSecondary}
             />
-          }
-        />
-      )}
+          </TouchableOpacity>
+        </Animated.View>
 
-      <CreatePostModalWithImages
-        visible={createPostVisible}
-        onClose={() => setCreatePostVisible(false)}
-        onSubmit={handleCreatePost}
-      />
+        {/* Search */}
+        <Animated.View
+          entering={FadeInDown.delay(100).duration(500)}
+          style={styles(theme).searchContainer}
+        >
+          <FontAwesome
+            name="search"
+            size={16}
+            color={theme.colors.textMuted}
+            style={{ marginLeft: 16 }}
+          />
+          <TextInput
+            style={styles(theme).searchInput}
+            placeholder="Search circles or posts..."
+            placeholderTextColor={theme.colors.textMuted}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+          />
+        </Animated.View>
 
-      <CommentsModal
-        visible={commentsVisible}
-        onClose={() => {
-          setCommentsVisible(false);
-          setSelectedPostId(null);
-        }}
-        comments={selectedPost?.comments || []}
-        onAddComment={handleAddComment}
-      />
+        {/* Trending Circles */}
+        <Animated.View entering={FadeInDown.delay(200).duration(500)}>
+          <Text style={styles(theme).sectionLabel}>TRENDING CIRCLES</Text>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles(theme).circlesRow}
+          >
+            {TRENDING_CIRCLES.map((circle, idx) => (
+              <Animated.View
+                key={circle.id}
+                entering={FadeInRight.delay(idx * 80).duration(300)}
+              >
+                <TrendingCircle
+                  label={circle.label}
+                  icon={circle.icon}
+                  color={circle.color}
+                  bgColor={circle.bgColor}
+                />
+              </Animated.View>
+            ))}
+          </ScrollView>
+        </Animated.View>
+
+        {/* Recent Conversations */}
+        <Animated.View entering={FadeInDown.delay(300).duration(500)}>
+          <Text style={styles(theme).sectionLabel}>RECENT CONVERSATIONS</Text>
+          <View style={{ gap: 12 }}>
+            {POSTS.map((post, idx) => renderPostCard(post, idx))}
+          </View>
+        </Animated.View>
+
+        {/* Bottom spacer */}
+        <View style={{ height: 120 }} />
+      </ScrollView>
+
+      {/* Floating Compose Button */}
+      <TouchableOpacity
+        style={styles(theme).composeFab}
+        activeOpacity={0.8}
+      >
+        <FontAwesome name="pencil" size={22} color="#FFF" />
+      </TouchableOpacity>
     </View>
   );
 }
 
 const styles = (theme: AppTheme) =>
   StyleSheet.create({
-    container: {
+    screen: {
       flex: 1,
       backgroundColor: theme.colors.background,
+    },
+    scrollContent: {
+      paddingHorizontal: 24,
     },
     header: {
       flexDirection: "row",
       justifyContent: "space-between",
       alignItems: "center",
-      paddingTop:
-        Platform.OS === "android" ? responsive.sp(50) : responsive.sp(60),
-      paddingBottom: responsive.sp(16),
-      paddingHorizontal: responsive.sp(20),
-      backgroundColor: theme.colors.background,
-      borderBottomWidth: StyleSheet.hairlineWidth,
-      borderBottomColor: theme.colors.borderLight,
+      paddingTop: 12,
+      paddingBottom: 12,
     },
-    title: {
+    headerTitle: {
+      fontSize: 28,
       fontFamily: theme.fonts.subtitle.family,
-      fontSize: responsive.fs(28),
+      color: theme.colors.text,
+    },
+    notificationBtn: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      backgroundColor: theme.colors.surface,
+      alignItems: "center",
+      justifyContent: "center",
+      borderWidth: 1,
+      borderColor: theme.colors.borderLight,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.05,
+      shadowRadius: 4,
+      elevation: 2,
+    },
+    searchContainer: {
+      flexDirection: "row",
+      alignItems: "center",
+      backgroundColor: theme.colors.surface,
+      borderRadius: 16,
+      marginBottom: 24,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.04,
+      shadowRadius: 6,
+      elevation: 1,
+    },
+    searchInput: {
+      flex: 1,
+      paddingVertical: 12,
+      paddingHorizontal: 12,
+      fontSize: 14,
+      fontFamily: theme.fonts.body.family,
+      color: theme.colors.text,
+    },
+    sectionLabel: {
+      fontSize: 11,
+      fontFamily: theme.fonts.body.family,
+      fontWeight: "700",
+      letterSpacing: 2,
+      color: theme.colors.textMuted,
+      marginBottom: 16,
+    },
+    circlesRow: {
+      gap: 20,
+      paddingBottom: 24,
+    },
+    postCard: {
+      backgroundColor: theme.colors.surface,
+      borderRadius: 16,
+      padding: 16,
+      borderWidth: 1,
+      borderColor: theme.colors.borderLight,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.04,
+      shadowRadius: 6,
+      elevation: 1,
+    },
+    authorRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 10,
+      marginBottom: 12,
+    },
+    authorAvatarPlaceholder: {
+      width: 32,
+      height: 32,
+      borderRadius: 16,
+      backgroundColor: theme.colors.borderLight,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    authorName: {
+      fontSize: 12,
+      fontFamily: theme.fonts.body.family,
       fontWeight: "700",
       color: theme.colors.text,
     },
-    newPostButton: {
-      backgroundColor: theme.colors.primary,
-      paddingVertical: responsive.sp(10),
-      paddingHorizontal: responsive.sp(18),
-      borderRadius: responsive.sp(20),
-      ...Platform.select({
-        ios: {
-          shadowColor: theme.colors.primary,
-          shadowOffset: { width: 0, height: 4 },
-          shadowOpacity: 0.3,
-          shadowRadius: 8,
-        },
-        android: {
-          elevation: 4,
-        },
-      }),
-    },
-    newPostButtonText: {
+    authorTime: {
+      fontSize: 10,
       fontFamily: theme.fonts.body.family,
-      fontSize: responsive.fs(14),
-      fontWeight: "600",
-      color: theme.colors.textOnPrimary,
-    },
-    postList: {
-      paddingTop: responsive.sp(12),
-      paddingHorizontal: responsive.sp(16),
-      paddingBottom: responsive.sp(100),
-    },
-    loadingContainer: {
-      flex: 1,
-      justifyContent: "center",
-      alignItems: "center",
-      padding: responsive.sp(32),
-    },
-    loadingText: {
-      fontFamily: theme.fonts.body.family,
-      fontSize: responsive.fs(16),
-      color: theme.colors.textSecondary,
-      marginTop: responsive.sp(16),
-    },
-    emptyContainer: {
-      flex: 1,
-      justifyContent: "center",
-      alignItems: "center",
-      padding: responsive.sp(32),
-    },
-    emptyIcon: {
-      fontSize: responsive.sp(48),
-      marginBottom: responsive.sp(16),
-    },
-    emptyText: {
-      fontFamily: theme.fonts.subtitle.family,
-      fontSize: responsive.fs(20),
-      fontWeight: "600",
-      color: theme.colors.textSecondary,
-      textAlign: "center",
-      marginBottom: responsive.sp(8),
-    },
-    emptySubtext: {
-      fontFamily: theme.fonts.body.family,
-      fontSize: responsive.fs(14),
       color: theme.colors.textMuted,
-      textAlign: "center",
-      maxWidth: responsive.wp(70),
+    },
+    tagBadge: {
+      paddingHorizontal: 8,
+      paddingVertical: 3,
+      borderRadius: 999,
+    },
+    tagText: {
+      fontSize: 9,
+      fontFamily: theme.fonts.body.family,
+      fontWeight: "700",
+      textTransform: "uppercase",
+    },
+    postTitle: {
+      fontSize: 17,
+      fontFamily: theme.fonts.title.family,
+      color: theme.colors.text,
+      lineHeight: 24,
+      marginBottom: 6,
+    },
+    postExcerpt: {
+      fontSize: 12,
+      fontFamily: theme.fonts.body.family,
+      color: theme.colors.textSecondary,
+      lineHeight: 18,
+      marginBottom: 12,
+    },
+    statsRow: {
+      flexDirection: "row",
+      gap: 16,
+    },
+    statItem: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 6,
+    },
+    statCount: {
+      fontSize: 10,
+      fontFamily: theme.fonts.body.family,
+      fontWeight: "700",
+      color: theme.colors.textMuted,
+    },
+    composeFab: {
+      position: "absolute",
+      bottom: 100,
+      right: 24,
+      width: 56,
+      height: 56,
+      borderRadius: 20,
+      backgroundColor: theme.colors.primary,
+      alignItems: "center",
+      justifyContent: "center",
+      shadowColor: theme.colors.primary,
+      shadowOffset: { width: 0, height: 6 },
+      shadowOpacity: 0.3,
+      shadowRadius: 12,
+      elevation: 8,
+      // Petal shape approximation
+      borderTopLeftRadius: 16,
+      borderTopRightRadius: 28,
+      borderBottomRightRadius: 28,
+      borderBottomLeftRadius: 16,
     },
   });

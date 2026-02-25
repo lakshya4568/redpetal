@@ -78,17 +78,36 @@ export const colorPalettes = {
     gradientStart: "#D8A7B1",
     gradientEnd: "#E8CDD3",
   },
+  redPetal: {
+    primary: "#ee2b3b", // Red Petal - Stitch design system
+    accent: "#ff8a95", // Soft coral accent
+    neutral: "#fdfaf9", // Warm off-white
+    background: "#fdfaf9",
+    surface: "#FFFFFF",
+    surfaceVariant: "#FFF5F5",
+    text: "#1e293b", // slate-800
+    textSecondary: "#64748b", // slate-500
+    textMuted: "#94a3b8", // slate-400
+    textOnPrimary: "#FFFFFF",
+    border: "#ee2b3b",
+    borderLight: "#fecdd3",
+    shadow: "#ee2b3b",
+    overlay: "rgba(238, 43, 59, 0.08)",
+    // V2 Gradient Colors
+    gradientStart: "#ee2b3b",
+    gradientEnd: "#ff8a95",
+  },
 };
 
 // Font Configuration with robust fallbacks
 export const fonts = {
-  // Title/Logo fonts - Pacifico (casual script) with system fallbacks
+  // Title/Heading font — Playfair Display (elegant serif from Stitch)
   title: {
     family: Platform.select({
-      ios: "Pacifico-Title",
-      android: "Pacifico-Title",
-      web: "Pacifico, cursive",
-      default: "Pacifico-Title",
+      ios: "PlayfairDisplay",
+      android: "PlayfairDisplay",
+      web: "Playfair Display, Georgia, serif",
+      default: "PlayfairDisplay",
     }),
     fallback: Platform.select({
       ios: "Georgia, serif",
@@ -97,28 +116,28 @@ export const fonts = {
       default: "serif",
     }),
   },
-  // Subtitle fonts - Cookie (decorative script) with system fallbacks
+  // Subtitle font — Playfair Display Italic
   subtitle: {
     family: Platform.select({
-      ios: "Cookie-subtitle",
-      android: "Cookie-subtitle",
-      web: "Cookie, cursive",
-      default: "Cookie-subtitle",
+      ios: "PlayfairDisplay-Italic",
+      android: "PlayfairDisplay-Italic",
+      web: "Playfair Display, Georgia, serif",
+      default: "PlayfairDisplay-Italic",
     }),
     fallback: Platform.select({
-      ios: "SF Pro Display, -apple-system, sans-serif",
-      android: "Roboto, sans-serif",
-      web: "system-ui, -apple-system, sans-serif",
-      default: "sans-serif",
+      ios: "Georgia, serif",
+      android: "serif",
+      web: "Georgia, Times, serif",
+      default: "serif",
     }),
   },
-  // Body text fonts - OpenSans with system fallbacks
+  // Body text font — Plus Jakarta Sans (clean sans-serif from Stitch)
   body: {
     family: Platform.select({
-      ios: "OpenSans-Body",
-      android: "OpenSans-Body",
-      web: "Open Sans, sans-serif",
-      default: "OpenSans-Body",
+      ios: "PlusJakartaSans",
+      android: "PlusJakartaSans",
+      web: "Plus Jakarta Sans, system-ui, sans-serif",
+      default: "PlusJakartaSans",
     }),
     fallback: Platform.select({
       ios: "SF Pro Text, -apple-system, sans-serif",
@@ -423,8 +442,16 @@ export const organicCard = {
 };
 
 // Current theme selection (change this to switch themes)
-const currentPalette: keyof typeof colorPalettes = "blushPink";
+const currentPalette: keyof typeof colorPalettes = "redPetal";
 const activeColorPalette = colorPalettes[currentPalette];
+
+// Petal-shaped organic blob style (signature Red Petal design element)
+export const petalShape = {
+  borderTopLeftRadius: 100,
+  borderTopRightRadius: 200,
+  borderBottomRightRadius: 200,
+  borderBottomLeftRadius: 100,
+};
 
 // Complete Theme Object
 export const theme = {
@@ -452,7 +479,7 @@ export const theme = {
     ] as [string, string],
     accent: [activeColorPalette.accent, activeColorPalette.primary] as [
       string,
-      string
+      string,
     ],
     surface: ["#FFFFFF", activeColorPalette.surfaceVariant] as [string, string],
   },
@@ -568,7 +595,7 @@ export const switchTheme = (paletteName: keyof typeof colorPalettes) => {
     gradients: {
       primary: [newPalette.gradientStart, newPalette.gradientEnd] as [
         string,
-        string
+        string,
       ],
       accent: [newPalette.accent, newPalette.primary] as [string, string],
       surface: ["#FFFFFF", newPalette.surfaceVariant] as [string, string],

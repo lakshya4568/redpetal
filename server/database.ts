@@ -179,6 +179,22 @@ export const createTables = async () => {
       );
     `);
 
+    // Daily logs table (combined mood/flow/skin per day)
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS daily_logs (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+        date DATE NOT NULL,
+        flow VARCHAR(20),
+        mood VARCHAR(20),
+        skin TEXT[],
+        notes TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(user_id, date)
+      );
+    `);
+
     // Create indexes for better performance
     await client.query(`
       CREATE INDEX IF NOT EXISTS idx_period_cycles_user_date ON period_cycles(user_id, cycle_start_date);

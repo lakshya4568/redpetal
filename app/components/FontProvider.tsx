@@ -26,9 +26,9 @@ const FontProvider: React.FC<FontProviderProps> = ({ children }) => {
     // For native platforms, load fonts with error handling
     try {
       const config: Record<string, any> = {
-        "Pacifico-Title": require("../../assets/fonts/Pacifico-Title.ttf"),
-        "Cookie-subtitle": require("../../assets/fonts/Cookie-subtitle.ttf"),
-        "OpenSans-Body": require("../../assets/fonts/OpenSans-Body.ttf"),
+        "PlayfairDisplay": require("../../assets/fonts/PlayfairDisplay-Bold.ttf"),
+        "PlayfairDisplay-Italic": require("../../assets/fonts/PlayfairDisplay-Italic.ttf"),
+        "PlusJakartaSans": require("../../assets/fonts/PlusJakartaSans-Regular.ttf"),
       };
       return config;
     } catch (error) {
@@ -85,7 +85,7 @@ const FontProvider: React.FC<FontProviderProps> = ({ children }) => {
       console.log("Font config keys:", Object.keys(fontConfig));
       console.log("Fonts loaded:", fontsLoaded);
       setAppReady(true); // Continue with system fonts
-      SplashScreen.hideAsync().catch(() => {});
+      SplashScreen.hideAsync().catch(() => { });
     }
   }, [fontLoadError, fontConfig, fontsLoaded, isMounted]);
 
@@ -103,7 +103,7 @@ const FontProvider: React.FC<FontProviderProps> = ({ children }) => {
       ) {
         console.warn("Font loading timed out, continuing with system fonts");
         setAppReady(true);
-        SplashScreen.hideAsync().catch(() => {});
+        SplashScreen.hideAsync().catch(() => { });
       }
     }, 3000); // Reduced timeout to 3 seconds
 

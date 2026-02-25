@@ -41,3 +41,5 @@ yarn-error.*
 app-example
 
 .env*
+
+stitch-designs

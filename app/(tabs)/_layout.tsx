@@ -19,8 +19,12 @@ export default function TabLayout() {
       <Tabs.Screen name="index" />
       <Tabs.Screen name="calendar" />
       <Tabs.Screen name="community" />
-      <Tabs.Screen name="remedies" />
       <Tabs.Screen name="profile" />
+      <Tabs.Screen
+        name="remedies"
+        options={{ href: null }} // Hide from tab bar but keep accessible
+      />
     </Tabs>
   );
 }
+

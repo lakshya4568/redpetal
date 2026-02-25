@@ -1,362 +1,537 @@
 /**
- * HomeScreen - Redesigned for RedPetal V2
- * Optimized with proper virtualization, lazy loading, and 60fps animations
+ * HomeScreen — Red Petal Home Dashboard
+ * Redesigned to match Stitch "Modern Home" design
+ * Features: PetalTracker, Quick Actions, Daily Insights, Today's Tip, Weekly Calendar
  */
 
+import { FontAwesome } from "@expo/vector-icons";
 import React, { useCallback } from "react";
 import {
   FlatList,
-  ListRenderItem,
-  Platform,
+  ScrollView,
+  StatusBar,
   StyleSheet,
   Text,
-  View,
+  TouchableOpacity,
+  View
 } from "react-native";
 import Animated, {
-  useAnimatedScrollHandler,
-  useSharedValue,
+  FadeInDown,
+  FadeInRight,
 } from "react-native-reanimated";
-import ArticleCard from "../components/ArticleCard";
-import CalendarHeader from "../components/CalendarHeader";
-import CycleSummaryCard from "../components/CycleSummaryCard";
-import FeatureEntryCard from "../components/FeatureEntryCard";
-import InsightCard from "../components/InsightCard";
-import NotesCard from "../components/NotesCard";
-import PeriodTrackerCard from "../components/PeriodTrackerCard";
-import SectionHeader from "../components/SectionHeader";
-import SymptomPatternsCard from "../components/SymptomPatternsCard";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import PetalTracker from "../components/PetalTracker";
 import { AppTheme, useThemeContext } from "../components/ThemeContext";
-import { responsive } from "../utils/animations";
+import TodayTip from "../components/TodayTip";
 
-// Static data - moved outside component to prevent re-creation
-const insights = [
-  { id: "1", title: "Time for a pregnancy test?", icon: "🧪" },
-  { id: "2", title: "Early pregnancy or PMS symptoms?", icon: "🤔" },
-  { id: "3", title: "Coping with pregnancy paranoia", icon: "🧘" },
-];
-
-const cycleArticles = [
-  { id: "1", title: "What counts as a late period?", readTime: "7 min read" },
+// Mock data
+const INSIGHTS = [
+  {
+    id: "1",
+    category: "Wellness",
+    title: "Reducing Cramps naturally",
+    excerpt: "Explore herbal teas and gentle movement techniques.",
+    image: null,
+  },
   {
     id: "2",
-    title: "Cramps but no period? This could be why",
-    readTime: "6 min read",
+    category: "Nutrition",
+    title: "The power of Magnesium",
+    excerpt: "Why this mineral is key for your hormonal balance.",
+    image: null,
   },
   {
     id: "3",
-    title: "5 late period 'remedies' to avoid",
-    readTime: "11 min read",
+    category: "Fitness",
+    title: "Cycle-synced workouts",
+    excerpt: "Adjust your exercise routine to your phase.",
+    image: null,
   },
 ];
 
-const featureCards = [
-  {
-    id: "petal-find",
-    title: "Petal Find",
-    description: "Find safe and clean washrooms near you",
-    icon: "map-marker" as const,
-    route: "/features/map",
-  },
-  {
-    id: "doctor-connect",
-    title: "Doctor Connect",
-    description: "Book appointments with healthcare specialists",
-    icon: "user-md" as const,
-    route: "/features/doctors",
-  },
-  {
-    id: "sister-ai",
-    title: "Sister AI",
-    description: "Your caring Hinglish health assistant",
-    icon: "comments" as const,
-    comingSoon: true,
-  },
+const WEEK_DAYS = [
+  { day: "Mon", date: 13 },
+  { day: "Tue", date: 14 },
+  { day: "Wed", date: 15 },
+  { day: "Thu", date: 16, isToday: true },
+  { day: "Fri", date: 17 },
+  { day: "Sat", date: 18 },
 ];
-
-// Section types for the main list
-type SectionType =
-  | "calendar"
-  | "tracker"
-  | "quickAccess"
-  | "insights"
-  | "mainArticle"
-  | "cycleArticles"
-  | "summary"
-  | "patterns"
-  | "notes"
-  | "spacer";
-
-interface SectionItem {
-  id: string;
-  type: SectionType;
-}
-
-const sections: SectionItem[] = [
-  { id: "calendar", type: "calendar" },
-  { id: "tracker", type: "tracker" },
-  { id: "quickAccess", type: "quickAccess" },
-  { id: "insights", type: "insights" },
-  { id: "mainArticle", type: "mainArticle" },
-  { id: "cycleArticles", type: "cycleArticles" },
-  { id: "summary", type: "summary" },
-  { id: "patterns", type: "patterns" },
-  { id: "notes", type: "notes" },
-  { id: "spacer", type: "spacer" },
-];
-
-const AnimatedFlatList = Animated.createAnimatedComponent(
-  FlatList<SectionItem>
-);
-
-// Memoized insight item renderer
-const InsightItem = React.memo(
-  ({ item, index }: { item: (typeof insights)[0]; index: number }) => (
-    <InsightCard
-      title={item.title}
-      icon={<Text style={{ fontSize: responsive.sp(28) }}>{item.icon}</Text>}
-      index={index}
-    />
-  )
-);
-
-InsightItem.displayName = "InsightItem";
-
-// Memoized article item renderer
-const ArticleItem = React.memo(
-  ({ item, theme }: { item: (typeof cycleArticles)[0]; theme: AppTheme }) => (
-    <View style={styles(theme).articleItem}>
-      <ArticleCard
-        title={item.title}
-        image={require("../../assets/images/floral-background.png")}
-        height={responsive.hp(18)}
-      />
-      <Text style={styles(theme).readTime}>{item.readTime}</Text>
-    </View>
-  )
-);
-
-ArticleItem.displayName = "ArticleItem";
 
 export default function HomeScreen() {
   const { theme } = useThemeContext();
-  const scrollY = useSharedValue(0);
+  const insets = useSafeAreaInsets();
 
-  // Scroll handler for potential parallax/header effects
-  const scrollHandler = useAnimatedScrollHandler({
-    onScroll: (event) => {
-      scrollY.value = event.contentOffset.y;
-    },
-  });
-
-  // Memoized insight list key extractor
-  const insightKeyExtractor = useCallback(
-    (item: (typeof insights)[0]) => item.id,
-    []
-  );
-
-  // Memoized article list key extractor
-  const articleKeyExtractor = useCallback(
-    (item: (typeof cycleArticles)[0]) => item.id,
-    []
-  );
-
-  // Memoized insight render item
-  const renderInsightItem = useCallback(
-    ({ item, index }: { item: (typeof insights)[0]; index: number }) => (
-      <InsightItem item={item} index={index} />
-    ),
-    []
-  );
-
-  // Memoized article render item
-  const renderArticleItem = useCallback(
-    ({ item }: { item: (typeof cycleArticles)[0] }) => (
-      <ArticleItem item={item} theme={theme} />
+  const renderInsightCard = useCallback(
+    ({ item, index }: { item: typeof INSIGHTS[0]; index: number }) => (
+      <Animated.View
+        entering={FadeInRight.delay(index * 100).duration(400)}
+        style={styles(theme).insightCard}
+      >
+        <View style={styles(theme).insightImagePlaceholder}>
+          <FontAwesome
+            name={
+              item.category === "Wellness"
+                ? "heartbeat"
+                : item.category === "Nutrition"
+                  ? "leaf"
+                  : "bicycle"
+            }
+            size={32}
+            color={theme.colors.primary + "60"}
+          />
+        </View>
+        <View style={styles(theme).insightContent}>
+          <Text style={styles(theme).insightCategory}>{item.category}</Text>
+          <Text style={styles(theme).insightTitle}>{item.title}</Text>
+          <Text style={styles(theme).insightExcerpt} numberOfLines={1}>
+            {item.excerpt}
+          </Text>
+        </View>
+      </Animated.View>
     ),
     [theme]
   );
 
-  // Main section renderer
-  const renderSection: ListRenderItem<SectionItem> = useCallback(
-    ({ item }) => {
-      switch (item.type) {
-        case "calendar":
-          return <CalendarHeader />;
+  return (
+    <View style={[styles(theme).screen, { paddingTop: insets.top }]}>
+      <StatusBar barStyle="dark-content" backgroundColor={theme.colors.background} />
 
-        case "tracker":
-          return (
-            <PeriodTrackerCard daysLate={3} cycleDay={31} totalCycleDays={28} />
-          );
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles(theme).scrollContent}
+      >
+        {/* Header */}
+        <Animated.View
+          entering={FadeInDown.duration(500)}
+          style={styles(theme).header}
+        >
+          <View style={styles(theme).headerLeft}>
+            <View style={styles(theme).profileCircle}>
+              <FontAwesome name="user" size={18} color={theme.colors.primary} />
+            </View>
+            <Text style={styles(theme).brandText}>RED PETAL</Text>
+          </View>
+          <TouchableOpacity style={styles(theme).notificationBtn}>
+            <FontAwesome
+              name="bell-o"
+              size={20}
+              color={theme.colors.textSecondary}
+            />
+          </TouchableOpacity>
+        </Animated.View>
 
-        case "quickAccess":
-          return (
-            <>
-              <SectionHeader title="Quick Access" />
-              {featureCards.map((card, index) => (
-                <FeatureEntryCard
-                  key={card.id}
-                  title={card.title}
-                  description={card.description}
-                  icon={card.icon}
-                  route={card.route}
-                  comingSoon={card.comingSoon}
-                  index={index}
-                  gradientColors={
-                    card.comingSoon
-                      ? [theme.colors.accent, theme.colors.primary]
-                      : undefined
-                  }
-                />
-              ))}
-            </>
-          );
+        {/* Hero Greeting */}
+        <Animated.View
+          entering={FadeInDown.delay(100).duration(500)}
+          style={styles(theme).greetingSection}
+        >
+          <Text style={styles(theme).greetingHello}>Hello,</Text>
+          <Text style={styles(theme).greetingName}>Sarah</Text>
+        </Animated.View>
 
-        case "insights":
-          return (
-            <>
-              <SectionHeader title="My daily insights" />
-              <FlatList
-                horizontal
-                data={insights}
-                renderItem={renderInsightItem}
-                keyExtractor={insightKeyExtractor}
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={styles(theme).horizontalListContent}
-                initialNumToRender={3}
-                maxToRenderPerBatch={3}
-                removeClippedSubviews={Platform.OS === "android"}
-              />
-            </>
-          );
+        {/* Petal Tracker */}
+        <Animated.View entering={FadeInDown.delay(200).duration(600)}>
+          <PetalTracker
+            cycleDay={12}
+            phase="Follicular Phase"
+            fertilityLevel="High"
+          />
+        </Animated.View>
 
-        case "mainArticle":
-          return (
-            <View style={styles(theme).mainArticleContainer}>
-              <ArticleCard
-                title="Am I pregnant?"
-                items={[
-                  "8 early signs of pregnancy",
-                  "Taking a pregnancy test",
-                  "Other reasons you're late",
-                ]}
-                image={require("../../assets/images/floral-background.png")}
+        {/* Insight text */}
+        <Animated.View
+          entering={FadeInDown.delay(300).duration(500)}
+          style={styles(theme).insightTextSection}
+        >
+          <Text style={styles(theme).insightMainText}>
+            Your{" "}
+            <Text style={{ color: theme.colors.primary, fontWeight: "600" }}>
+              fertility is high
+            </Text>{" "}
+            today. A great time for light yoga and nourishing greens.
+          </Text>
+        </Animated.View>
+
+        {/* Quick Action Buttons */}
+        <Animated.View
+          entering={FadeInDown.delay(400).duration(500)}
+          style={styles(theme).quickActions}
+        >
+          <TouchableOpacity style={styles(theme).logSymptomsBtn}>
+            <FontAwesome name="plus-circle" size={18} color={theme.colors.primary} />
+            <Text style={styles(theme).logSymptomsText}>Log Symptoms</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles(theme).moodBtn}>
+            <FontAwesome
+              name="smile-o"
+              size={20}
+              color={theme.colors.textSecondary}
+            />
+          </TouchableOpacity>
+        </Animated.View>
+
+        {/* Quick Access Cards */}
+        <Animated.View
+          entering={FadeInDown.delay(450).duration(500)}
+          style={styles(theme).quickAccessGrid}
+        >
+          <TouchableOpacity style={styles(theme).quickAccessCard}>
+            <View style={styles(theme).quickAccessIcon}>
+              <FontAwesome
+                name="smile-o"
+                size={22}
+                color={theme.colors.primary}
               />
             </View>
-          );
-
-        case "cycleArticles":
-          return (
-            <>
-              <SectionHeader title="Based on your current cycle" />
-              <FlatList
-                horizontal
-                data={cycleArticles}
-                renderItem={renderArticleItem}
-                keyExtractor={articleKeyExtractor}
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={styles(theme).horizontalListContent}
-                initialNumToRender={2}
-                maxToRenderPerBatch={2}
-                removeClippedSubviews={Platform.OS === "android"}
+            <Text style={styles(theme).quickAccessLabel}>Daily Mood</Text>
+            <Text style={styles(theme).quickAccessHint}>Not logged</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles(theme).quickAccessCard}>
+            <View style={styles(theme).quickAccessIcon}>
+              <FontAwesome
+                name="heart-o"
+                size={22}
+                color={theme.colors.primary}
               />
-            </>
-          );
+            </View>
+            <Text style={styles(theme).quickAccessLabel}>Symptoms</Text>
+            <Text style={styles(theme).quickAccessHint}>Track now</Text>
+          </TouchableOpacity>
+        </Animated.View>
 
-        case "summary":
-          return (
-            <>
-              <SectionHeader title="Cycle summary" />
-              <CycleSummaryCard />
-            </>
-          );
+        {/* Today's Tip */}
+        <Animated.View entering={FadeInDown.delay(500).duration(500)}>
+          <TodayTip title="The benefits of Magnesium during your Luteal phase" />
+        </Animated.View>
 
-        case "patterns":
-          return (
-            <>
-              <SectionHeader title="My symptom patterns" />
-              <SymptomPatternsCard />
-            </>
-          );
+        {/* Daily Insights */}
+        <Animated.View
+          entering={FadeInDown.delay(550).duration(500)}
+          style={styles(theme).insightsSection}
+        >
+          <View style={styles(theme).sectionHeader}>
+            <Text style={styles(theme).sectionTitle}>Daily Insights</Text>
+            <TouchableOpacity>
+              <Text style={styles(theme).seeAllText}>See All</Text>
+            </TouchableOpacity>
+          </View>
+          <FlatList
+            data={INSIGHTS}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            keyExtractor={(item) => item.id}
+            renderItem={renderInsightCard}
+            contentContainerStyle={{ gap: 12 }}
+          />
+        </Animated.View>
 
-        case "notes":
-          return <NotesCard />;
+        {/* Weekly Calendar Preview */}
+        <Animated.View
+          entering={FadeInDown.delay(600).duration(500)}
+          style={styles(theme).calendarPreview}
+        >
+          <View style={styles(theme).sectionHeader}>
+            <Text style={styles(theme).sectionTitle}>Upcoming</Text>
+            <Text style={[styles(theme).seeAllText, { fontWeight: "500" }]}>
+              May 2024
+            </Text>
+          </View>
+          <View style={styles(theme).weekRow}>
+            {WEEK_DAYS.map((d) => (
+              <View key={d.date} style={styles(theme).weekDay}>
+                <Text
+                  style={[
+                    styles(theme).weekDayLabel,
+                    d.isToday && { color: theme.colors.primary, fontWeight: "700" },
+                  ]}
+                >
+                  {d.day}
+                </Text>
+                <View
+                  style={[
+                    styles(theme).weekDayCircle,
+                    d.isToday && styles(theme).weekDayCircleToday,
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles(theme).weekDayDate,
+                      d.isToday && { color: "#FFF", fontWeight: "700" },
+                    ]}
+                  >
+                    {d.date}
+                  </Text>
+                </View>
+              </View>
+            ))}
+          </View>
+        </Animated.View>
 
-        case "spacer":
-          return <View style={styles(theme).bottomSpacer} />;
-
-        default:
-          return null;
-      }
-    },
-    [
-      theme,
-      renderInsightItem,
-      renderArticleItem,
-      insightKeyExtractor,
-      articleKeyExtractor,
-    ]
-  );
-
-  // Section key extractor
-  const sectionKeyExtractor = useCallback((item: SectionItem) => item.id, []);
-
-  // Get item layout for better scroll performance
-  const getItemLayout = useCallback(
-    (_: unknown, index: number) => ({
-      length: responsive.hp(30), // Approximate item height
-      offset: responsive.hp(30) * index,
-      index,
-    }),
-    []
-  );
-
-  return (
-    <View style={styles(theme).container}>
-      <AnimatedFlatList
-        data={sections}
-        renderItem={renderSection}
-        keyExtractor={sectionKeyExtractor}
-        showsVerticalScrollIndicator={false}
-        onScroll={scrollHandler}
-        scrollEventThrottle={16}
-        initialNumToRender={5}
-        maxToRenderPerBatch={3}
-        windowSize={7}
-        removeClippedSubviews={Platform.OS === "android"}
-        contentContainerStyle={styles(theme).listContent}
-      />
+        {/* Bottom spacer for tab bar */}
+        <View style={{ height: 100 }} />
+      </ScrollView>
     </View>
   );
 }
 
 const styles = (theme: AppTheme) =>
   StyleSheet.create({
-    container: {
+    screen: {
       flex: 1,
       backgroundColor: theme.colors.background,
     },
-    listContent: {
-      paddingBottom: responsive.sp(100), // Space for floating tab bar
+    scrollContent: {
+      paddingHorizontal: 24,
     },
-    horizontalListContent: {
-      paddingHorizontal: responsive.sp(14),
+    header: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      paddingTop: 12,
+      paddingBottom: 8,
     },
-    mainArticleContainer: {
-      paddingHorizontal: responsive.sp(20),
-      marginTop: responsive.sp(8),
+    headerLeft: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 10,
     },
-    articleItem: {
-      marginRight: responsive.sp(12),
-      width: responsive.wp(60),
+    profileCircle: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      borderWidth: 2,
+      borderColor: theme.colors.primary + "30",
+      alignItems: "center",
+      justifyContent: "center",
     },
-    readTime: {
+    brandText: {
+      fontSize: 13,
       fontFamily: theme.fonts.body.family,
-      fontSize: responsive.fs(12),
+      fontWeight: "600",
+      letterSpacing: 2,
       color: theme.colors.textSecondary,
-      marginTop: responsive.sp(8),
-      marginLeft: responsive.sp(4),
+      textTransform: "uppercase",
     },
-    bottomSpacer: {
-      height: responsive.sp(20),
+    notificationBtn: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      backgroundColor: theme.colors.surface,
+      alignItems: "center",
+      justifyContent: "center",
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.05,
+      shadowRadius: 4,
+      elevation: 2,
+      borderWidth: 1,
+      borderColor: theme.colors.borderLight,
+    },
+    greetingSection: {
+      paddingVertical: 16,
+    },
+    greetingHello: {
+      fontSize: 44,
+      fontFamily: theme.fonts.title.family,
+      fontWeight: "700",
+      color: theme.colors.text,
+      lineHeight: 52,
+    },
+    greetingName: {
+      fontSize: 44,
+      fontFamily: theme.fonts.subtitle.family,
+      color: theme.colors.primary,
+      lineHeight: 52,
+    },
+    insightTextSection: {
+      paddingHorizontal: 16,
+      marginBottom: 24,
+    },
+    insightMainText: {
+      fontSize: 16,
+      fontFamily: theme.fonts.body.family,
+      color: theme.colors.textSecondary,
+      lineHeight: 26,
+      textAlign: "center",
+    },
+    quickActions: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 12,
+      marginBottom: 24,
+      justifyContent: "center",
+    },
+    logSymptomsBtn: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 8,
+      backgroundColor: theme.colors.primary + "15",
+      paddingHorizontal: 20,
+      paddingVertical: 12,
+      borderRadius: 999,
+    },
+    logSymptomsText: {
+      fontSize: 14,
+      fontFamily: theme.fonts.body.family,
+      fontWeight: "700",
+      color: theme.colors.primary,
+    },
+    moodBtn: {
+      width: 44,
+      height: 44,
+      borderRadius: 22,
+      backgroundColor: theme.colors.surface,
+      alignItems: "center",
+      justifyContent: "center",
+      borderWidth: 1,
+      borderColor: theme.colors.borderLight,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.05,
+      shadowRadius: 4,
+      elevation: 1,
+    },
+    quickAccessGrid: {
+      flexDirection: "row",
+      gap: 12,
+      marginBottom: 20,
+    },
+    quickAccessCard: {
+      flex: 1,
+      backgroundColor: theme.colors.surface,
+      padding: 20,
+      borderRadius: 16,
+      alignItems: "center",
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.05,
+      shadowRadius: 6,
+      elevation: 2,
+      borderWidth: 1,
+      borderColor: theme.colors.borderLight,
+    },
+    quickAccessIcon: {
+      width: 48,
+      height: 48,
+      borderRadius: 24,
+      backgroundColor: theme.colors.primary + "10",
+      alignItems: "center",
+      justifyContent: "center",
+      marginBottom: 10,
+    },
+    quickAccessLabel: {
+      fontSize: 13,
+      fontFamily: theme.fonts.body.family,
+      fontWeight: "700",
+      color: theme.colors.text,
+      marginBottom: 4,
+    },
+    quickAccessHint: {
+      fontSize: 10,
+      fontFamily: theme.fonts.body.family,
+      color: theme.colors.textMuted,
+    },
+    insightsSection: {
+      marginTop: 24,
+    },
+    sectionHeader: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      marginBottom: 16,
+    },
+    sectionTitle: {
+      fontSize: 17,
+      fontFamily: theme.fonts.body.family,
+      fontWeight: "700",
+      color: theme.colors.text,
+    },
+    seeAllText: {
+      fontSize: 13,
+      fontFamily: theme.fonts.body.family,
+      fontWeight: "600",
+      color: theme.colors.primary,
+    },
+    insightCard: {
+      width: 240,
+      borderRadius: 16,
+      backgroundColor: theme.colors.surface,
+      overflow: "hidden",
+      borderWidth: 1,
+      borderColor: theme.colors.borderLight,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.05,
+      shadowRadius: 6,
+      elevation: 2,
+    },
+    insightImagePlaceholder: {
+      height: 120,
+      backgroundColor: theme.colors.overlay,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    insightContent: {
+      padding: 14,
+    },
+    insightCategory: {
+      fontSize: 10,
+      fontFamily: theme.fonts.body.family,
+      fontWeight: "700",
+      color: theme.colors.primary,
+      letterSpacing: 2,
+      textTransform: "uppercase",
+      marginBottom: 4,
+    },
+    insightTitle: {
+      fontSize: 15,
+      fontFamily: theme.fonts.body.family,
+      fontWeight: "700",
+      color: theme.colors.text,
+      lineHeight: 20,
+      marginBottom: 4,
+    },
+    insightExcerpt: {
+      fontSize: 12,
+      fontFamily: theme.fonts.body.family,
+      color: theme.colors.textMuted,
+    },
+    calendarPreview: {
+      marginTop: 24,
+    },
+    weekRow: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+    },
+    weekDay: {
+      alignItems: "center",
+      gap: 8,
+    },
+    weekDayLabel: {
+      fontSize: 10,
+      fontFamily: theme.fonts.body.family,
+      color: theme.colors.textMuted,
+    },
+    weekDayCircle: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    weekDayCircleToday: {
+      backgroundColor: theme.colors.primary,
+      shadowColor: theme.colors.primary,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.3,
+      shadowRadius: 8,
+      elevation: 4,
+    },
+    weekDayDate: {
+      fontSize: 14,
+      fontFamily: theme.fonts.body.family,
+      fontWeight: "500",
+      color: theme.colors.text,
     },
   });

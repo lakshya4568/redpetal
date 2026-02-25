@@ -4,7 +4,14 @@
  */
 
 import React, { useCallback, useEffect, useMemo, useRef } from "react";
-import { FlatList, Platform, StyleSheet, Text, View } from "react-native";
+import {
+  FlatList,
+  Platform,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import Animated, {
   Extrapolation,
   interpolate,
@@ -30,9 +37,7 @@ interface DateItemProps {
   index: number;
 }
 
-const AnimatedTouchable = Animated.createAnimatedComponent(
-  require("react-native").TouchableOpacity
-);
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 const DateItem = React.memo(
   ({
@@ -81,12 +86,11 @@ const DateItem = React.memo(
     );
 
     return (
-      <AnimatedTouchable
+      <AnimatedPressable
         style={[animatedContainerStyle, containerStyle]}
         onPress={onSelect}
         onPressIn={handlePressIn}
         onPressOut={handlePressOut}
-        activeOpacity={1}
       >
         <Text
           style={[
@@ -113,7 +117,7 @@ const DateItem = React.memo(
             {date}
           </Text>
         </View>
-      </AnimatedTouchable>
+      </AnimatedPressable>
     );
   }
 );

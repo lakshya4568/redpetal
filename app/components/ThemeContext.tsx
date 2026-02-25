@@ -22,8 +22,8 @@ interface ThemeContextType {
 
 // Create the context
 const ThemeContext = createContext<ThemeContextType>({
-  theme: switchTheme("blushPink"),
-  palette: "blushPink",
+  theme: switchTheme("redPetal"),
+  palette: "redPetal",
   setPalette: () =>
     console.warn("setPalette called outside of a ThemeProvider"),
   resetPalette: () =>
@@ -36,7 +36,7 @@ export const useThemeContext = () => useContext(ThemeContext);
 // Provider component
 export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
   const [palette, setPalette] =
-    useState<keyof typeof colorPalettes>("blushPink");
+    useState<keyof typeof colorPalettes>("redPetal");
 
   // Load the saved theme from AsyncStorage
   useEffect(() => {
@@ -48,7 +48,7 @@ export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
         } else {
           // If no saved theme, use system preference
           const colorScheme = Appearance.getColorScheme();
-          setPalette(colorScheme === "dark" ? "roseRed" : "blushPink");
+          setPalette(colorScheme === "dark" ? "roseRed" : "redPetal");
         }
       } catch (error) {
         console.error("Failed to load theme from storage", error);
@@ -67,7 +67,7 @@ export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
 
   // Reset to the default theme
   const handleResetPalette = () => {
-    handleSetPalette("blushPink");
+    handleSetPalette("redPetal");
   };
 
   // Re-compute the theme only when the palette changes

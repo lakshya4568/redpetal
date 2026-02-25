@@ -14,8 +14,10 @@ import { createTables } from "./database";
 // Import routes
 import authRoutes from "./routes/auth";
 import communityRoutes from "./routes/community";
+import dailyLogRoutes from "./routes/daily-logs";
 import periodRoutes from "./routes/periods";
 import remedyRoutes from "./routes/remedies";
+import reportRoutes from "./routes/reports";
 import resourceRoutes from "./routes/resources";
 
 // Load env from project root .env (../.env) so running from /server works
@@ -35,7 +37,7 @@ app.use(
         imgSrc: ["'self'", "data:", "https:"],
       },
     },
-  })
+  }),
 );
 
 // Rate limiting
@@ -59,7 +61,7 @@ app.use(
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
-  })
+  }),
 );
 
 // Body parsing middleware
@@ -82,18 +84,22 @@ app.use("/api/periods", periodRoutes);
 app.use("/api/community", communityRoutes);
 app.use("/api/remedies", remedyRoutes);
 app.use("/api/resources", resourceRoutes);
+app.use("/api/daily-logs", dailyLogRoutes);
+app.use("/api/reports", reportRoutes);
 
 // Root endpoint
 app.get("/", (req, res) => {
   res.json({
     message: "RedPetal API is running!",
-    version: "1.0.0",
+    version: "2.0.0",
     endpoints: {
       auth: "/api/auth",
       periods: "/api/periods",
       community: "/api/community",
       remedies: "/api/remedies",
       resources: "/api/resources",
+      dailyLogs: "/api/daily-logs",
+      reports: "/api/reports",
     },
   });
 });
@@ -103,7 +109,7 @@ const errorHandler: ErrorRequestHandler = (
   err: any,
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ): void => {
   console.error("Error:", err);
 
