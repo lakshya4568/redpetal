@@ -1,6 +1,7 @@
 /**
  * DailyLogScreen — Daily symptom/mood/flow/skin logging
  * Matches the Stitch "Red Petal Daily Log" design
+ * Connected to POST /api/daily-logs
  */
 
 import { FontAwesome } from "@expo/vector-icons";
@@ -8,6 +9,8 @@ import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import React, { useState } from "react";
 import {
+    ActivityIndicator,
+    Alert,
     ScrollView,
     StatusBar,
     StyleSheet,
@@ -18,6 +21,8 @@ import {
 } from "react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { dailyLogsAPI } from "../../services/api";
+import { useAuth } from "../../services/auth";
 import FlowSelector, { FlowLevel } from "../components/FlowSelector";
 import MoodSelector, { MoodType } from "../components/MoodSelector";
 import SkinSelector, { SkinType } from "../components/SkinSelector";
@@ -26,11 +31,14 @@ import { AppTheme, useThemeContext } from "../components/ThemeContext";
 export default function DailyLogScreen() {
     const { theme } = useThemeContext();
     const insets = useSafeAreaInsets();
+    const { user } = useAuth();
+    const isGuest = user?.id === "guest";
 
     const [flow, setFlow] = useState<FlowLevel | null>(null);
     const [mood, setMood] = useState<MoodType | null>(null);
     const [skin, setSkin] = useState<SkinType[]>([]);
     const [notes, setNotes] = useState("");
+    const [saving, setSaving] = useState(false);
 
     const handleSkinToggle = (s: SkinType) => {
         setSkin((prev) =>
@@ -38,22 +46,65 @@ export default function DailyLogScreen() {
         );
     };
 
-    const handleSave = () => {
-        // TODO: POST to /api/daily-logs
-        console.log("Saving daily log:", { flow, mood, skin, notes });
+    const handleSave = async () => {
+        if (isGuest) {
+            Alert.alert(
+                "Sign in Required",
+                "Please sign in to save your daily log.",
+                [{ text: "OK" }]
+            );
+            return;
+        }
+
+        if (!flow && !mood && skin.length === 0 && !notes.trim()) {
+            Alert.alert(
+                "Nothing to save",
+                "Please log at least one item before saving."
+            );
+            return;
+        }
+
+        try {
+            setSaving(true);
+            await dailyLogsAPI.create({
+                date: new Date().toISOString().split("T")[0],
+                flow: flow || null,
+                mood: mood || null,
+                skin: skin.length > 0 ? skin : [],
+                notes: notes.trim() || null,
+            });
+            Alert.alert("Saved! ✨", "Your daily log has been recorded.", [
+                { text: "OK", onPress: () => router.back() },
+            ]);
+        } catch (error: any) {
+            console.error("Error saving daily log:", error);
+            Alert.alert(
+                "Save Failed",
+                error?.message || "Could not save your log. Please try again."
+            );
+        } finally {
+            setSaving(false);
+        }
     };
 
     const today = new Date();
-    const dayName = today.toLocaleDateString("en-US", { weekday: "long" }).toUpperCase();
-    const dateStr = today.toLocaleDateString("en-US", {
-        month: "long",
-        day: "numeric",
-        year: "numeric",
-    }).toUpperCase();
+    const dayName = today
+        .toLocaleDateString("en-US", { weekday: "long" })
+        .toUpperCase();
+    const dateStr = today
+        .toLocaleDateString("en-US", {
+            month: "long",
+            day: "numeric",
+            year: "numeric",
+        })
+        .toUpperCase();
 
     return (
         <View style={[styles(theme).screen, { paddingTop: insets.top }]}>
-            <StatusBar barStyle="dark-content" backgroundColor={theme.colors.background} />
+            <StatusBar
+                barStyle="dark-content"
+                backgroundColor={theme.colors.background}
+            />
 
             {/* Header */}
             <View style={styles(theme).header}>
@@ -61,7 +112,11 @@ export default function DailyLogScreen() {
                     onPress={() => router.back()}
                     style={styles(theme).headerBtn}
                 >
-                    <FontAwesome name="chevron-left" size={16} color={theme.colors.text} />
+                    <FontAwesome
+                        name="chevron-left"
+                        size={16}
+                        color={theme.colors.text}
+                    />
                 </TouchableOpacity>
                 <View style={styles(theme).headerCenter}>
                     <Text style={styles(theme).headerDay}>{dayName}</Text>
@@ -122,16 +177,40 @@ export default function DailyLogScreen() {
             </ScrollView>
 
             {/* Sticky Save Button */}
-            <View style={[styles(theme).saveButtonContainer, { paddingBottom: insets.bottom + 90 }]}>
-                <TouchableOpacity onPress={handleSave} activeOpacity={0.8}>
+            <View
+                style={[
+                    styles(theme).saveButtonContainer,
+                    { paddingBottom: insets.bottom + 90 },
+                ]}
+            >
+                <TouchableOpacity
+                    onPress={handleSave}
+                    activeOpacity={0.8}
+                    disabled={saving}
+                >
                     <LinearGradient
                         colors={[theme.colors.primary, theme.colors.accent]}
                         start={{ x: 0, y: 0 }}
                         end={{ x: 1, y: 0 }}
-                        style={styles(theme).saveButton}
+                        style={[
+                            styles(theme).saveButton,
+                            saving && { opacity: 0.7 },
+                        ]}
                     >
-                        <Text style={styles(theme).saveButtonText}>Save Daily Log</Text>
-                        <FontAwesome name="heart" size={16} color="#FFF" />
+                        {saving ? (
+                            <ActivityIndicator size="small" color="#FFF" />
+                        ) : (
+                            <>
+                                <Text style={styles(theme).saveButtonText}>
+                                    Save Daily Log
+                                </Text>
+                                <FontAwesome
+                                    name="heart"
+                                    size={16}
+                                    color="#FFF"
+                                />
+                            </>
+                        )}
                     </LinearGradient>
                 </TouchableOpacity>
             </View>

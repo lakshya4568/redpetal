@@ -1,12 +1,14 @@
 /**
  * MonthlyReportScreen — Monthly cycle/symptom report
  * Matches the Stitch "Red Petal Monthly Report" design
+ * Connected to GET /api/reports/monthly
  */
 
 import { FontAwesome } from "@expo/vector-icons";
 import { router } from "expo-router";
-import React, { useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
+    ActivityIndicator,
     ScrollView,
     StatusBar,
     StyleSheet,
@@ -16,28 +18,63 @@ import {
 } from "react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import Svg, { Defs, Path, Stop, LinearGradient as SvgGrad } from "react-native-svg";
+import Svg, {
+    Defs,
+    Path,
+    Stop,
+    LinearGradient as SvgGrad,
+} from "react-native-svg";
+import { reportsAPI } from "../../services/api";
+import { useAuth } from "../../services/auth";
 import SymptomBar from "../components/SymptomBar";
 import { AppTheme, useThemeContext } from "../components/ThemeContext";
 
-// Mock data
-const SUMMARY = {
-    cycleLength: "28 Days",
-    avgFlow: "Medium",
-    periodDuration: "5 Days",
-};
+interface ReportData {
+    month: string;
+    cycle: {
+        cycleLength: number;
+        periodLength: number;
+        startDate: string;
+        endDate: string;
+    } | null;
+    symptoms: { type: string; count: number }[];
+    moods: { mood: string; count: number }[];
+    flowDistribution: Record<string, number>;
+    totalLogDays: number;
+    dailyLogs: any[];
+}
 
-const SYMPTOMS = [
-    { label: "Cramps", count: 12, maxCount: 15 },
-    { label: "Bloating", count: 8, maxCount: 15 },
-    { label: "Headache", count: 3, maxCount: 15 },
-];
-
-function EnergyChart({ theme }: { theme: AppTheme }) {
+function EnergyChart({
+    theme,
+    dailyLogs,
+}: {
+    theme: AppTheme;
+    dailyLogs: any[];
+}) {
     const width = 300;
     const height = 120;
-    // Simple area chart path
-    const chartPath = `M0 ${height * 0.8} L${width * 0.1} ${height * 0.7} L${width * 0.2} ${height * 0.4} L${width * 0.3} ${height * 0.2} L${width * 0.4} ${height * 0.45} L${width * 0.5} ${height * 0.6} L${width * 0.6} ${height * 0.3} L${width * 0.7} ${height * 0.1} L${width * 0.8} ${height * 0.5} L${width * 0.9} ${height * 0.85} L${width} ${height * 0.9}`;
+
+    // Build chart from daily logs energy (if available), else fallback to a smooth curve
+    let chartPath: string;
+    if (dailyLogs && dailyLogs.length >= 3) {
+        const points = dailyLogs.map((log: any, i: number) => {
+            // Map mood to energy: happy=high, sad=low, etc
+            const moodEnergy: Record<string, number> = {
+                happy: 0.15,
+                calm: 0.3,
+                neutral: 0.5,
+                anxious: 0.6,
+                sad: 0.75,
+                angry: 0.85,
+            };
+            const y = (moodEnergy[log.mood] || 0.5) * height;
+            const x = (i / (dailyLogs.length - 1)) * width;
+            return `${x} ${y}`;
+        });
+        chartPath = `M${points.join(" L")}`;
+    } else {
+        chartPath = `M0 ${height * 0.8} L${width * 0.1} ${height * 0.7} L${width * 0.2} ${height * 0.4} L${width * 0.3} ${height * 0.2} L${width * 0.4} ${height * 0.45} L${width * 0.5} ${height * 0.6} L${width * 0.6} ${height * 0.3} L${width * 0.7} ${height * 0.1} L${width * 0.8} ${height * 0.5} L${width * 0.9} ${height * 0.85} L${width} ${height * 0.9}`;
+    }
     const areaPath = `${chartPath} L${width} ${height} L0 ${height} Z`;
 
     return (
@@ -45,12 +82,25 @@ function EnergyChart({ theme }: { theme: AppTheme }) {
             <Svg width={width} height={height}>
                 <Defs>
                     <SvgGrad id="areaGrad" x1="0" y1="0" x2="0" y2="1">
-                        <Stop offset="0" stopColor={theme.colors.primary} stopOpacity="0.2" />
-                        <Stop offset="1" stopColor={theme.colors.primary} stopOpacity="0" />
+                        <Stop
+                            offset="0"
+                            stopColor={theme.colors.primary}
+                            stopOpacity="0.2"
+                        />
+                        <Stop
+                            offset="1"
+                            stopColor={theme.colors.primary}
+                            stopOpacity="0"
+                        />
                     </SvgGrad>
                 </Defs>
                 <Path d={areaPath} fill="url(#areaGrad)" />
-                <Path d={chartPath} fill="none" stroke={theme.colors.primary} strokeWidth="2.5" />
+                <Path
+                    d={chartPath}
+                    fill="none"
+                    stroke={theme.colors.primary}
+                    strokeWidth="2.5"
+                />
             </Svg>
             <View style={chartLabelStyles(theme).row}>
                 <Text style={chartLabelStyles(theme).label}>Day 1</Text>
@@ -83,11 +133,121 @@ const chartLabelStyles = (theme: AppTheme) =>
 export default function MonthlyReportScreen() {
     const { theme } = useThemeContext();
     const insets = useSafeAreaInsets();
-    const [selectedMonth] = useState("October 2023");
+    const { user } = useAuth();
+    const isGuest = user?.id === "guest";
+
+    const [loading, setLoading] = useState(true);
+    const [report, setReport] = useState<ReportData | null>(null);
+
+    // Month navigation state
+    const [selectedYear, setSelectedYear] = useState(
+        new Date().getFullYear()
+    );
+    const [selectedMonth, setSelectedMonth] = useState(
+        new Date().getMonth() + 1
+    );
+
+    const monthName = new Date(selectedYear, selectedMonth - 1).toLocaleDateString(
+        "en-US",
+        { month: "long", year: "numeric" }
+    );
+
+    const loadReport = useCallback(async () => {
+        if (isGuest) {
+            setLoading(false);
+            return;
+        }
+        try {
+            setLoading(true);
+            const data = await reportsAPI.getMonthly(selectedYear, selectedMonth);
+            setReport(data);
+        } catch (error) {
+            console.error("Error loading report:", error);
+            setReport(null);
+        } finally {
+            setLoading(false);
+        }
+    }, [selectedYear, selectedMonth, isGuest]);
+
+    useEffect(() => {
+        loadReport();
+    }, [loadReport]);
+
+    const navigateMonth = (direction: -1 | 1) => {
+        let newMonth = selectedMonth + direction;
+        let newYear = selectedYear;
+        if (newMonth < 1) {
+            newMonth = 12;
+            newYear--;
+        } else if (newMonth > 12) {
+            newMonth = 1;
+            newYear++;
+        }
+        setSelectedMonth(newMonth);
+        setSelectedYear(newYear);
+    };
+
+    // Computed summary values
+    const cycleLength = report?.cycle?.cycleLength
+        ? `${report.cycle.cycleLength} Days`
+        : "—";
+    const periodDuration = report?.cycle?.periodLength
+        ? `${report.cycle.periodLength} Days`
+        : "—";
+
+    // Determine avg flow from flow distribution
+    let avgFlow = "—";
+    if (report?.flowDistribution) {
+        const entries = Object.entries(report.flowDistribution);
+        if (entries.length > 0) {
+            entries.sort((a, b) => b[1] - a[1]);
+            avgFlow =
+                entries[0][0].charAt(0).toUpperCase() + entries[0][0].slice(1);
+        }
+    }
+
+    // Symptoms for bars
+    const maxSymptomCount =
+        report?.symptoms && report.symptoms.length > 0
+            ? Math.max(...report.symptoms.map((s) => s.count))
+            : 15;
+    const symptomBars = (report?.symptoms || []).slice(0, 5);
+
+    if (isGuest) {
+        return (
+            <View
+                style={[
+                    styles(theme).screen,
+                    {
+                        paddingTop: insets.top,
+                        justifyContent: "center",
+                        alignItems: "center",
+                    },
+                ]}
+            >
+                <Text style={styles(theme).title}>Monthly Report</Text>
+                <Text
+                    style={{
+                        fontSize: 15,
+                        color: theme.colors.textSecondary,
+                        textAlign: "center",
+                        paddingHorizontal: 32,
+                        marginTop: 16,
+                        fontFamily: theme.fonts.body.family,
+                    }}
+                >
+                    Sign in to view your monthly cycle report and insights.
+                </Text>
+            </View>
+        );
+    }
 
     return (
         <View style={[styles(theme).screen, { paddingTop: insets.top }]}>
-            <StatusBar barStyle="dark-content" backgroundColor={theme.colors.background} />
+            <StatusBar
+                barStyle="dark-content"
+                backgroundColor={theme.colors.background}
+            />
 
             {/* Header */}
             <View style={styles(theme).header}>
@@ -95,113 +255,294 @@ export default function MonthlyReportScreen() {
                     onPress={() => router.back()}
                     style={styles(theme).headerBtn}
                 >
-                    <FontAwesome name="chevron-left" size={16} color={theme.colors.primary} />
+                    <FontAwesome
+                        name="chevron-left"
+                        size={16}
+                        color={theme.colors.primary}
+                    />
                 </TouchableOpacity>
                 <Text style={styles(theme).headerTitle}>Red Petal</Text>
                 <TouchableOpacity style={styles(theme).headerBtn}>
-                    <FontAwesome name="share-alt" size={18} color={theme.colors.primary} />
+                    <FontAwesome
+                        name="share-alt"
+                        size={18}
+                        color={theme.colors.primary}
+                    />
                 </TouchableOpacity>
             </View>
 
-            <ScrollView
-                showsVerticalScrollIndicator={false}
-                contentContainerStyle={styles(theme).scrollContent}
-            >
-                {/* Title */}
-                <Animated.View
-                    entering={FadeInDown.duration(500)}
-                    style={styles(theme).titleSection}
+            {loading ? (
+                <View
+                    style={{
+                        flex: 1,
+                        justifyContent: "center",
+                        alignItems: "center",
+                    }}
                 >
-                    <Text style={styles(theme).title}>Your Monthly Reflection</Text>
-                    <View style={styles(theme).monthChip}>
-                        <FontAwesome
-                            name="calendar"
-                            size={12}
-                            color={theme.colors.primary}
-                        />
-                        <Text style={styles(theme).monthText}>{selectedMonth}</Text>
-                    </View>
-                </Animated.View>
+                    <ActivityIndicator
+                        size="large"
+                        color={theme.colors.primary}
+                    />
+                    <Text
+                        style={{
+                            marginTop: 16,
+                            color: theme.colors.textSecondary,
+                            fontFamily: theme.fonts.body.family,
+                        }}
+                    >
+                        Loading report...
+                    </Text>
+                </View>
+            ) : (
+                <ScrollView
+                    showsVerticalScrollIndicator={false}
+                    contentContainerStyle={styles(theme).scrollContent}
+                >
+                    {/* Title */}
+                    <Animated.View
+                        entering={FadeInDown.duration(500)}
+                        style={styles(theme).titleSection}
+                    >
+                        <Text style={styles(theme).title}>
+                            Your Monthly Reflection
+                        </Text>
+                        <View style={styles(theme).monthNav}>
+                            <TouchableOpacity
+                                onPress={() => navigateMonth(-1)}
+                                style={styles(theme).monthNavBtn}
+                            >
+                                <FontAwesome
+                                    name="chevron-left"
+                                    size={12}
+                                    color={theme.colors.primary}
+                                />
+                            </TouchableOpacity>
+                            <View style={styles(theme).monthChip}>
+                                <FontAwesome
+                                    name="calendar"
+                                    size={12}
+                                    color={theme.colors.primary}
+                                />
+                                <Text style={styles(theme).monthText}>
+                                    {monthName}
+                                </Text>
+                            </View>
+                            <TouchableOpacity
+                                onPress={() => navigateMonth(1)}
+                                style={styles(theme).monthNavBtn}
+                            >
+                                <FontAwesome
+                                    name="chevron-right"
+                                    size={12}
+                                    color={theme.colors.primary}
+                                />
+                            </TouchableOpacity>
+                        </View>
+                    </Animated.View>
 
-                {/* Summary Cards */}
-                <Animated.View
-                    entering={FadeInDown.delay(100).duration(500)}
-                    style={styles(theme).summaryGrid}
-                >
-                    <View style={styles(theme).summaryCard}>
-                        <Text style={styles(theme).summaryLabel}>CYCLE LENGTH</Text>
-                        <Text style={styles(theme).summaryValue}>{SUMMARY.cycleLength}</Text>
-                    </View>
-                    <View style={styles(theme).summaryCard}>
-                        <Text style={styles(theme).summaryLabel}>AVG. FLOW</Text>
-                        <Text style={styles(theme).summaryValue}>{SUMMARY.avgFlow}</Text>
-                    </View>
-                    <View style={[styles(theme).summaryCard, styles(theme).summaryCardFull]}>
-                        <View>
-                            <Text style={styles(theme).summaryLabel}>PERIOD DURATION</Text>
+                    {/* Summary Cards */}
+                    <Animated.View
+                        entering={FadeInDown.delay(100).duration(500)}
+                        style={styles(theme).summaryGrid}
+                    >
+                        <View style={styles(theme).summaryCard}>
+                            <Text style={styles(theme).summaryLabel}>
+                                CYCLE LENGTH
+                            </Text>
                             <Text style={styles(theme).summaryValue}>
-                                {SUMMARY.periodDuration}
+                                {cycleLength}
                             </Text>
                         </View>
-                        <FontAwesome
-                            name="tint"
-                            size={32}
-                            color={theme.colors.primary + "40"}
-                        />
-                    </View>
-                </Animated.View>
-
-                {/* Energy Chart */}
-                <Animated.View
-                    entering={FadeInDown.delay(200).duration(500)}
-                    style={styles(theme).chartSection}
-                >
-                    <View style={styles(theme).chartHeader}>
-                        <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-                            <FontAwesome name="bolt" size={16} color={theme.colors.primary} />
-                            <Text style={styles(theme).chartTitle}>Energy Levels</Text>
+                        <View style={styles(theme).summaryCard}>
+                            <Text style={styles(theme).summaryLabel}>
+                                AVG. FLOW
+                            </Text>
+                            <Text style={styles(theme).summaryValue}>
+                                {avgFlow}
+                            </Text>
                         </View>
-                        <Text style={styles(theme).chartSubtitle}>Past 30 Days</Text>
-                    </View>
-                    <EnergyChart theme={theme} />
-                </Animated.View>
+                        <View
+                            style={[
+                                styles(theme).summaryCard,
+                                styles(theme).summaryCardFull,
+                            ]}
+                        >
+                            <View>
+                                <Text style={styles(theme).summaryLabel}>
+                                    PERIOD DURATION
+                                </Text>
+                                <Text style={styles(theme).summaryValue}>
+                                    {periodDuration}
+                                </Text>
+                            </View>
+                            <FontAwesome
+                                name="tint"
+                                size={32}
+                                color={theme.colors.primary + "40"}
+                            />
+                        </View>
+                    </Animated.View>
 
-                {/* Symptom Frequency */}
-                <Animated.View
-                    entering={FadeInDown.delay(300).duration(500)}
-                    style={styles(theme).chartSection}
-                >
-                    <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 20 }}>
-                        <FontAwesome name="bar-chart" size={16} color={theme.colors.primary} />
-                        <Text style={styles(theme).chartTitle}>Symptom Frequency</Text>
-                    </View>
-                    {SYMPTOMS.map((s) => (
-                        <SymptomBar
-                            key={s.label}
-                            label={s.label}
-                            count={s.count}
-                            maxCount={s.maxCount}
+                    {/* Logged Days Summary */}
+                    {report && report.totalLogDays > 0 && (
+                        <Animated.View
+                            entering={FadeInDown.delay(150).duration(500)}
+                            style={styles(theme).loggedDaysCard}
+                        >
+                            <FontAwesome
+                                name="check-circle"
+                                size={18}
+                                color={theme.colors.primary}
+                            />
+                            <Text style={styles(theme).loggedDaysText}>
+                                You logged {report.totalLogDays} days this month
+                            </Text>
+                        </Animated.View>
+                    )}
+
+                    {/* Energy Chart */}
+                    <Animated.View
+                        entering={FadeInDown.delay(200).duration(500)}
+                        style={styles(theme).chartSection}
+                    >
+                        <View style={styles(theme).chartHeader}>
+                            <View
+                                style={{
+                                    flexDirection: "row",
+                                    alignItems: "center",
+                                    gap: 8,
+                                }}
+                            >
+                                <FontAwesome
+                                    name="bolt"
+                                    size={16}
+                                    color={theme.colors.primary}
+                                />
+                                <Text style={styles(theme).chartTitle}>
+                                    Energy Levels
+                                </Text>
+                            </View>
+                            <Text style={styles(theme).chartSubtitle}>
+                                {monthName}
+                            </Text>
+                        </View>
+                        <EnergyChart
+                            theme={theme}
+                            dailyLogs={report?.dailyLogs || []}
                         />
-                    ))}
-                </Animated.View>
+                    </Animated.View>
 
-                {/* Share CTA */}
-                <Animated.View entering={FadeInDown.delay(400).duration(500)}>
-                    <TouchableOpacity style={styles(theme).shareBtn} activeOpacity={0.8}>
-                        <FontAwesome name="medkit" size={18} color="#FFF" />
-                        <Text style={styles(theme).shareBtnText}>
-                            Share Report with Doctor
-                        </Text>
-                    </TouchableOpacity>
-                    <Text style={styles(theme).aiInsight}>
-                        "Your energy peaked during Week 2, consistent with your previous
-                        cycle. This is a great time for high-intensity movement."
-                    </Text>
-                </Animated.View>
+                    {/* Symptom Frequency */}
+                    <Animated.View
+                        entering={FadeInDown.delay(300).duration(500)}
+                        style={styles(theme).chartSection}
+                    >
+                        <View
+                            style={{
+                                flexDirection: "row",
+                                alignItems: "center",
+                                gap: 8,
+                                marginBottom: 20,
+                            }}
+                        >
+                            <FontAwesome
+                                name="bar-chart"
+                                size={16}
+                                color={theme.colors.primary}
+                            />
+                            <Text style={styles(theme).chartTitle}>
+                                Symptom Frequency
+                            </Text>
+                        </View>
+                        {symptomBars.length > 0 ? (
+                            symptomBars.map((s) => (
+                                <SymptomBar
+                                    key={s.type}
+                                    label={
+                                        s.type.charAt(0).toUpperCase() +
+                                        s.type.slice(1)
+                                    }
+                                    count={s.count}
+                                    maxCount={maxSymptomCount}
+                                />
+                            ))
+                        ) : (
+                            <Text
+                                style={{
+                                    fontSize: 13,
+                                    color: theme.colors.textMuted,
+                                    textAlign: "center",
+                                    paddingVertical: 16,
+                                    fontFamily: theme.fonts.body.family,
+                                }}
+                            >
+                                No symptoms logged this month
+                            </Text>
+                        )}
+                    </Animated.View>
 
-                {/* Bottom spacer */}
-                <View style={{ height: 120 }} />
-            </ScrollView>
+                    {/* Mood Distribution */}
+                    {report?.moods && report.moods.length > 0 && (
+                        <Animated.View
+                            entering={FadeInDown.delay(350).duration(500)}
+                            style={styles(theme).chartSection}
+                        >
+                            <View
+                                style={{
+                                    flexDirection: "row",
+                                    alignItems: "center",
+                                    gap: 8,
+                                    marginBottom: 20,
+                                }}
+                            >
+                                <FontAwesome
+                                    name="smile-o"
+                                    size={16}
+                                    color={theme.colors.primary}
+                                />
+                                <Text style={styles(theme).chartTitle}>
+                                    Mood Distribution
+                                </Text>
+                            </View>
+                            {report.moods.map((m) => (
+                                <SymptomBar
+                                    key={m.mood}
+                                    label={
+                                        m.mood.charAt(0).toUpperCase() +
+                                        m.mood.slice(1)
+                                    }
+                                    count={m.count}
+                                    maxCount={Math.max(
+                                        ...report.moods.map((x) => x.count)
+                                    )}
+                                />
+                            ))}
+                        </Animated.View>
+                    )}
+
+                    {/* Share CTA */}
+                    <Animated.View
+                        entering={FadeInDown.delay(400).duration(500)}
+                    >
+                        <TouchableOpacity
+                            style={styles(theme).shareBtn}
+                            activeOpacity={0.8}
+                        >
+                            <FontAwesome
+                                name="medkit"
+                                size={18}
+                                color="#FFF"
+                            />
+                            <Text style={styles(theme).shareBtnText}>
+                                Share Report with Doctor
+                            </Text>
+                        </TouchableOpacity>
+                    </Animated.View>
+
+                    {/* Bottom spacer */}
+                    <View style={{ height: 120 }} />
+                </ScrollView>
+            )}
         </View>
     );
 }
@@ -248,6 +589,19 @@ const styles = (theme: AppTheme) =>
             color: theme.colors.text,
             marginBottom: 16,
             textAlign: "center",
+        },
+        monthNav: {
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 12,
+        },
+        monthNavBtn: {
+            width: 32,
+            height: 32,
+            borderRadius: 16,
+            backgroundColor: theme.colors.primary + "10",
+            alignItems: "center",
+            justifyContent: "center",
         },
         monthChip: {
             flexDirection: "row",
@@ -307,6 +661,22 @@ const styles = (theme: AppTheme) =>
             fontWeight: "700",
             color: theme.colors.primary,
         },
+        loggedDaysCard: {
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 10,
+            backgroundColor: theme.colors.primary + "08",
+            paddingHorizontal: 16,
+            paddingVertical: 12,
+            borderRadius: 12,
+            marginBottom: 20,
+        },
+        loggedDaysText: {
+            fontSize: 13,
+            fontFamily: theme.fonts.body.family,
+            fontWeight: "600",
+            color: theme.colors.text,
+        },
         chartSection: {
             backgroundColor: theme.colors.surface,
             padding: 20,
@@ -357,14 +727,5 @@ const styles = (theme: AppTheme) =>
             fontSize: 15,
             fontFamily: theme.fonts.body.family,
             fontWeight: "700",
-        },
-        aiInsight: {
-            fontSize: 13,
-            fontFamily: theme.fonts.subtitle.family,
-            color: theme.colors.textMuted,
-            lineHeight: 22,
-            textAlign: "center",
-            paddingHorizontal: 24,
-            marginBottom: 16,
         },
     });

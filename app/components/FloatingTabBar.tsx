@@ -6,6 +6,7 @@
 
 import { FontAwesome } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
+import { router } from "expo-router";
 import React from "react";
 import {
   Dimensions,
@@ -94,7 +95,7 @@ export default function FloatingTabBar({
                 <React.Fragment key={tab.name}>
                   {/* Center FAB */}
                   <Pressable
-                    onPress={() => navigation.navigate("features/log" as any)}
+                    onPress={() => router.push("/features/log")}
                     style={styles(theme).centerFab}
                   >
                     <FontAwesome name="plus" size={22} color="#FFFFFF" />

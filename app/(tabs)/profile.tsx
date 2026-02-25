@@ -115,7 +115,7 @@ const SettingsItem = React.memo(
 SettingsItem.displayName = "SettingsItem";
 
 export default function ProfileScreen() {
-  const { logout } = useAuth();
+  const { user, logout } = useAuth();
   const { theme } = useThemeContext();
 
   // Animation values
@@ -175,8 +175,8 @@ export default function ProfileScreen() {
             />
           </View>
         </Animated.View>
-        <Text style={styles(theme).userName}>RedPetal User</Text>
-        <Text style={styles(theme).userEmail}>user@redpetal.app</Text>
+        <Text style={styles(theme).userName}>{user?.first_name && user?.last_name ? `${user.first_name} ${user.last_name}` : user?.username || "RedPetal User"}</Text>
+        <Text style={styles(theme).userEmail}>{user?.email || "user@redpetal.app"}</Text>
       </Animated.View>
 
       {/* Account Section */}
@@ -187,7 +187,7 @@ export default function ProfileScreen() {
             icon="user"
             title="Personal Information"
             subtitle="Manage your profile details"
-            onPress={() => {}}
+            onPress={() => { }}
             theme={theme}
             index={0}
           />
@@ -195,7 +195,7 @@ export default function ProfileScreen() {
             icon="lock"
             title="Privacy & Security"
             subtitle="Password and data settings"
-            onPress={() => {}}
+            onPress={() => { }}
             theme={theme}
             index={1}
           />
@@ -203,7 +203,7 @@ export default function ProfileScreen() {
             icon="bell"
             title="Notifications"
             subtitle="Reminders and alerts"
-            onPress={() => {}}
+            onPress={() => { }}
             theme={theme}
             index={2}
             showBorder={false}
@@ -228,7 +228,7 @@ export default function ProfileScreen() {
             icon="globe"
             title="Language"
             subtitle="English"
-            onPress={() => {}}
+            onPress={() => { }}
             theme={theme}
             index={4}
             iconColor={theme.colors.info}
@@ -237,7 +237,7 @@ export default function ProfileScreen() {
             icon="calendar"
             title="Cycle Settings"
             subtitle="Customize your tracking"
-            onPress={() => {}}
+            onPress={() => { }}
             theme={theme}
             index={5}
             showBorder={false}
@@ -253,14 +253,14 @@ export default function ProfileScreen() {
           <SettingsItem
             icon="question-circle"
             title="Help Center"
-            onPress={() => {}}
+            onPress={() => { }}
             theme={theme}
             index={6}
           />
           <SettingsItem
             icon="envelope"
             title="Contact Us"
-            onPress={() => {}}
+            onPress={() => { }}
             theme={theme}
             index={7}
           />
@@ -268,7 +268,7 @@ export default function ProfileScreen() {
             icon="info-circle"
             title="About RedPetal"
             subtitle="Version 2.0.0"
-            onPress={() => {}}
+            onPress={() => { }}
             theme={theme}
             index={8}
             showBorder={false}

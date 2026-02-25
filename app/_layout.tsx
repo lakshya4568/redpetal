@@ -20,6 +20,7 @@ export default function RootLayout() {
                   <Stack screenOptions={{ headerShown: false }}>
                     <Stack.Screen name="index" />
                     <Stack.Screen name="(tabs)" />
+                    <Stack.Screen name="features" />
                     <Stack.Screen name="auth/login" />
                     <Stack.Screen name="auth/signup" />
                   </Stack>

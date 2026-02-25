@@ -16,7 +16,7 @@ import { useThemeContext } from "./ThemeContext";
 interface LogPeriodModalProps {
   visible: boolean;
   onClose: () => void;
-  selectedDate: string | null;
+  selectedDate?: string | null;
   onPeriodLogged?: () => void;
 }
 
@@ -25,9 +25,10 @@ const { width } = Dimensions.get("window");
 export default function LogPeriodModal({
   visible,
   onClose,
-  selectedDate,
+  selectedDate: selectedDateProp,
   onPeriodLogged,
 }: LogPeriodModalProps) {
+  const selectedDate = selectedDateProp ?? new Date().toISOString().split("T")[0];
   const { theme } = useThemeContext();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -334,7 +335,7 @@ export default function LogPeriodModal({
                     style={[
                       styles.symptomChip,
                       formData.symptoms.includes(symptom) &&
-                        styles.symptomChipSelected,
+                      styles.symptomChipSelected,
                     ]}
                     onPress={() => toggleSymptom(symptom)}
                   >
@@ -342,7 +343,7 @@ export default function LogPeriodModal({
                       style={[
                         styles.symptomText,
                         formData.symptoms.includes(symptom) &&
-                          styles.symptomTextSelected,
+                        styles.symptomTextSelected,
                       ]}
                     >
                       {symptom}

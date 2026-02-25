@@ -5,7 +5,8 @@
  */
 
 import { FontAwesome } from "@expo/vector-icons";
-import React, { useCallback } from "react";
+import { router, useFocusEffect } from "expo-router";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   FlatList,
   ScrollView,
@@ -20,11 +21,13 @@ import Animated, {
   FadeInRight,
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { periodsAPI } from "../../services/api";
+import { useAuth } from "../../services/auth";
 import PetalTracker from "../components/PetalTracker";
 import { AppTheme, useThemeContext } from "../components/ThemeContext";
 import TodayTip from "../components/TodayTip";
 
-// Mock data
+// Static insights (could be backend-driven in future)
 const INSIGHTS = [
   {
     id: "1",
@@ -49,18 +52,127 @@ const INSIGHTS = [
   },
 ];
 
-const WEEK_DAYS = [
-  { day: "Mon", date: 13 },
-  { day: "Tue", date: 14 },
-  { day: "Wed", date: 15 },
-  { day: "Thu", date: 16, isToday: true },
-  { day: "Fri", date: 17 },
-  { day: "Sat", date: 18 },
-];
+// Helper to compute cycle info from predictions/history
+function computeCycleInfo(predictions: any) {
+  if (!predictions) {
+    return { cycleDay: 0, phase: "Unknown", fertilityLevel: "Unknown" };
+  }
+
+  const avgCycleLength = predictions.avg_cycle_length || 28;
+  const nextPeriod = predictions.next_period_start;
+
+  if (!nextPeriod) {
+    return { cycleDay: 0, phase: "Unknown", fertilityLevel: "Unknown" };
+  }
+
+  const today = new Date();
+  const nextStart = new Date(nextPeriod);
+  const daysUntilNext = Math.ceil(
+    (nextStart.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
+  );
+  const cycleDay = Math.max(1, avgCycleLength - daysUntilNext);
+
+  // Determine phase
+  let phase = "Menstrual";
+  let fertilityLevel = "Low";
+  const periodLength = predictions.avg_period_length || 5;
+
+  if (cycleDay <= periodLength) {
+    phase = "Menstrual";
+    fertilityLevel = "Low";
+  } else if (cycleDay <= 13) {
+    phase = "Follicular";
+    fertilityLevel = cycleDay >= 10 ? "High" : "Medium";
+  } else if (cycleDay <= 16) {
+    phase = "Ovulation";
+    fertilityLevel = "Peak";
+  } else {
+    phase = "Luteal";
+    fertilityLevel = "Low";
+  }
+
+  return { cycleDay, phase, fertilityLevel };
+}
 
 export default function HomeScreen() {
   const { theme } = useThemeContext();
   const insets = useSafeAreaInsets();
+  const { user } = useAuth();
+  const isGuest = user?.id === "guest";
+
+  // State for cycle data
+  const [cycleInfo, setCycleInfo] = useState({
+    cycleDay: 0,
+    phase: "Loading...",
+    fertilityLevel: "...",
+  });
+  const [weekDays, setWeekDays] = useState<
+    { day: string; date: number; isToday?: boolean }[]
+  >([]);
+
+  // Build week days from current date
+  useEffect(() => {
+    const today = new Date();
+    const dayOfWeek = today.getDay(); // 0=Sun, 1=Mon, ...
+    const monday = new Date(today);
+    monday.setDate(today.getDate() - ((dayOfWeek + 6) % 7));
+
+    const days = [];
+    const dayNames = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+    for (let i = 0; i < 6; i++) {
+      const d = new Date(monday);
+      d.setDate(monday.getDate() + i);
+      days.push({
+        day: dayNames[i],
+        date: d.getDate(),
+        isToday: d.toDateString() === today.toDateString(),
+      });
+    }
+    setWeekDays(days);
+  }, []);
+
+  // Fetch cycle predictions
+  useFocusEffect(
+    useCallback(() => {
+      if (isGuest) {
+        setCycleInfo({ cycleDay: 0, phase: "Sign in to track", fertilityLevel: "—" });
+        return;
+      }
+      loadCycleData();
+    }, [isGuest])
+  );
+
+  const loadCycleData = async () => {
+    try {
+      const predictionsResponse = await periodsAPI.getPredictions();
+      const info = computeCycleInfo(predictionsResponse.predictions);
+      setCycleInfo(info);
+    } catch (error) {
+      console.error("Error loading cycle data:", error);
+      setCycleInfo({ cycleDay: 0, phase: "No data yet", fertilityLevel: "—" });
+    }
+  };
+
+  const displayName = user?.first_name || user?.username || "there";
+  const currentMonthYear = new Date().toLocaleDateString("en-US", {
+    month: "long",
+    year: "numeric",
+  });
+
+  // Phase-based insight text
+  const insightText =
+    cycleInfo.phase === "Loading..." || cycleInfo.phase === "No data yet"
+      ? "Log your period to get personalized cycle insights."
+      : cycleInfo.phase === "Sign in to track"
+        ? "Sign in to track your cycle and get insights."
+        : `Your fertility is ${cycleInfo.fertilityLevel.toLowerCase()} today. A great time for ${cycleInfo.phase === "Follicular"
+          ? "light yoga and nourishing greens"
+          : cycleInfo.phase === "Ovulation"
+            ? "high-intensity workouts"
+            : cycleInfo.phase === "Luteal"
+              ? "rest and gentle stretching"
+              : "self-care and rest"
+        }.`;
 
   const renderInsightCard = useCallback(
     ({ item, index }: { item: typeof INSIGHTS[0]; index: number }) => (
@@ -127,15 +239,15 @@ export default function HomeScreen() {
           style={styles(theme).greetingSection}
         >
           <Text style={styles(theme).greetingHello}>Hello,</Text>
-          <Text style={styles(theme).greetingName}>Sarah</Text>
+          <Text style={styles(theme).greetingName}>{displayName}</Text>
         </Animated.View>
 
         {/* Petal Tracker */}
         <Animated.View entering={FadeInDown.delay(200).duration(600)}>
           <PetalTracker
-            cycleDay={12}
-            phase="Follicular Phase"
-            fertilityLevel="High"
+            cycleDay={cycleInfo.cycleDay}
+            phase={cycleInfo.phase}
+            fertilityLevel={cycleInfo.fertilityLevel}
           />
         </Animated.View>
 
@@ -145,11 +257,7 @@ export default function HomeScreen() {
           style={styles(theme).insightTextSection}
         >
           <Text style={styles(theme).insightMainText}>
-            Your{" "}
-            <Text style={{ color: theme.colors.primary, fontWeight: "600" }}>
-              fertility is high
-            </Text>{" "}
-            today. A great time for light yoga and nourishing greens.
+            {insightText}
           </Text>
         </Animated.View>
 
@@ -158,11 +266,17 @@ export default function HomeScreen() {
           entering={FadeInDown.delay(400).duration(500)}
           style={styles(theme).quickActions}
         >
-          <TouchableOpacity style={styles(theme).logSymptomsBtn}>
+          <TouchableOpacity
+            style={styles(theme).logSymptomsBtn}
+            onPress={() => router.push("/features/log")}
+          >
             <FontAwesome name="plus-circle" size={18} color={theme.colors.primary} />
             <Text style={styles(theme).logSymptomsText}>Log Symptoms</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles(theme).moodBtn}>
+          <TouchableOpacity
+            style={styles(theme).moodBtn}
+            onPress={() => router.push("/features/log")}
+          >
             <FontAwesome
               name="smile-o"
               size={20}
@@ -176,7 +290,10 @@ export default function HomeScreen() {
           entering={FadeInDown.delay(450).duration(500)}
           style={styles(theme).quickAccessGrid}
         >
-          <TouchableOpacity style={styles(theme).quickAccessCard}>
+          <TouchableOpacity
+            style={styles(theme).quickAccessCard}
+            onPress={() => router.push("/features/log")}
+          >
             <View style={styles(theme).quickAccessIcon}>
               <FontAwesome
                 name="smile-o"
@@ -187,7 +304,10 @@ export default function HomeScreen() {
             <Text style={styles(theme).quickAccessLabel}>Daily Mood</Text>
             <Text style={styles(theme).quickAccessHint}>Not logged</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles(theme).quickAccessCard}>
+          <TouchableOpacity
+            style={styles(theme).quickAccessCard}
+            onPress={() => router.push("/features/log")}
+          >
             <View style={styles(theme).quickAccessIcon}>
               <FontAwesome
                 name="heart-o"
@@ -234,11 +354,11 @@ export default function HomeScreen() {
           <View style={styles(theme).sectionHeader}>
             <Text style={styles(theme).sectionTitle}>Upcoming</Text>
             <Text style={[styles(theme).seeAllText, { fontWeight: "500" }]}>
-              May 2024
+              {currentMonthYear}
             </Text>
           </View>
           <View style={styles(theme).weekRow}>
-            {WEEK_DAYS.map((d) => (
+            {weekDays.map((d) => (
               <View key={d.date} style={styles(theme).weekDay}>
                 <Text
                   style={[

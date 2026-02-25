@@ -74,7 +74,7 @@ class ApiClient {
   }
 
   private async getHeaders(
-    includeAuth = true
+    includeAuth = true,
   ): Promise<Record<string, string>> {
     const headers: Record<string, string> = {
       "Content-Type": "application/json",
@@ -93,7 +93,7 @@ class ApiClient {
   private async request<T>(
     endpoint: string,
     options: RequestInit = {},
-    includeAuth = true
+    includeAuth = true,
   ): Promise<T> {
     const url = `${this.baseURL}${endpoint}`;
     const headers = await this.getHeaders(includeAuth);
@@ -112,7 +112,7 @@ class ApiClient {
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         throw new Error(
-          errorData.error || `HTTP error! status: ${response.status}`
+          errorData.error || `HTTP error! status: ${response.status}`,
         );
       }
 
@@ -135,7 +135,7 @@ class ApiClient {
         method: "POST",
         body: JSON.stringify(data),
       },
-      includeAuth
+      includeAuth,
     );
   }
 
@@ -146,7 +146,7 @@ class ApiClient {
         method: "PUT",
         body: JSON.stringify(data),
       },
-      includeAuth
+      includeAuth,
     );
   }
 
@@ -163,7 +163,7 @@ export const authAPI = {
     const response = await apiClient.post<any>(
       "/auth/login",
       { email, password },
-      false
+      false,
     );
     if (response.token) {
       await setAuthToken(response.token);
@@ -182,7 +182,7 @@ export const authAPI = {
     const response = await apiClient.post<any>(
       "/auth/register",
       userData,
-      false
+      false,
     );
     if (response.token) {
       await setAuthToken(response.token);
@@ -215,7 +215,7 @@ export const periodsAPI = {
 
   getHistory: async (limit = 12, offset = 0) => {
     return apiClient.get<any>(
-      `/periods/history?limit=${limit}&offset=${offset}`
+      `/periods/history?limit=${limit}&offset=${offset}`,
     );
   },
 
@@ -274,7 +274,7 @@ export const communityAPI = {
       offset?: number;
       category?: string;
       user_id?: string;
-    } = {}
+    } = {},
   ) => {
     const searchParams = new URLSearchParams();
     Object.entries(params).forEach(([key, value]) => {
@@ -284,7 +284,7 @@ export const communityAPI = {
     });
     return apiClient.get<any>(
       `/community/posts?${searchParams.toString()}`,
-      false
+      false,
     );
   },
 
@@ -302,7 +302,7 @@ export const communityAPI = {
       content: string;
       parent_comment_id?: string;
       is_anonymous?: boolean;
-    }
+    },
   ) => {
     return apiClient.post<any>(`/community/posts/${postId}/comments`, data);
   },
@@ -310,7 +310,7 @@ export const communityAPI = {
   getComments: async (postId: string, limit = 50, offset = 0) => {
     return apiClient.get<any>(
       `/community/posts/${postId}/comments?limit=${limit}&offset=${offset}`,
-      false
+      false,
     );
   },
 
@@ -339,7 +339,7 @@ export const remediesAPI = {
       search?: string;
       sort_by?: string;
       sort_order?: string;
-    } = {}
+    } = {},
   ) => {
     const searchParams = new URLSearchParams();
     Object.entries(params).forEach(([key, value]) => {
@@ -356,7 +356,7 @@ export const remediesAPI = {
 
   rateRemedy: async (
     remedyId: string,
-    data: { rating: number; review?: string }
+    data: { rating: number; review?: string },
   ) => {
     return apiClient.post<any>(`/remedies/${remedyId}/rate`, data);
   },
@@ -368,7 +368,7 @@ export const remediesAPI = {
   searchRemedies: async (query: string, limit = 10) => {
     return apiClient.get<any>(
       `/remedies/search/${encodeURIComponent(query)}?limit=${limit}`,
-      false
+      false,
     );
   },
 
@@ -400,7 +400,7 @@ export const resourcesAPI = {
       category?: string;
       resource_type?: string;
       search?: string;
-    } = {}
+    } = {},
   ) => {
     const searchParams = new URLSearchParams();
     Object.entries(params).forEach(([key, value]) => {
@@ -422,7 +422,7 @@ export const resourcesAPI = {
   searchResources: async (query: string, limit = 10) => {
     return apiClient.get<any>(
       `/resources/search/${encodeURIComponent(query)}?limit=${limit}`,
-      false
+      false,
     );
   },
 
@@ -432,6 +432,37 @@ export const resourcesAPI = {
 
   deleteResource: async (resourceId: string) => {
     return apiClient.delete<any>(`/resources/${resourceId}`);
+  },
+};
+
+// Daily Logs API
+export const dailyLogsAPI = {
+  getByDate: async (date?: string) => {
+    const d = date || new Date().toISOString().split("T")[0];
+    return apiClient.get<any>(`/daily-logs?date=${d}`);
+  },
+
+  getRange: async (start: string, end: string) => {
+    return apiClient.get<any>(`/daily-logs/range?start=${start}&end=${end}`);
+  },
+
+  create: async (data: {
+    date?: string;
+    flow?: string | null;
+    mood?: string | null;
+    skin?: string[];
+    notes?: string | null;
+  }) => {
+    return apiClient.post<any>("/daily-logs", data);
+  },
+};
+
+// Reports API
+export const reportsAPI = {
+  getMonthly: async (year?: number, month?: number) => {
+    const y = year || new Date().getFullYear();
+    const m = month || new Date().getMonth() + 1;
+    return apiClient.get<any>(`/reports/monthly?year=${y}&month=${m}`);
   },
 };
 
