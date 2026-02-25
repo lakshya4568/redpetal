@@ -26,6 +26,7 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 import { periodsAPI } from "../../services/api";
+import { useAuth } from "../../services/auth";
 import LogPeriodModal from "../components/LogPeriodModal";
 import { AppTheme, useThemeContext } from "../components/ThemeContext";
 import { responsive, springConfigs, timingConfigs } from "../utils/animations";
@@ -116,6 +117,8 @@ InfoCard.displayName = "InfoCard";
 
 export default function CalendarScreen() {
   const { theme } = useThemeContext();
+  const { user } = useAuth();
+  const isGuest = user?.id === "guest";
   const [markedDates, setMarkedDates] = useState<{ [key: string]: MarkedDate }>(
     {}
   );
@@ -148,6 +151,13 @@ export default function CalendarScreen() {
   }, [titleOpacity, calendarOpacity, calendarScale]);
 
   const loadPeriodData = async () => {
+    // Guests have no auth token — skip authenticated API calls silently
+    if (isGuest) {
+      setLoading(false);
+      setRefreshing(false);
+      return;
+    }
+
     try {
       setLoading(true);
 
@@ -252,7 +262,7 @@ export default function CalendarScreen() {
       setMarkedDates(newMarkedDates);
     } catch (error) {
       console.error("Error loading period data:", error);
-      Alert.alert("Error", "Failed to load period data");
+      Alert.alert("Error", "Failed to load period data. Please try again.");
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -305,6 +315,26 @@ export default function CalendarScreen() {
       <View style={styles(theme).loadingContainer}>
         <ActivityIndicator size="large" color={theme.colors.primary} />
         <Text style={styles(theme).loadingText}>Loading calendar...</Text>
+      </View>
+    );
+  }
+
+  // Guest users see a sign-in prompt instead of empty data
+  if (isGuest) {
+    return (
+      <View style={styles(theme).loadingContainer}>
+        <Text style={[styles(theme).title, { paddingTop: 0 }]}>
+          Period Calendar
+        </Text>
+        <Text
+          style={[
+            styles(theme).loadingText,
+            { textAlign: "center", paddingHorizontal: 32, marginTop: 16 },
+          ]}
+        >
+          Sign in to track your period, view your cycle history, and get
+          personalised insights.
+        </Text>
       </View>
     );
   }
@@ -375,17 +405,15 @@ export default function CalendarScreen() {
           <View style={styles(theme).infoCardsRow}>
             <InfoCard
               label="Avg. Cycle"
-              value={`${
-                (predictions as Record<string, unknown>).avg_cycle_length || 28
-              } days`}
+              value={`${(predictions as Record<string, unknown>).avg_cycle_length || 28
+                } days`}
               index={0}
               theme={theme}
             />
             <InfoCard
               label="Avg. Period"
-              value={`${
-                (predictions as Record<string, unknown>).avg_period_length || 5
-              } days`}
+              value={`${(predictions as Record<string, unknown>).avg_period_length || 5
+                } days`}
               index={1}
               theme={theme}
             />

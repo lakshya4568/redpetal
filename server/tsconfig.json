@@ -7,6 +7,19 @@
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true
+    "forceConsistentCasingInFileNames": true,
+    "typeRoots": [
+      "./node_modules/@types"
+    ],
+    "types": [
+      "node",
+      "express",
+      "cors",
+      "pg",
+      "bcryptjs",
+      "jsonwebtoken",
+      "uuid",
+      "multer"
+    ]
   }
 }
