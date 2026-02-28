@@ -107,7 +107,11 @@ const REQUIRED_EXTENSIONS = ["pgcrypto", "pg_trgm"];
 async function runTests() {
   console.log(bold("\n🗄️  Red Petal Database Health Tests\n"));
   console.log(cyan(`Database: ${process.env.DB_NAME || "redpetal"}`));
-  console.log(cyan(`Host: ${process.env.DB_HOST || "localhost"}:${process.env.DB_PORT || "5432"}\n`));
+  console.log(
+    cyan(
+      `Host: ${process.env.DB_HOST || "localhost"}:${process.env.DB_PORT || "5432"}\n`,
+    ),
+  );
 
   // 1. Basic connectivity
   await test("1. Database connection", async () => {
@@ -128,7 +132,7 @@ async function runTests() {
   await test("3. Required extensions installed", async () => {
     const result = await pool.query(
       "SELECT extname FROM pg_extension WHERE extname = ANY($1)",
-      [REQUIRED_EXTENSIONS]
+      [REQUIRED_EXTENSIONS],
     );
     const installed = result.rows.map((r: { extname: string }) => r.extname);
     for (const ext of REQUIRED_EXTENSIONS) {
@@ -144,18 +148,21 @@ async function runTests() {
       WHERE table_schema = 'public' AND table_type = 'BASE TABLE'
       ORDER BY table_name
     `);
-    const existing = result.rows.map((r: { table_name: string }) => r.table_name);
+    const existing = result.rows.map(
+      (r: { table_name: string }) => r.table_name,
+    );
     const missing: string[] = [];
     for (const table of REQUIRED_TABLES) {
       if (!existing.includes(table)) {
         missing.push(table);
       }
     }
-    console.log(dim(`   Tables found: ${existing.length} / ${REQUIRED_TABLES.length} required`));
-    assert(
-      missing.length === 0,
-      `Missing tables: ${missing.join(", ")}`
+    console.log(
+      dim(
+        `   Tables found: ${existing.length} / ${REQUIRED_TABLES.length} required`,
+      ),
     );
+    assert(missing.length === 0, `Missing tables: ${missing.join(", ")}`);
   });
 
   // 5. All required indexes exist
@@ -170,7 +177,11 @@ async function runTests() {
         missing.push(idx);
       }
     }
-    console.log(dim(`   Indexes found: ${existing.length} total, ${REQUIRED_INDEXES.length} required`));
+    console.log(
+      dim(
+        `   Indexes found: ${existing.length} total, ${REQUIRED_INDEXES.length} required`,
+      ),
+    );
     if (missing.length > 0) {
       assert(false, `Missing indexes: ${missing.join(", ")}`);
     }
@@ -186,13 +197,27 @@ async function runTests() {
     `);
     const cols = result.rows.map((r: { column_name: string }) => r.column_name);
     const required = [
-      "id", "email", "username", "password_hash",
-      "first_name", "last_name", "date_of_birth",
-      "profile_image_url", "bio", "phone", "locale",
-      "is_active", "last_login_at", "created_at", "updated_at",
+      "id",
+      "email",
+      "username",
+      "password_hash",
+      "first_name",
+      "last_name",
+      "date_of_birth",
+      "profile_image_url",
+      "bio",
+      "phone",
+      "locale",
+      "is_active",
+      "last_login_at",
+      "created_at",
+      "updated_at",
     ];
     const missing = required.filter((c) => !cols.includes(c));
-    assert(missing.length === 0, `Missing columns in users: ${missing.join(", ")}`);
+    assert(
+      missing.length === 0,
+      `Missing columns in users: ${missing.join(", ")}`,
+    );
   });
 
   // 7. Daily logs enhanced columns
@@ -202,9 +227,17 @@ async function runTests() {
       WHERE table_name = 'daily_logs' AND table_schema = 'public'
     `);
     const cols = result.rows.map((r: { column_name: string }) => r.column_name);
-    const enhanced = ["energy_level", "sleep_hours", "water_intake", "exercise_minutes"];
+    const enhanced = [
+      "energy_level",
+      "sleep_hours",
+      "water_intake",
+      "exercise_minutes",
+    ];
     const missing = enhanced.filter((c) => !cols.includes(c));
-    assert(missing.length === 0, `Missing enhanced columns in daily_logs: ${missing.join(", ")}`);
+    assert(
+      missing.length === 0,
+      `Missing enhanced columns in daily_logs: ${missing.join(", ")}`,
+    );
   });
 
   // 8. Foreign key constraints
@@ -237,7 +270,10 @@ async function runTests() {
       SELECT routine_name FROM information_schema.routines
       WHERE routine_name = 'update_updated_at_column' AND routine_schema = 'public'
     `);
-    assert(result.rows.length > 0, "Trigger function update_updated_at_column not found");
+    assert(
+      result.rows.length > 0,
+      "Trigger function update_updated_at_column not found",
+    );
   });
 
   // 11. Updated_at triggers applied
@@ -248,8 +284,15 @@ async function runTests() {
       WHERE trigger_schema = 'public'
         AND trigger_name LIKE 'trigger_%_updated_at'
     `);
-    const triggered = result.rows.map((r: { event_object_table: string }) => r.event_object_table);
-    const expected = ["users", "period_cycles", "community_posts", "daily_logs"];
+    const triggered = result.rows.map(
+      (r: { event_object_table: string }) => r.event_object_table,
+    );
+    const expected = [
+      "users",
+      "period_cycles",
+      "community_posts",
+      "daily_logs",
+    ];
     const missing = expected.filter((t) => !triggered.includes(t));
     console.log(dim(`   Triggered tables: ${triggered.length}`));
     if (missing.length > 0) {
@@ -260,10 +303,14 @@ async function runTests() {
   // 12. Schema migration tracked
   await test("12. Schema migration version recorded", async () => {
     const result = await pool.query(
-      "SELECT version, name FROM schema_migrations ORDER BY version DESC LIMIT 1"
+      "SELECT version, name FROM schema_migrations ORDER BY version DESC LIMIT 1",
     );
     assert(result.rows.length > 0, "No migration records found");
-    console.log(dim(`   Latest migration: v${result.rows[0].version} — ${result.rows[0].name}`));
+    console.log(
+      dim(
+        `   Latest migration: v${result.rows[0].version} — ${result.rows[0].name}`,
+      ),
+    );
   });
 
   // 13. Unique constraints
@@ -275,7 +322,10 @@ async function runTests() {
     `);
     const tables = result.rows.map((r: { table_name: string }) => r.table_name);
     assert(tables.includes("users"), "Missing unique constraint on users");
-    assert(tables.includes("daily_logs"), "Missing unique constraint on daily_logs");
+    assert(
+      tables.includes("daily_logs"),
+      "Missing unique constraint on daily_logs",
+    );
     console.log(dim(`   Unique constraints: ${result.rows.length}`));
   });
 
@@ -284,8 +334,15 @@ async function runTests() {
     const totalCount = pool.totalCount;
     const idleCount = pool.idleCount;
     const waitingCount = pool.waitingCount;
-    console.log(dim(`   Total: ${totalCount}, Idle: ${idleCount}, Waiting: ${waitingCount}`));
-    assert(waitingCount === 0, `${waitingCount} clients waiting for connections`);
+    console.log(
+      dim(
+        `   Total: ${totalCount}, Idle: ${idleCount}, Waiting: ${waitingCount}`,
+      ),
+    );
+    assert(
+      waitingCount === 0,
+      `${waitingCount} clients waiting for connections`,
+    );
   });
 
   // 15. Table row counts (informational)

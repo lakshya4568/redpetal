@@ -16,10 +16,7 @@ import {
   Text,
   View,
 } from "react-native";
-import {
-  useSharedValue,
-  withSpring
-} from "react-native-reanimated";
+import { useSharedValue, withSpring } from "react-native-reanimated";
 import { androidRipple, touchTarget } from "../utils/platform";
 import { AppTheme, useThemeContext } from "./ThemeContext";
 
@@ -67,7 +64,7 @@ export default function FloatingTabBar({
 
   const getDisplayIndex = (
     routeIndex: number,
-    routes: { name: string }[]
+    routes: { name: string }[],
   ): number => {
     const routeName = routes[routeIndex]?.name;
     return TABS.findIndex((t) => t.name === routeName);
@@ -81,11 +78,7 @@ export default function FloatingTabBar({
 
   return (
     <View style={styles(theme).container}>
-      <BlurView
-        intensity={80}
-        tint="light"
-        style={styles(theme).blurContainer}
-      >
+      <BlurView intensity={80} tint="light" style={styles(theme).blurContainer}>
         <View style={styles(theme).tabsContainer}>
           {TABS.map((tab, index) => {
             const isActive = currentRouteName === tab.name;
@@ -115,15 +108,16 @@ export default function FloatingTabBar({
                       name={tab.icon}
                       size={22}
                       color={
-                        isActive
-                          ? theme.colors.primary
-                          : theme.colors.textMuted
+                        isActive ? theme.colors.primary : theme.colors.textMuted
                       }
                     />
                     <Text
                       style={[
                         styles(theme).tabLabel,
-                        isActive && { color: theme.colors.primary, fontWeight: "700" },
+                        isActive && {
+                          color: theme.colors.primary,
+                          fontWeight: "700",
+                        },
                       ]}
                     >
                       {tab.label}
@@ -147,15 +141,16 @@ export default function FloatingTabBar({
                   name={tab.icon}
                   size={22}
                   color={
-                    isActive
-                      ? theme.colors.primary
-                      : theme.colors.textMuted
+                    isActive ? theme.colors.primary : theme.colors.textMuted
                   }
                 />
                 <Text
                   style={[
                     styles(theme).tabLabel,
-                    isActive && { color: theme.colors.primary, fontWeight: "700" },
+                    isActive && {
+                      color: theme.colors.primary,
+                      fontWeight: "700",
+                    },
                   ]}
                 >
                   {tab.label}

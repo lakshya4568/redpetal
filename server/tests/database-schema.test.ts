@@ -48,7 +48,7 @@ async function tableExists(tableName: string): Promise<boolean> {
       SELECT FROM information_schema.tables
       WHERE table_schema = 'public' AND table_name = $1
     )`,
-    [tableName]
+    [tableName],
   );
   return result.rows[0].exists;
 }
@@ -59,7 +59,7 @@ async function getColumns(tableName: string): Promise<string[]> {
     `SELECT column_name FROM information_schema.columns
      WHERE table_schema = 'public' AND table_name = $1
      ORDER BY ordinal_position`,
-    [tableName]
+    [tableName],
   );
   return result.rows.map((r: { column_name: string }) => r.column_name);
 }
@@ -70,7 +70,7 @@ async function indexExists(indexName: string): Promise<boolean> {
     `SELECT EXISTS (
       SELECT FROM pg_indexes WHERE indexname = $1
     )`,
-    [indexName]
+    [indexName],
   );
   return result.rows[0].exists;
 }
@@ -81,7 +81,7 @@ async function extensionExists(extName: string): Promise<boolean> {
     `SELECT EXISTS (
       SELECT FROM pg_extension WHERE extname = $1
     )`,
-    [extName]
+    [extName],
   );
   return result.rows[0].exists;
 }
@@ -147,7 +147,12 @@ async function runTests() {
 
   await test(`${tableOffset + 1}. Daily logs has enhanced columns`, async () => {
     const cols = await getColumns("daily_logs");
-    const required = ["energy_level", "sleep_hours", "water_intake", "exercise_minutes"];
+    const required = [
+      "energy_level",
+      "sleep_hours",
+      "water_intake",
+      "exercise_minutes",
+    ];
     for (const col of required) {
       assert(cols.includes(col), `Missing column: daily_logs.${col}`);
     }
@@ -195,11 +200,17 @@ async function runTests() {
 
   // Trigram indexes for search
   await test(`${indexOffset}. Trigram index: posts content`, async () => {
-    assert(await indexExists("idx_posts_content_trgm"), "Trigram index on posts content missing");
+    assert(
+      await indexExists("idx_posts_content_trgm"),
+      "Trigram index on posts content missing",
+    );
   });
 
   await test(`${indexOffset + 1}. Trigram index: remedies title`, async () => {
-    assert(await indexExists("idx_remedies_title_trgm"), "Trigram index on remedies title missing");
+    assert(
+      await indexExists("idx_remedies_title_trgm"),
+      "Trigram index on remedies title missing",
+    );
   });
 
   // Trigger function exists
@@ -207,7 +218,7 @@ async function runTests() {
     const result = await pool.query(
       `SELECT EXISTS (
         SELECT FROM pg_proc WHERE proname = 'update_updated_at_column'
-      )`
+      )`,
     );
     assert(result.rows[0].exists, "Trigger function not found");
   });
@@ -215,7 +226,7 @@ async function runTests() {
   // Schema migration recorded
   await test(`${indexOffset + 3}. Schema migration v2 recorded`, async () => {
     const result = await pool.query(
-      `SELECT * FROM schema_migrations WHERE version = 2`
+      `SELECT * FROM schema_migrations WHERE version = 2`,
     );
     assert(result.rows.length > 0, "Migration v2 not recorded");
   });
@@ -227,7 +238,11 @@ async function runTests() {
       // Insert a dummy user first
       const userResult = await pool.query(
         `INSERT INTO users (email, username, password_hash) VALUES ($1, $2, $3) RETURNING id`,
-        [`schema-test-${Date.now()}@test.com`, `schema_test_${Date.now()}`, "hash"]
+        [
+          `schema-test-${Date.now()}@test.com`,
+          `schema_test_${Date.now()}`,
+          "hash",
+        ],
       );
       const userId = userResult.rows[0].id;
       // Try invalid severity
@@ -235,7 +250,7 @@ async function runTests() {
       try {
         await pool.query(
           `INSERT INTO symptoms (user_id, date, symptom_type, severity) VALUES ($1, $2, $3, $4)`,
-          [userId, "2025-01-01", "cramp", 10]
+          [userId, "2025-01-01", "cramp", 10],
         );
       } catch {
         threw = true;

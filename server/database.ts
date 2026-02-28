@@ -39,7 +39,7 @@ export const checkDatabaseHealth = async (): Promise<{
 
 // Helper: run a query inside a client (for transactions)
 const runInTransaction = async (
-  fn: (client: PoolClient) => Promise<void>
+  fn: (client: PoolClient) => Promise<void>,
 ): Promise<void> => {
   const client = await pool.connect();
   try {
@@ -378,8 +378,14 @@ export const createTables = async () => {
 
     // Apply updated_at triggers to all relevant tables
     const tablesWithUpdatedAt = [
-      'users', 'user_preferences', 'period_cycles', 'community_posts',
-      'comments', 'home_remedies', 'resources', 'daily_logs'
+      "users",
+      "user_preferences",
+      "period_cycles",
+      "community_posts",
+      "comments",
+      "home_remedies",
+      "resources",
+      "daily_logs",
     ];
     for (const table of tablesWithUpdatedAt) {
       await client.query(`

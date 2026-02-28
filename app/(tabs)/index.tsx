@@ -14,12 +14,9 @@ import {
   StyleSheet,
   Text,
   TouchableOpacity,
-  View
+  View,
 } from "react-native";
-import Animated, {
-  FadeInDown,
-  FadeInRight,
-} from "react-native-reanimated";
+import Animated, { FadeInDown, FadeInRight } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { periodsAPI } from "../../services/api";
 import { useAuth } from "../../services/auth";
@@ -69,7 +66,7 @@ function computeCycleInfo(predictions: any) {
   const today = new Date();
   const nextStart = new Date(nextPeriod);
   const daysUntilNext = Math.ceil(
-    (nextStart.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
+    (nextStart.getTime() - today.getTime()) / (1000 * 60 * 60 * 24),
   );
   const cycleDay = Math.max(1, avgCycleLength - daysUntilNext);
 
@@ -136,11 +133,15 @@ export default function HomeScreen() {
   useFocusEffect(
     useCallback(() => {
       if (isGuest) {
-        setCycleInfo({ cycleDay: 0, phase: "Sign in to track", fertilityLevel: "—" });
+        setCycleInfo({
+          cycleDay: 0,
+          phase: "Sign in to track",
+          fertilityLevel: "—",
+        });
         return;
       }
       loadCycleData();
-    }, [isGuest])
+    }, [isGuest]),
   );
 
   const loadCycleData = async () => {
@@ -166,17 +167,18 @@ export default function HomeScreen() {
       ? "Log your period to get personalized cycle insights."
       : cycleInfo.phase === "Sign in to track"
         ? "Sign in to track your cycle and get insights."
-        : `Your fertility is ${cycleInfo.fertilityLevel.toLowerCase()} today. A great time for ${cycleInfo.phase === "Follicular"
-          ? "light yoga and nourishing greens"
-          : cycleInfo.phase === "Ovulation"
-            ? "high-intensity workouts"
-            : cycleInfo.phase === "Luteal"
-              ? "rest and gentle stretching"
-              : "self-care and rest"
-        }.`;
+        : `Your fertility is ${cycleInfo.fertilityLevel.toLowerCase()} today. A great time for ${
+            cycleInfo.phase === "Follicular"
+              ? "light yoga and nourishing greens"
+              : cycleInfo.phase === "Ovulation"
+                ? "high-intensity workouts"
+                : cycleInfo.phase === "Luteal"
+                  ? "rest and gentle stretching"
+                  : "self-care and rest"
+          }.`;
 
   const renderInsightCard = useCallback(
-    ({ item, index }: { item: typeof INSIGHTS[0]; index: number }) => (
+    ({ item, index }: { item: (typeof INSIGHTS)[0]; index: number }) => (
       <Animated.View
         entering={FadeInRight.delay(index * 100).duration(400)}
         style={styles(theme).insightCard}
@@ -204,12 +206,15 @@ export default function HomeScreen() {
         </View>
       </Animated.View>
     ),
-    [theme]
+    [theme],
   );
 
   return (
     <View style={[styles(theme).screen, { paddingTop: insets.top }]}>
-      <StatusBar barStyle="dark-content" backgroundColor={theme.colors.background} />
+      <StatusBar
+        barStyle="dark-content"
+        backgroundColor={theme.colors.background}
+      />
 
       <ScrollView
         showsVerticalScrollIndicator={false}
@@ -264,9 +269,7 @@ export default function HomeScreen() {
           entering={FadeInDown.delay(300).duration(500)}
           style={styles(theme).insightTextSection}
         >
-          <Text style={styles(theme).insightMainText}>
-            {insightText}
-          </Text>
+          <Text style={styles(theme).insightMainText}>{insightText}</Text>
         </Animated.View>
 
         {/* Quick Action Buttons */}
@@ -278,7 +281,11 @@ export default function HomeScreen() {
             style={styles(theme).logSymptomsBtn}
             onPress={() => router.push("/features/log")}
           >
-            <FontAwesome name="plus-circle" size={18} color={theme.colors.primary} />
+            <FontAwesome
+              name="plus-circle"
+              size={18}
+              color={theme.colors.primary}
+            />
             <Text style={styles(theme).logSymptomsText}>Log Symptoms</Text>
           </TouchableOpacity>
           <TouchableOpacity
@@ -371,7 +378,10 @@ export default function HomeScreen() {
                 <Text
                   style={[
                     styles(theme).weekDayLabel,
-                    d.isToday && { color: theme.colors.primary, fontWeight: "700" },
+                    d.isToday && {
+                      color: theme.colors.primary,
+                      fontWeight: "700",
+                    },
                   ]}
                 >
                   {d.day}

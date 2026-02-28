@@ -36,7 +36,7 @@ async function apiCall(
   method: string,
   path: string,
   body?: Record<string, unknown>,
-  token?: string
+  token?: string,
 ): Promise<{ ok: boolean; status: number; data: Record<string, unknown> }> {
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
@@ -94,7 +94,10 @@ async function runTests() {
   await test("Health check returns OK with DB status", async () => {
     const r = await apiCall("GET", `${BASE_URL}/health`);
     assert(r.ok, `Status ${r.status}`);
-    assert(r.data.status === "OK" || r.data.status === "DEGRADED", "Invalid status");
+    assert(
+      r.data.status === "OK" || r.data.status === "DEGRADED",
+      "Invalid status",
+    );
     assert("database" in r.data, "Missing database health info");
   });
 
@@ -127,9 +130,12 @@ async function runTests() {
       last_name: "Test",
     });
     assert(r.ok, `Status ${r.status}: ${JSON.stringify(r.data)}`);
-    assert(typeof r.data.token === "string" && r.data.token.length > 0, "Missing token");
+    assert(
+      typeof r.data.token === "string" && r.data.token.length > 0,
+      "Missing token",
+    );
     authToken = r.data.token as string;
-    testUserId = (r.data.user as Record<string, unknown>)?.id as string || "";
+    testUserId = ((r.data.user as Record<string, unknown>)?.id as string) || "";
   });
 
   await test("Duplicate registration fails with 409", async () => {
@@ -165,7 +171,12 @@ async function runTests() {
   });
 
   await test("Protected route rejects invalid token", async () => {
-    const r = await apiCall("GET", "/auth/profile", undefined, "invalid.token.here");
+    const r = await apiCall(
+      "GET",
+      "/auth/profile",
+      undefined,
+      "invalid.token.here",
+    );
     assert(r.status === 403, `Expected 403, got ${r.status}`);
   });
 
@@ -181,7 +192,7 @@ async function runTests() {
       "PUT",
       "/auth/profile",
       { first_name: "Updated", last_name: "Tester" },
-      authToken
+      authToken,
     );
     assert(r.ok, `Status ${r.status}`);
   });
@@ -203,14 +214,19 @@ async function runTests() {
         skin: ["clear", "glowing"],
         notes: "Integration test log",
       },
-      authToken
+      authToken,
     );
     assert(r.ok, `Status ${r.status}: ${JSON.stringify(r.data)}`);
   });
 
   await test("Get daily log by date", async () => {
     if (!authToken) return skip("Get daily log", "No auth token");
-    const r = await apiCall("GET", `/daily-logs?date=${today}`, undefined, authToken);
+    const r = await apiCall(
+      "GET",
+      `/daily-logs?date=${today}`,
+      undefined,
+      authToken,
+    );
     assert(r.ok, `Status ${r.status}`);
     assert(r.data.flow === "medium", `Flow mismatch: ${r.data.flow}`);
   });
@@ -221,7 +237,7 @@ async function runTests() {
       "POST",
       "/daily-logs",
       { date: today, flow: "heavy", mood: "tired", skin: ["dry"] },
-      authToken
+      authToken,
     );
     assert(r.ok, `Status ${r.status}`);
     assert(r.data.flow === "heavy", "Upsert did not update flow");
@@ -229,12 +245,14 @@ async function runTests() {
 
   await test("Get daily logs range", async () => {
     if (!authToken) return skip("Get range", "No auth token");
-    const start = new Date(Date.now() - 7 * 86400000).toISOString().split("T")[0];
+    const start = new Date(Date.now() - 7 * 86400000)
+      .toISOString()
+      .split("T")[0];
     const r = await apiCall(
       "GET",
       `/daily-logs/range?start=${start}&end=${today}`,
       undefined,
-      authToken
+      authToken,
     );
     assert(r.ok, `Status ${r.status}`);
     assert(Array.isArray(r.data), "Expected array");
@@ -249,20 +267,30 @@ async function runTests() {
       "POST",
       "/periods/log",
       { period_start_date: today, notes: "Test period" },
-      authToken
+      authToken,
     );
     assert(r.ok || r.status === 409, `Unexpected status ${r.status}`);
   });
 
   await test("Get period predictions", async () => {
     if (!authToken) return skip("Predictions", "No auth token");
-    const r = await apiCall("GET", "/periods/predictions", undefined, authToken);
+    const r = await apiCall(
+      "GET",
+      "/periods/predictions",
+      undefined,
+      authToken,
+    );
     assert(r.ok || r.status === 404, `Unexpected status ${r.status}`);
   });
 
   await test("Get period history", async () => {
     if (!authToken) return skip("History", "No auth token");
-    const r = await apiCall("GET", "/periods/history?limit=5&offset=0", undefined, authToken);
+    const r = await apiCall(
+      "GET",
+      "/periods/history?limit=5&offset=0",
+      undefined,
+      authToken,
+    );
     assert(r.ok, `Status ${r.status}`);
   });
 
@@ -272,7 +300,7 @@ async function runTests() {
       "POST",
       "/periods/symptoms",
       { date: today, symptom_type: "cramp", severity: 3 },
-      authToken
+      authToken,
     );
     assert(r.ok, `Status ${r.status}: ${JSON.stringify(r.data)}`);
   });
@@ -283,7 +311,7 @@ async function runTests() {
       "POST",
       "/periods/moods",
       { date: today, mood_type: "calm", intensity: 4 },
-      authToken
+      authToken,
     );
     assert(r.ok, `Status ${r.status}: ${JSON.stringify(r.data)}`);
   });
@@ -301,7 +329,7 @@ async function runTests() {
         content: "Testing the backend integration thoroughly!",
         category: "support",
       },
-      authToken
+      authToken,
     );
     assert(r.ok, `Status ${r.status}: ${JSON.stringify(r.data)}`);
     testPostId = ((r.data.post as Record<string, unknown>)?.id as string) || "";
@@ -314,7 +342,7 @@ async function runTests() {
       "POST",
       "/community/posts",
       { content: "" },
-      authToken
+      authToken,
     );
     assert(!r.ok, "Should reject empty content");
   });
@@ -332,18 +360,25 @@ async function runTests() {
   });
 
   await test("Like post (toggle on)", async () => {
-    if (!authToken || !testPostId) return skip("Like post", "Missing auth or post");
-    const r = await apiCall("POST", `/community/posts/${testPostId}/like`, {}, authToken);
+    if (!authToken || !testPostId)
+      return skip("Like post", "Missing auth or post");
+    const r = await apiCall(
+      "POST",
+      `/community/posts/${testPostId}/like`,
+      {},
+      authToken,
+    );
     assert(r.ok, `Status ${r.status}`);
   });
 
   await test("Add comment to post", async () => {
-    if (!authToken || !testPostId) return skip("Add comment", "Missing auth or post");
+    if (!authToken || !testPostId)
+      return skip("Add comment", "Missing auth or post");
     const r = await apiCall(
       "POST",
       `/community/posts/${testPostId}/comments`,
       { content: "Great integration test!" },
-      authToken
+      authToken,
     );
     assert(r.ok, `Status ${r.status}`);
   });
@@ -366,13 +401,15 @@ async function runTests() {
         title: "Ginger Tea for Cramps",
         description: "Warm ginger tea helps reduce period cramps naturally.",
         ingredients: ["ginger", "honey", "water", "lemon"],
-        instructions: "Boil water, add freshly grated ginger, steep 10 min, add honey.",
+        instructions:
+          "Boil water, add freshly grated ginger, steep 10 min, add honey.",
         category: "cramps",
       },
-      authToken
+      authToken,
     );
     assert(r.ok, `Status ${r.status}: ${JSON.stringify(r.data)}`);
-    testRemedyId = ((r.data.remedy as Record<string, unknown>)?.id as string) || "";
+    testRemedyId =
+      ((r.data.remedy as Record<string, unknown>)?.id as string) || "";
   });
 
   await test("Get remedies list", async () => {
@@ -381,12 +418,13 @@ async function runTests() {
   });
 
   await test("Rate a remedy", async () => {
-    if (!authToken || !testRemedyId) return skip("Rate remedy", "Missing auth or remedy");
+    if (!authToken || !testRemedyId)
+      return skip("Rate remedy", "Missing auth or remedy");
     const r = await apiCall(
       "POST",
       `/remedies/${testRemedyId}/rate`,
       { rating: 5, review: "Works great!" },
-      authToken
+      authToken,
     );
     assert(r.ok, `Status ${r.status}`);
   });
@@ -406,10 +444,11 @@ async function runTests() {
         resource_type: "article",
         category: "education",
       },
-      authToken
+      authToken,
     );
     assert(r.ok, `Status ${r.status}: ${JSON.stringify(r.data)}`);
-    testResourceId = ((r.data.resource as Record<string, unknown>)?.id as string) || "";
+    testResourceId =
+      ((r.data.resource as Record<string, unknown>)?.id as string) || "";
   });
 
   await test("Get resources list", async () => {
@@ -427,7 +466,7 @@ async function runTests() {
       "GET",
       `/reports/monthly?year=${now.getFullYear()}&month=${now.getMonth() + 1}`,
       undefined,
-      authToken
+      authToken,
     );
     assert(r.ok, `Status ${r.status}`);
     assert("month" in r.data, "Missing 'month' field");
@@ -441,7 +480,12 @@ async function runTests() {
 
   // Delete test post (cascades to comments/likes)
   if (testPostId && authToken) {
-    await apiCall("DELETE", `/community/posts/${testPostId}`, undefined, authToken);
+    await apiCall(
+      "DELETE",
+      `/community/posts/${testPostId}`,
+      undefined,
+      authToken,
+    );
     console.log(dim("  Cleaned up test post"));
   }
 
@@ -453,7 +497,12 @@ async function runTests() {
 
   // Delete test resource
   if (testResourceId && authToken) {
-    await apiCall("DELETE", `/resources/${testResourceId}`, undefined, authToken);
+    await apiCall(
+      "DELETE",
+      `/resources/${testResourceId}`,
+      undefined,
+      authToken,
+    );
     console.log(dim("  Cleaned up test resource"));
   }
 

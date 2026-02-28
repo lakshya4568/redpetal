@@ -397,12 +397,7 @@ async function runTests() {
       skipped++;
       return;
     }
-    const r = await apiCall(
-      "GET",
-      "/periods/history",
-      undefined,
-      authToken,
-    );
+    const r = await apiCall("GET", "/periods/history", undefined, authToken);
     assert(
       r.ok || r.status === 404,
       `Status ${r.status}: ${JSON.stringify(r.data)}`,

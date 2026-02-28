@@ -26,9 +26,9 @@ const FontProvider: React.FC<FontProviderProps> = ({ children }) => {
     // For native platforms, load fonts with error handling
     try {
       const config: Record<string, any> = {
-        "PlayfairDisplay": require("../../assets/fonts/PlayfairDisplay-Bold.ttf"),
+        PlayfairDisplay: require("../../assets/fonts/PlayfairDisplay-Bold.ttf"),
         "PlayfairDisplay-Italic": require("../../assets/fonts/PlayfairDisplay-Italic.ttf"),
-        "PlusJakartaSans": require("../../assets/fonts/PlusJakartaSans-Regular.ttf"),
+        PlusJakartaSans: require("../../assets/fonts/PlusJakartaSans-Regular.ttf"),
       };
 
       // Try loading additional weight variants if available
@@ -43,11 +43,17 @@ const FontProvider: React.FC<FontProviderProps> = ({ children }) => {
         try {
           // Attempt load — wrapped in try since these may not exist yet
           if (name === "PlusJakartaSans-Medium") {
-            config[name] = require("../../assets/fonts/PlusJakartaSans-Medium.ttf");
+            config[
+              name
+            ] = require("../../assets/fonts/PlusJakartaSans-Medium.ttf");
           } else if (name === "PlusJakartaSans-SemiBold") {
-            config[name] = require("../../assets/fonts/PlusJakartaSans-SemiBold.ttf");
+            config[
+              name
+            ] = require("../../assets/fonts/PlusJakartaSans-SemiBold.ttf");
           } else if (name === "PlusJakartaSans-Bold") {
-            config[name] = require("../../assets/fonts/PlusJakartaSans-Bold.ttf");
+            config[
+              name
+            ] = require("../../assets/fonts/PlusJakartaSans-Bold.ttf");
           }
         } catch {
           // Optional font not available — that's fine
@@ -109,7 +115,7 @@ const FontProvider: React.FC<FontProviderProps> = ({ children }) => {
       console.log("Font config keys:", Object.keys(fontConfig));
       console.log("Fonts loaded:", fontsLoaded);
       setAppReady(true); // Continue with system fonts
-      SplashScreen.hideAsync().catch(() => { });
+      SplashScreen.hideAsync().catch(() => {});
     }
   }, [fontLoadError, fontConfig, fontsLoaded, isMounted]);
 
@@ -127,7 +133,7 @@ const FontProvider: React.FC<FontProviderProps> = ({ children }) => {
       ) {
         console.warn("Font loading timed out, continuing with system fonts");
         setAppReady(true);
-        SplashScreen.hideAsync().catch(() => { });
+        SplashScreen.hideAsync().catch(() => {});
       }
     }, 3000); // Reduced timeout to 3 seconds
 

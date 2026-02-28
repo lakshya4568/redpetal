@@ -163,7 +163,10 @@ export const fonts = {
 };
 
 // Android-safe text style helper — removes font padding for consistent rendering
-const androidText = Platform.OS === "android" ? { includeFontPadding: false, textAlignVertical: "center" as const } : {};
+const androidText =
+  Platform.OS === "android"
+    ? { includeFontPadding: false, textAlignVertical: "center" as const }
+    : {};
 
 // Typography Scale with semantic naming
 export const typography = {

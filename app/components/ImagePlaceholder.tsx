@@ -85,14 +85,13 @@ export default function ImagePlaceholder({
       <LinearGradient
         colors={[
           theme.colors.surfaceVariant,
-          theme.colors.overlay.replace("0.1)", "0.2)").replace("0.08)", "0.15)"),
+          theme.colors.overlay
+            .replace("0.1)", "0.2)")
+            .replace("0.08)", "0.15)"),
         ]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
-        style={[
-          styles(theme).gradient,
-          { borderRadius: resolvedBorderRadius },
-        ]}
+        style={[styles(theme).gradient, { borderRadius: resolvedBorderRadius }]}
       >
         {/* Decorative petal shapes in background */}
         <View style={styles(theme).petalDecor1} />

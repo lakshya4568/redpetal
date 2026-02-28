@@ -11,7 +11,13 @@
  * - Safe text rendering with fallback fonts
  */
 
-import { Dimensions, Platform, PixelRatio, StatusBar, ViewStyle } from "react-native";
+import {
+  Dimensions,
+  PixelRatio,
+  Platform,
+  StatusBar,
+  ViewStyle,
+} from "react-native";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
@@ -125,7 +131,9 @@ export function floatingPosition(options: {
   return {
     position: "absolute",
     ...(bottomOffset !== undefined && { bottom: bottomOffset }),
-    ...(options.top !== undefined && { top: options.top + getStatusBarHeight() }),
+    ...(options.top !== undefined && {
+      top: options.top + getStatusBarHeight(),
+    }),
     ...(options.left !== undefined && { left: options.left }),
     ...(options.right !== undefined && { right: options.right }),
     zIndex: 999,
@@ -137,7 +145,7 @@ export function floatingPosition(options: {
  * Android has limited font weight support for some custom fonts.
  */
 export function safeTextWeight(
-  weight: "300" | "400" | "500" | "600" | "700" | "800"
+  weight: "300" | "400" | "500" | "600" | "700" | "800",
 ): object {
   if (Platform.OS === "android") {
     // On Android, map fine-grained weights to supported levels
@@ -149,7 +157,9 @@ export function safeTextWeight(
       "700": "bold",
       "800": "bold",
     };
-    return { fontWeight: androidWeightMap[weight] as "normal" | "bold" | "300" | "500" };
+    return {
+      fontWeight: androidWeightMap[weight] as "normal" | "bold" | "300" | "500",
+    };
   }
   return { fontWeight: weight };
 }
