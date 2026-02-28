@@ -57,3 +57,6 @@ check.html
 start-server.sh
 *.md
 !README.md
+
+.agent
+.agents
