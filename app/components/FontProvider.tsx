@@ -30,6 +30,30 @@ const FontProvider: React.FC<FontProviderProps> = ({ children }) => {
         "PlayfairDisplay-Italic": require("../../assets/fonts/PlayfairDisplay-Italic.ttf"),
         "PlusJakartaSans": require("../../assets/fonts/PlusJakartaSans-Regular.ttf"),
       };
+
+      // Try loading additional weight variants if available
+      const optionalFonts: Record<string, string> = {
+        "PlusJakartaSans-Medium": "PlusJakartaSans-Medium.ttf",
+        "PlusJakartaSans-SemiBold": "PlusJakartaSans-SemiBold.ttf",
+        "PlusJakartaSans-Bold": "PlusJakartaSans-Bold.ttf",
+      };
+
+      // Note: optional fonts are tried but won't break if missing
+      for (const [name, _file] of Object.entries(optionalFonts)) {
+        try {
+          // Attempt load — wrapped in try since these may not exist yet
+          if (name === "PlusJakartaSans-Medium") {
+            config[name] = require("../../assets/fonts/PlusJakartaSans-Medium.ttf");
+          } else if (name === "PlusJakartaSans-SemiBold") {
+            config[name] = require("../../assets/fonts/PlusJakartaSans-SemiBold.ttf");
+          } else if (name === "PlusJakartaSans-Bold") {
+            config[name] = require("../../assets/fonts/PlusJakartaSans-Bold.ttf");
+          }
+        } catch {
+          // Optional font not available — that's fine
+        }
+      }
+
       return config;
     } catch (error) {
       console.warn("Font files not found, using system fonts:", error);

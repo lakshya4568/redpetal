@@ -20,6 +20,7 @@ import {
   useSharedValue,
   withSpring
 } from "react-native-reanimated";
+import { androidRipple, touchTarget } from "../utils/platform";
 import { AppTheme, useThemeContext } from "./ThemeContext";
 
 interface TabItem {
@@ -97,16 +98,18 @@ export default function FloatingTabBar({
                   <Pressable
                     onPress={() => router.push("/features/log")}
                     style={styles(theme).centerFab}
+                    {...androidRipple(theme.colors.primary + "40")}
                   >
                     <FontAwesome name="plus" size={22} color="#FFFFFF" />
                   </Pressable>
                   {/* Tab item */}
                   <Pressable
                     onPress={() => handleTabPress(tab.name)}
-                    style={styles(theme).tabItem}
+                    style={[styles(theme).tabItem, touchTarget()]}
                     accessibilityRole="tab"
                     accessibilityState={{ selected: isActive }}
                     accessibilityLabel={tab.label}
+                    {...androidRipple()}
                   >
                     <FontAwesome
                       name={tab.icon}
@@ -134,10 +137,11 @@ export default function FloatingTabBar({
               <Pressable
                 key={tab.name}
                 onPress={() => handleTabPress(tab.name)}
-                style={styles(theme).tabItem}
+                style={[styles(theme).tabItem, touchTarget()]}
                 accessibilityRole="tab"
                 accessibilityState={{ selected: isActive }}
                 accessibilityLabel={tab.label}
+                {...androidRipple()}
               >
                 <FontAwesome
                   name={tab.icon}
@@ -169,12 +173,16 @@ const styles = (theme: AppTheme) =>
   StyleSheet.create({
     container: {
       position: "absolute",
-      bottom: 24,
+      bottom: Platform.OS === "android" ? 16 : 24,
       left: (SCREEN_WIDTH - TAB_BAR_WIDTH) / 2,
       width: TAB_BAR_WIDTH,
       height: 68,
       borderRadius: 999,
       overflow: "hidden",
+      // Android: use solid background instead of blur for reliable rendering
+      ...(Platform.OS === "android" && {
+        backgroundColor: "rgba(255, 255, 255, 0.97)",
+      }),
       ...Platform.select({
         ios: {
           shadowColor: "#000",
@@ -183,7 +191,9 @@ const styles = (theme: AppTheme) =>
           shadowRadius: 24,
         },
         android: {
-          elevation: 12,
+          elevation: 16,
+          borderWidth: 1,
+          borderColor: "rgba(0, 0, 0, 0.06)",
         },
       }),
     },
@@ -191,8 +201,14 @@ const styles = (theme: AppTheme) =>
       flex: 1,
       borderRadius: 999,
       overflow: "hidden",
-      borderWidth: 1,
-      borderColor: "rgba(255, 255, 255, 0.2)",
+      // Android: BlurView can be unreliable, use solid bg as fallback
+      ...(Platform.OS === "android" && {
+        backgroundColor: "rgba(255, 255, 255, 0.97)",
+      }),
+      ...(Platform.OS === "ios" && {
+        borderWidth: 1,
+        borderColor: "rgba(255, 255, 255, 0.2)",
+      }),
     },
     tabsContainer: {
       flex: 1,
@@ -215,6 +231,11 @@ const styles = (theme: AppTheme) =>
       color: theme.colors.textMuted,
       textTransform: "uppercase",
       letterSpacing: 0.5,
+      // Android text rendering fix: prevent font padding clipping
+      ...(Platform.OS === "android" && {
+        includeFontPadding: false,
+        textAlignVertical: "center" as const,
+      }),
     },
     centerFab: {
       width: 48,

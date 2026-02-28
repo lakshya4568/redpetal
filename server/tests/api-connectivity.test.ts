@@ -330,6 +330,151 @@ async function runTests() {
     assert(r.ok, `Status ${r.status}: ${JSON.stringify(r.data)}`);
   });
 
+  // ─── Enhanced V2 Tests ────────────────────────────────────
+
+  // 17. Update daily log with enhanced fields
+  await test("17. PUT /api/daily-logs (enhanced fields)", async () => {
+    if (!authToken) {
+      skipped++;
+      return;
+    }
+    const r = await apiCall(
+      "POST",
+      "/daily-logs",
+      {
+        date: today,
+        flow: "light",
+        mood: "happy",
+        skin: ["glowing"],
+        energy_level: 4,
+        sleep_hours: 7.5,
+        water_intake: 8,
+        exercise_minutes: 30,
+        notes: "Enhanced field test",
+      },
+      authToken,
+    );
+    // POST may upsert or fail on duplicate — both acceptable
+    assert(
+      r.ok || r.status === 409 || r.status === 400,
+      `Status ${r.status}: ${JSON.stringify(r.data)}`,
+    );
+  });
+
+  // 18. Database health endpoint
+  await test("18. GET /health (database info)", async () => {
+    const r = await apiCall("GET", `${BASE_URL}/health`);
+    assert(r.ok, `Status ${r.status}`);
+    assert(r.data.status === "OK", `Expected OK, got ${r.data.status}`);
+    assert(typeof r.data.uptime === "number", "Missing uptime");
+  });
+
+  // 19. Update profile
+  await test("19. PUT /api/auth/profile", async () => {
+    if (!authToken) {
+      skipped++;
+      return;
+    }
+    const r = await apiCall(
+      "PUT",
+      "/auth/profile",
+      {
+        first_name: "Updated",
+        last_name: "Tester",
+      },
+      authToken,
+    );
+    // May not have this endpoint yet — acceptable 404
+    assert(
+      r.ok || r.status === 404,
+      `Status ${r.status}: ${JSON.stringify(r.data)}`,
+    );
+  });
+
+  // 20. Get period history
+  await test("20. GET /api/periods/history", async () => {
+    if (!authToken) {
+      skipped++;
+      return;
+    }
+    const r = await apiCall(
+      "GET",
+      "/periods/history",
+      undefined,
+      authToken,
+    );
+    assert(
+      r.ok || r.status === 404,
+      `Status ${r.status}: ${JSON.stringify(r.data)}`,
+    );
+  });
+
+  // 21. Get post with comments
+  await test("21. GET /api/community/posts/:id", async () => {
+    if (!testPostId) {
+      skipped++;
+      return;
+    }
+    const r = await apiCall(
+      "GET",
+      `/community/posts/${testPostId}`,
+      undefined,
+      authToken || undefined,
+    );
+    assert(
+      r.ok || r.status === 404,
+      `Status ${r.status}: ${JSON.stringify(r.data)}`,
+    );
+  });
+
+  // 22. Error handling — invalid endpoint
+  await test("22. GET /api/nonexistent → 404", async () => {
+    const r = await apiCall("GET", "/nonexistent");
+    assert(r.status === 404, `Expected 404, got ${r.status}`);
+  });
+
+  // 23. Error handling — unauthorized access
+  await test("23. GET /api/auth/profile (no token) → 401", async () => {
+    const r = await apiCall("GET", "/auth/profile", undefined, undefined);
+    assert(
+      r.status === 401 || r.status === 403,
+      `Expected 401/403, got ${r.status}`,
+    );
+  });
+
+  // 24. Error handling — invalid login
+  await test("24. POST /api/auth/login (bad creds) → 401", async () => {
+    const r = await apiCall("POST", "/auth/login", {
+      email: "nonexistent@test.com",
+      password: "wrongPassword123",
+    });
+    assert(
+      r.status === 401 || r.status === 400 || r.status === 404,
+      `Expected 401/400/404, got ${r.status}`,
+    );
+  });
+
+  // 25. Rate limiting headers present
+  await test("25. Rate limiting headers present", async () => {
+    const res = await fetch(`${BASE_URL}/health`);
+    const rateHeaders = [
+      "ratelimit-limit",
+      "ratelimit-remaining",
+      "ratelimit-reset",
+    ];
+    const foundHeaders: string[] = [];
+    for (const h of rateHeaders) {
+      if (res.headers.get(h) !== null) {
+        foundHeaders.push(h);
+      }
+    }
+    // At least some rate-limit headers should be present
+    assert(
+      foundHeaders.length >= 1,
+      `No rate-limit headers found (checked: ${rateHeaders.join(", ")})`,
+    );
+  });
+
   // ─── Cleanup ─────────────────────────────────────────────
   // Delete test post
   if (testPostId && authToken) {

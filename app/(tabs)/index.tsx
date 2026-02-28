@@ -23,6 +23,7 @@ import Animated, {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { periodsAPI } from "../../services/api";
 import { useAuth } from "../../services/auth";
+import ImagePlaceholder from "../components/ImagePlaceholder";
 import PetalTracker from "../components/PetalTracker";
 import { AppTheme, useThemeContext } from "../components/ThemeContext";
 import TodayTip from "../components/TodayTip";
@@ -180,19 +181,20 @@ export default function HomeScreen() {
         entering={FadeInRight.delay(index * 100).duration(400)}
         style={styles(theme).insightCard}
       >
-        <View style={styles(theme).insightImagePlaceholder}>
-          <FontAwesome
-            name={
-              item.category === "Wellness"
-                ? "heartbeat"
-                : item.category === "Nutrition"
-                  ? "leaf"
-                  : "bicycle"
-            }
-            size={32}
-            color={theme.colors.primary + "60"}
-          />
-        </View>
+        <ImagePlaceholder
+          width={240}
+          height={120}
+          variant="card"
+          label={`insight-${item.category.toLowerCase()}`}
+          icon={
+            item.category === "Wellness"
+              ? "heartbeat"
+              : item.category === "Nutrition"
+                ? "leaf"
+                : "bicycle"
+          }
+          borderRadius={0}
+        />
         <View style={styles(theme).insightContent}>
           <Text style={styles(theme).insightCategory}>{item.category}</Text>
           <Text style={styles(theme).insightTitle}>{item.title}</Text>
@@ -220,7 +222,13 @@ export default function HomeScreen() {
         >
           <View style={styles(theme).headerLeft}>
             <View style={styles(theme).profileCircle}>
-              <FontAwesome name="user" size={18} color={theme.colors.primary} />
+              <ImagePlaceholder
+                width={36}
+                height={36}
+                variant="avatar"
+                icon="user"
+                iconSize={14}
+              />
             </View>
             <Text style={styles(theme).brandText}>RED PETAL</Text>
           </View>

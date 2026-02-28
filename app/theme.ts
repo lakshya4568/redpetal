@@ -110,7 +110,7 @@ export const fonts = {
       default: "PlayfairDisplay",
     }),
     fallback: Platform.select({
-      ios: "Georgia, serif",
+      ios: "Georgia",
       android: "serif",
       web: "Georgia, Times, serif",
       default: "serif",
@@ -125,7 +125,7 @@ export const fonts = {
       default: "PlayfairDisplay-Italic",
     }),
     fallback: Platform.select({
-      ios: "Georgia, serif",
+      ios: "Georgia",
       android: "serif",
       web: "Georgia, Times, serif",
       default: "serif",
@@ -140,8 +140,8 @@ export const fonts = {
       default: "PlusJakartaSans",
     }),
     fallback: Platform.select({
-      ios: "SF Pro Text, -apple-system, sans-serif",
-      android: "Roboto, sans-serif",
+      ios: "SF Pro Text",
+      android: "Roboto",
       web: "system-ui, -apple-system, sans-serif",
       default: "sans-serif",
     }),
@@ -155,7 +155,15 @@ export const fonts = {
     bold: "700" as const,
     extraBold: "800" as const,
   },
+  // Android-optimized text rendering defaults
+  androidDefaults: {
+    includeFontPadding: false,
+    textAlignVertical: "center" as const,
+  },
 };
+
+// Android-safe text style helper — removes font padding for consistent rendering
+const androidText = Platform.OS === "android" ? { includeFontPadding: false, textAlignVertical: "center" as const } : {};
 
 // Typography Scale with semantic naming
 export const typography = {
@@ -166,6 +174,7 @@ export const typography = {
     fontFamily: fonts.title.family,
     fontWeight: fonts.weights.regular,
     letterSpacing: 0.5,
+    ...androidText,
   },
   // Large display text
   displayLarge: {
@@ -174,6 +183,7 @@ export const typography = {
     fontFamily: fonts.subtitle.family,
     fontWeight: fonts.weights.bold,
     letterSpacing: -0.5,
+    ...androidText,
   },
   displayMedium: {
     fontSize: 48,
@@ -181,6 +191,7 @@ export const typography = {
     fontFamily: fonts.subtitle.family,
     fontWeight: fonts.weights.bold,
     letterSpacing: -0.25,
+    ...androidText,
   },
   displaySmall: {
     fontSize: 40,
@@ -188,6 +199,7 @@ export const typography = {
     fontFamily: fonts.subtitle.family,
     fontWeight: fonts.weights.semiBold,
     letterSpacing: 0,
+    ...androidText,
   },
   // Headlines
   headlineLarge: {
@@ -196,6 +208,7 @@ export const typography = {
     fontFamily: fonts.subtitle.family,
     fontWeight: fonts.weights.semiBold,
     letterSpacing: 0,
+    ...androidText,
   },
   headlineMedium: {
     fontSize: 28,
@@ -203,6 +216,7 @@ export const typography = {
     fontFamily: fonts.subtitle.family,
     fontWeight: fonts.weights.semiBold,
     letterSpacing: 0,
+    ...androidText,
   },
   headlineSmall: {
     fontSize: 24,
@@ -210,6 +224,7 @@ export const typography = {
     fontFamily: fonts.subtitle.family,
     fontWeight: fonts.weights.medium,
     letterSpacing: 0,
+    ...androidText,
   },
   // Titles
   titleLarge: {
@@ -218,6 +233,7 @@ export const typography = {
     fontFamily: fonts.subtitle.family,
     fontWeight: fonts.weights.medium,
     letterSpacing: 0,
+    ...androidText,
   },
   titleMedium: {
     fontSize: 18,
@@ -225,6 +241,7 @@ export const typography = {
     fontFamily: fonts.subtitle.family,
     fontWeight: fonts.weights.medium,
     letterSpacing: 0.15,
+    ...androidText,
   },
   titleSmall: {
     fontSize: 16,
@@ -232,6 +249,7 @@ export const typography = {
     fontFamily: fonts.subtitle.family,
     fontWeight: fonts.weights.medium,
     letterSpacing: 0.1,
+    ...androidText,
   },
   // Body text
   bodyLarge: {
@@ -240,6 +258,7 @@ export const typography = {
     fontFamily: fonts.body.family,
     fontWeight: fonts.weights.regular,
     letterSpacing: 0.5,
+    ...androidText,
   },
   bodyMedium: {
     fontSize: 14,
@@ -247,6 +266,7 @@ export const typography = {
     fontFamily: fonts.body.family,
     fontWeight: fonts.weights.regular,
     letterSpacing: 0.25,
+    ...androidText,
   },
   bodySmall: {
     fontSize: 12,
@@ -254,6 +274,7 @@ export const typography = {
     fontFamily: fonts.body.family,
     fontWeight: fonts.weights.regular,
     letterSpacing: 0.4,
+    ...androidText,
   },
   // Labels
   labelLarge: {
@@ -262,6 +283,7 @@ export const typography = {
     fontFamily: fonts.body.family,
     fontWeight: fonts.weights.medium,
     letterSpacing: 0.1,
+    ...androidText,
   },
   labelMedium: {
     fontSize: 12,
@@ -269,6 +291,7 @@ export const typography = {
     fontFamily: fonts.body.family,
     fontWeight: fonts.weights.medium,
     letterSpacing: 0.5,
+    ...androidText,
   },
   labelSmall: {
     fontSize: 10,
@@ -276,6 +299,7 @@ export const typography = {
     fontFamily: fonts.body.family,
     fontWeight: fonts.weights.medium,
     letterSpacing: 0.5,
+    ...androidText,
   },
   // Interactive elements
   button: {
@@ -284,6 +308,7 @@ export const typography = {
     fontFamily: fonts.body.family,
     fontWeight: fonts.weights.medium,
     letterSpacing: 0.1,
+    ...androidText,
   },
   caption: {
     fontSize: 12,
@@ -291,6 +316,17 @@ export const typography = {
     fontFamily: fonts.body.family,
     fontWeight: fonts.weights.regular,
     letterSpacing: 0.4,
+    ...androidText,
+  },
+  // Overline (small caps category labels)
+  overline: {
+    fontSize: 10,
+    lineHeight: 14,
+    fontFamily: fonts.body.family,
+    fontWeight: fonts.weights.bold,
+    letterSpacing: 2,
+    textTransform: "uppercase" as const,
+    ...androidText,
   },
 };
 

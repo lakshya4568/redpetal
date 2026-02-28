@@ -9,7 +9,7 @@ import express, {
 import expressRateLimit from "express-rate-limit";
 import helmet from "helmet";
 import path from "path";
-import { createTables } from "./database";
+import { checkDatabaseHealth, createTables } from "./database";
 
 // Import routes
 import authRoutes from "./routes/auth";
@@ -68,13 +68,18 @@ app.use(
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
-// Health check endpoint
-app.get("/health", (req, res) => {
-  res.status(200).json({
-    status: "OK",
+// Health check endpoint (with database status)
+app.get("/health", async (req, res) => {
+  const dbHealth = await checkDatabaseHealth();
+  res.status(dbHealth.connected ? 200 : 503).json({
+    status: dbHealth.connected ? "OK" : "DEGRADED",
     timestamp: new Date().toISOString(),
     uptime: process.uptime(),
     environment: process.env.NODE_ENV || "development",
+    database: {
+      connected: dbHealth.connected,
+      latencyMs: dbHealth.latencyMs,
+    },
   });
 });
 

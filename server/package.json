@@ -6,7 +6,11 @@
   "scripts": {
     "start": "node dist/server.js",
     "dev": "nodemon server.ts",
-    "build": "tsc"
+    "build": "tsc",
+    "test": "npx tsx tests/backend-integration.test.ts",
+    "test:db": "npx tsx tests/database-schema.test.ts",
+    "test:api": "npx tsx tests/api-connectivity.test.ts",
+    "test:all": "npx tsx tests/database-schema.test.ts && npx tsx tests/backend-integration.test.ts"
   },
   "dependencies": {
     "express": "^5.1.0",
