@@ -50,6 +50,41 @@ router.post(
           .json({ error: "Period already logged for this date" });
       }
 
+      // Find the most recent previous cycle to update its length
+      const previousCycleResult = await pool.query(
+        `SELECT id, cycle_start_date FROM period_cycles
+         WHERE user_id = $1 AND cycle_start_date < $2
+         ORDER BY cycle_start_date DESC LIMIT 1`,
+        [user_id, period_start_date]
+      );
+
+      if (previousCycleResult.rows.length > 0) {
+        const previousCycle = previousCycleResult.rows[0];
+        const prevStartDate = new Date(previousCycle.cycle_start_date);
+        const currentStartDate = new Date(period_start_date);
+
+        // Calculate cycle length in days
+        const diffTime = Math.abs(
+          currentStartDate.getTime() - prevStartDate.getTime()
+        );
+        const cycleLength = Math.round(diffTime / (1000 * 60 * 60 * 24));
+
+        // Calculate cycle end date (1 day before current start date)
+        const cycleEndDate = new Date(currentStartDate);
+        cycleEndDate.setDate(cycleEndDate.getDate() - 1);
+
+        await pool.query(
+          `UPDATE period_cycles
+           SET cycle_end_date = $1, cycle_length = $2, updated_at = CURRENT_TIMESTAMP
+           WHERE id = $3`,
+          [
+            cycleEndDate.toISOString().split("T")[0],
+            cycleLength,
+            previousCycle.id,
+          ]
+        );
+      }
+
       // Insert new period cycle
       const result = await pool.query(
         `INSERT INTO period_cycles (user_id, period_start_date, cycle_start_date, notes)
